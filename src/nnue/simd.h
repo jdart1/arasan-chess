@@ -472,7 +472,7 @@ template <size_t size, typename DataType> FORCEINLINE void vec_copy(const DataTy
             for (size_t i = 0; i < remaining / 512; ++i) {
                 outp[i] = _mm512_load_si512(inp + i);
             }
-            incr = sizeof(DataType) * remaining / 512;
+            incr = sizeof(DataType) * (remaining / 512);
             remaining = remaining % 512;
             break;
         }
@@ -484,7 +484,7 @@ template <size_t size, typename DataType> FORCEINLINE void vec_copy(const DataTy
             for (size_t i = 0; i < remaining / 256; ++i) {
                 outp[i] = _mm256_load_si256(inp + i);
             }
-            incr = sizeof(DataType) * remaining / 256;
+            incr = sizeof(DataType) * (remaining / 256);
             remaining = remaining % 256;
             break;
         }
