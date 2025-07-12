@@ -153,7 +153,7 @@ bench.cpp bhash.cpp bhash.h bitboard.cpp bitboard.h bitprobe.cpp
 bitprobe.h board.cpp board.h boardio.cpp boardio.h bookdefs.h
 bookread.cpp bookread.h bookwrit.cpp bookwrit.h calctime.cpp
 calctime.h chess.cpp chess.h chessio.cpp chessio.h constant.h
-eco.cpp ecodata.cpp ecodata.h eco.h ecoinfo.cpp ecoinfo.h epdrec.cpp
+eco.cpp ecodata.cpp ecodata.h eco.h epdrec.cpp
 epdrec.h globals.cpp globals.h hash.cpp hash.h learn.cpp learn.h
 legal.cpp legal.h material.cpp material.h movearr.cpp
 movearr.h movegen.cpp movegen.h notation.cpp notation.h options.cpp
@@ -168,7 +168,7 @@ bitboard.cpp bitboard.h bitprobe.cpp bitprobe.h board.cpp board.h
 boardio.cpp boardio.h bookdefs.h bookread.cpp bookread.h bookwrit.cpp
 bookwrit.h calctime.cpp calctime.h chess.cpp chess.h chessio.cpp
 chessio.h constant.h eco.cpp ecodata.cpp ecodata.h eco.h
-ecoinfo.cpp ecoinfo.h epdrec.cpp epdrec.h globals.cpp globals.h
+epdrec.cpp epdrec.h globals.cpp globals.h
 hash.cpp hash.h learn.cpp learn.h legal.cpp legal.h
 material.cpp material.h movearr.cpp movearr.h movegen.cpp movegen.h
 notation.cpp notation.h options.cpp options.h
