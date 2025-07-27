@@ -43,9 +43,8 @@ class SqrCReLUAndLinear
 #endif
         {
             // generic implementation
-            static AccumulatorHalf halves[] = {AccumulatorHalf::Lower, AccumulatorHalf::Upper};
             size_t offset = 0;
-            for (auto h : halves) {
+            for (auto h : AccumulatorType::halves) {
                 for (size_t i = 0; i < accum.getSize(); ++i) {
                     int16_t x = accum.getOutput(h)[i];
                     // CReLU
