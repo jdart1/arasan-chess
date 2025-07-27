@@ -136,10 +136,10 @@ class BookEntry {
 
 class BookEntryJson : public BookEntry {
   public:
-    BookEntryJson(Board b, unsigned ply, ColorType side, unsigned recomend, PositionEval ev,
+    BookEntryJson(Board b, unsigned p /*ply*/, ColorType side, unsigned recommend, PositionEval ev,
                   MoveEval mev, ResultType result, uint8_t idx, const std::string &move,
                   BookEntryJson *nxt, bool isFirst)
-        : BookEntry(side, ply, recomend, ev, mev, result, idx, nxt, isFirst) {
+        : BookEntry(side, p, recommend, ev, mev, result, idx, nxt, isFirst) {
         strncpy(movestr, move.c_str(), 8);
         std::stringstream s;
         BoardIO::writeFEN(b, s, 1);

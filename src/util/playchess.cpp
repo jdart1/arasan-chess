@@ -50,7 +50,7 @@ int CDECL main(int argc, char **argv) {
     // time limit in ms.
     int timeLimit = 5000;
     int depthLimit = 12;
-    enum SearchType { Depth, Time } searchType = Depth;
+    enum LimitType { Depth, Time } searchType = Depth;
     bool x_flag = false;
 
     if (argc == 1) {
