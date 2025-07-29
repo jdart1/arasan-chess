@@ -1,6 +1,6 @@
-// Copyright 2022, 2024 by Jon Dart. All Rights Reserved
-#ifndef _NNUE_SQRCRELU_H
-#define _NNUE_SQRCRELU_H
+// Copyright 2022, 2024-2025 by Jon Dart. All Rights Reserved
+#ifndef _NNUE_PAIRWISE_MULT_H
+#define _NNUE_PAIRWISE_MULT_H
 
 #include "typed.h"
 
@@ -10,12 +10,12 @@
 // 3. scaling the product
 template <typename InputType, typename AccumulatorType, typename OutputType, size_t size,
           unsigned clampMax, unsigned scaleFactor, size_t alignment = DEFAULT_ALIGN>
-class SqrCReLU
+class PairwiseMult
     : public TypedLayer<InputType, OutputType, size, size, alignment> {
   public:
-    SqrCReLU() = default;
+    PairwiseMult() = default;
 
-    virtual ~SqrCReLU() = default;
+    virtual ~PairwiseMult() = default;
 
     virtual void doForward([[maybe_unused]] const InputType *input, [[maybe_unused]] OutputType *output) const noexcept {
         // no-op for this layer: use method below
@@ -25,9 +25,9 @@ class SqrCReLU
     void postProcessAccum(const AccumulatorType &accum, OutputType *output) const {
 #if defined(SIMD)
         if constexpr (sizeof(OutputType) == 1) {
-            simd::sqrCRelU<InputType, OutputType, size / 2, clampMax, scaleFactor>(
+            simd::pairwiseMult<InputType, OutputType, size / 2, clampMax, scaleFactor>(
                 accum.getOutput(AccumulatorHalf::Lower), output);
-            simd::sqrCRelU<InputType, OutputType, size / 2, clampMax, scaleFactor>(
+            simd::pairwiseMult<InputType, OutputType, size / 2, clampMax, scaleFactor>(
                 accum.getOutput(AccumulatorHalf::Upper), output + size / 2);
         } else
 #endif
@@ -47,7 +47,7 @@ class SqrCReLU
             }
         }
 #ifdef NNUE_TRACE
-            std::cout << "---- halfka_output " << std::endl;
+            std::cout << "---- PairwiseMult output " << std::endl;
         for (size_t i = 0; i < size; ++i) {
             std::cout << int(output[i]) << ' ';
             if ((i + 1) % 64 == 0)

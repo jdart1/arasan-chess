@@ -8,6 +8,7 @@
 // for testing include >1 layer type
 #include "layers/creluandlinear.h"
 #include "layers/sqrcreluandlinear.h"
+#include "layers/pairwisemult.h"
 #include "util.h"
 
 class Network {

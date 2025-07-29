@@ -953,10 +953,10 @@ inline void CReLU(const InType *in, OutType *out, [[maybe_unused]] InType clampM
 #endif
 }
 
-// implements the second layer of the SFv4 net, transforming the outputs of the feature layer
+// performs activation by pairwise multiplication, as in the SFv4 net, transforming the outputs of the feature layer
 // into a uint8_t vector
 template <typename InType, typename OutType, size_t size, unsigned clampMax, unsigned shift>
-static inline void sqrCRelU(const InType *input, OutType *output) {
+static inline void pairwiseMult(const InType *input, OutType *output) {
     // currently assume fixed size types
     static_assert(sizeof(InType) == 2 && sizeof(OutType) == 1);
     static_assert(size * 8 >= simdWidth && size * 8 % simdWidth == 0);
