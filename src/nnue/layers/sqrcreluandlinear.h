@@ -17,45 +17,29 @@ class SqrCReLUAndLinear
 
     virtual ~SqrCReLUAndLinear() = default;
 
-    virtual void forward([[maybe_unused]] size_t bucket, [[maybe_unused]] const InputType *input,
-                         [[maybe_unused]] OutputType *output) const noexcept {
-        // no-op for this layer: use method below
-        assert(0);
-    }
-
-    void postProcessAccum(const AccumulatorType &accum, unsigned bucket, OutputType *output) const {
-        int32_t sum = 0;
+    virtual void forward(size_t bucket, const InputType *input, OutputType *output) const noexcept {
+        int32_t sum;
 #ifdef SIMD
         if constexpr (sizeof(InputType) == 2) {
             // SIMD optimized implementation
-            simd::sqrCRelUAndLinear < InputType, OutputType, WeightType, inputSize / 2, 1>
-                                      (accum.getOutput(AccumulatorHalf::Lower), output, clampMax,
-                                       this->_weights[bucket][0]);
-            sum += *output;
-            simd::sqrCRelUAndLinear < InputType, OutputType, WeightType, inputSize / 2, 1>
-                                      (accum.getOutput(AccumulatorHalf::Upper), output, clampMax,
-                                       this->_weights[bucket][0] + (inputSize / 2));
-            sum += *output;
-            output[0] = (sum / NETWORK_QA) + this->_biases[bucket][0];
+            simd::sqrCRelUAndLinear < InputType, OutputType, WeightType, inputSize, 1>(
+                input, output, clampMax, this->_weights[bucket][0]);
+            sum = *output;
         } else
 #endif
         {
-            // generic implementation
-            size_t offset = 0;
-            for (auto h : AccumulatorType::halves) {
-                for (size_t i = 0; i < accum.getSize(); ++i) {
-                    int16_t x = accum.getOutput(h)[i];
-                    // CReLU
-                    x = std::clamp<int16_t>(x, 0, clampMax);
-                    sum += std::clamp<int32_t>(this->_weights[bucket][0][i + offset] * x, -32767,
-                                               32768) * x;
-                }
-                offset += accum.getSize();
+            sum = 0;
+            for (size_t i = 0; i < inputSize; ++i) {
+                InputType x = input[i];
+                // CReLU
+                x = std::clamp<InputType>(x, 0, clampMax);
+                sum += std::clamp<OutputType>(this->_weights[bucket][0][i] * x, -32767,
+                                              32768) * x;
             }
-            // convert sum to a range that corrects for the squaring, i.e.
-            // what it would have if this were a regular CReLU layer
-            output[0] = (sum / NETWORK_QA) + this->_biases[bucket][0];
         }
+        // convert sum to a range that corrects for the squaring, i.e.
+        // what it would have if this were a regular CReLU layer
+        output[0] = (sum / NETWORK_QA) + this->_biases[bucket][0];
 #ifdef NNUE_TRACE
         std::cout << "output bucket = " << bucket << std::endl;
         std::cout << "---- SqrCReLUAndLinear output " << std::endl;

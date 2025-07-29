@@ -63,7 +63,7 @@ class Network {
         std::cout << accum << std::endl;
 #endif
         // evaluate the output layer, in the correct bucket
-        outputLayer->postProcessAccum(accum, bucket, reinterpret_cast<OutputType *>(buffer));
+        outputLayer->forward(bucket, accum.getOutput(), reinterpret_cast<OutputType *>(buffer));
         int32_t nnOut = reinterpret_cast<int32_t *>(buffer)[0];
 #ifdef NNUE_TRACE
         std::cout << "NN output, after scaling: "

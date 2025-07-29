@@ -17,8 +17,6 @@ class Accumulator {
   public:
     static constexpr AccumulatorHalf halves[2] = {AccumulatorHalf::Lower, AccumulatorHalf::Upper};
 
-    typedef const OutputType (*OutputPtr)[size];
-
     Accumulator() { _states[0] = _states[1] = AccumulatorState::Empty; }
 
     virtual ~Accumulator() = default;
@@ -72,7 +70,7 @@ class Accumulator {
         }
     }
 
-    OutputPtr getOutput() const noexcept { return _accum; }
+    const OutputType *getOutput() const noexcept { return reinterpret_cast<const OutputType*>(_accum); }
 
     const OutputType *getOutput(AccumulatorHalf half) const noexcept {
         return _accum[halfToIndex(half)];
