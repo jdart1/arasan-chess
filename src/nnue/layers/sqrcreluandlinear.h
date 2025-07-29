@@ -1,4 +1,4 @@
-// Copyright 2024 by Jon Dart. All Rights Reserved
+// Copyright 2024-2025 by Jon Dart. All Rights Reserved
 #ifndef _NNUE_SQRCRELUANDLINEAR_H
 #define _NNUE_SQRCRELUANDLINEAR_H
 
@@ -6,12 +6,10 @@
 
 // This combines both a SqrCReLU operation and a linear layer with output size one, the (single) hidden layer
 // in the Arasan V3 architecture. TBD: generalize to larger output sizes.
-// If saturate = true, the weights are multiplied by the input and the high 16 bits discarded. Then the operation
+// The weights are multiplied by the input and the high 16 bits discarded. Then the operation
 // is completed by multiplying by the input again (squaring)
-// If saturate = false, the input is just squared, asssuming no saturation. This will be true if the inputs are
-// clamped to <=181 = square root of 32768.
 template <typename AccumulatorType, typename InputType, typename WeightType, typename BiasType, typename OutputType, size_t inputSize,
-          int clampMax, int NETWORK_QA, size_t buckets, bool saturate, bool transpose = false, size_t alignment = DEFAULT_ALIGN>
+          int clampMax, int NETWORK_QA, size_t buckets, bool transpose = false, size_t alignment = DEFAULT_ALIGN>
 class SqrCReLUAndLinear
     : public LinearLayer<InputType, WeightType, BiasType, OutputType, inputSize, 1, buckets, transpose, alignment> {
   public:
@@ -30,11 +28,11 @@ class SqrCReLUAndLinear
 #ifdef SIMD
         if constexpr (sizeof(InputType) == 2) {
             // SIMD optimized implementation
-            simd::sqrCRelUAndLinear < InputType, OutputType, WeightType, inputSize / 2, 1, saturate >
+            simd::sqrCRelUAndLinear < InputType, OutputType, WeightType, inputSize / 2, 1>
                                       (accum.getOutput(AccumulatorHalf::Lower), output, clampMax,
                                        this->_weights[bucket][0]);
             sum += *output;
-            simd::sqrCRelUAndLinear < InputType, OutputType, WeightType, inputSize / 2, 1, saturate >
+            simd::sqrCRelUAndLinear < InputType, OutputType, WeightType, inputSize / 2, 1>
                                       (accum.getOutput(AccumulatorHalf::Upper), output, clampMax,
                                        this->_weights[bucket][0] + (inputSize / 2));
             sum += *output;
@@ -49,14 +47,8 @@ class SqrCReLUAndLinear
                     int16_t x = accum.getOutput(h)[i];
                     // CReLU
                     x = std::clamp<int16_t>(x, 0, clampMax);
-                    if constexpr (saturate) {
-                        sum += std::clamp<int32_t>(this->_weights[bucket][0][i + offset] * x,
-                                                   -32767,32768) * x;
-                    }
-                    else {
-                        // square and sum
-                        sum += (this->_weights[bucket][0][i + offset] * x * x);
-                    }
+                    sum += std::clamp<int32_t>(this->_weights[bucket][0][i + offset] * x, -32767,
+                                               32768) * x;
                 }
                 offset += accum.getSize();
             }

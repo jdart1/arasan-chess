@@ -1,4 +1,4 @@
-// Copyright 2021-2024 by Jon Dart. All Rights Reserved.
+// Copyright 2021-2025 by Jon Dart. All Rights Reserved.
 #ifndef _NNUE_NETWORK_H
 #define _NNUE_NETWORK_H
 
@@ -29,7 +29,7 @@ class Network {
     using OutputLayer =
         SqrCReLUAndLinear<AccumulatorType, int16_t, int16_t, int16_t, OutputType,
                           NetworkParams::HIDDEN_WIDTH * 2, NetworkParams::NETWORK_QA,
-                          NetworkParams::NETWORK_QA, NetworkParams::OUTPUT_BUCKETS, true, true>;
+                          NetworkParams::NETWORK_QA, NetworkParams::OUTPUT_BUCKETS, true>;
 
     static constexpr size_t BUFFER_SIZE = 4096;
 

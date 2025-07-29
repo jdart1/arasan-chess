@@ -1010,8 +1010,7 @@ static inline void sqrCRelU(const InType *input, OutType *output) {
 
 // Combination of piece-wise multitplication with CRelU activation and a linear layer with 1-dimensional output.
 // Operations are re-arranged as suggested here: https://github.com/cosmobobak/viridithas/blob/master/nnue-speedups.md#lizard-simd-for-squared-clipped-relu, allowing efficient SIMD execution with 16-bit quantities (originally implemented in LizardChess).
-template <typename InType, typename OutType, typename WeightType, size_t inputSize /* features */, size_t outputSize,
-          bool saturate>
+template <typename InType, typename OutType, typename WeightType, size_t inputSize /* features */, size_t outputSize>
 static inline void sqrCRelUAndLinear(const InType *input, OutType *output,
                                      const int clampMax, const WeightType *weights) {
     static_assert(sizeof(InType) == 2, "only 16bit is supported");
@@ -1027,12 +1026,7 @@ static inline void sqrCRelUAndLinear(const InType *input, OutType *output,
     constexpr size_t iterations = chunks<InType, simdWidth>(inputSize);
     for (size_t i = 0; i < iterations; ++i) {
         vec_t x = vec_clamp(vec_load(inp + i), maxValues);
-        if constexpr (saturate) {
-            sum = vec_add32(sum, vec_madd16(vec_mullo16(x,vec_load(w+i)),x));
-        }
-        else {
-            sum = vec_add32(sum, vec_madd16(vec_mullo16(x,x), vec_load(w+i)));
-        }
+        sum = vec_add32(sum, vec_madd16(vec_mullo16(x,vec_load(w+i)),x));
     }
     // horizontal add output register
 #ifdef NEON
