@@ -47,8 +47,10 @@ Excavator through Zen2 processors.
 as well as those required by the "modern" build. Recommended for Intel Haswell or later processors
 and AMD processors on the Zen3 architecture (Nov. 2020) or later.
 
-5. arasanx-64-avx512 - requires an Intel Xeon processor with AVX512 instructions (Intel
-Skylake X and Cannon Lake, or later), as well as those required by the "avx2" build.
+5. arasanx-64-avx512 - requires a modern x86 processor with AVX512
+instructions (Intel Xeon Skylake X and Cannon Lake, or 11th generation
+or later Intel Core processors (Tiger Lake), or Ryzen Zen 5 or later), as
+well as those required by the "avx2" build.
 
 6. arasanx-64-neon - ARM executable with support for NEON instruction set.
 
