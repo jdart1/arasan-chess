@@ -1,21 +1,22 @@
  use bullet_lib::{
-    game::{
-        inputs::{get_num_buckets, ChessBucketsMirrored},
-        outputs::MaterialCount,
-    },
+    game::outputs::MaterialCount,
     nn::{optimiser, InitSettings, Shape},
     trainer::{
         save::SavedFormat,
-        NetworkTrainer,
         schedule::{lr, wdl, TrainingSchedule, TrainingSteps},
         settings::LocalSettings,
     },
     default::{
-        inputs, loader, outputs,
-        Loss, TrainerBuilder,
+        inputs, loader,
     },
-    value::{loader::DirectSequentialDataLoader, ValueTrainerBuilder},
+    value::ValueTrainerBuilder,
 };
+
+macro_rules! net_id {
+    () => {
+        "arasan4"
+    };
+}
 
 macro_rules! net_id {
     () => {
@@ -32,7 +33,7 @@ fn main() {
     const INITIAL_LR: f32 = 0.001;
     let FINAL_LR = INITIAL_LR * 0.4f32.powi(4);
     const SUPERBATCHES: usize = 240;
-    
+
     #[rustfmt::skip]
     let mut trainer = ValueTrainerBuilder::default()
         .dual_perspective()
@@ -100,11 +101,9 @@ fn main() {
         save_rate: 60,
     };
 
-    let optimiser_params = optimiser::AdamWParams::default();
-    trainer.set_optimiser_params(optimiser_params);
     let stricter_clipping = optimiser::AdamWParams { max_weight: 0.99, min_weight: -0.99, ..Default::default() };
-    trainer.optimiser_mut().set_params_for_weight("l0w", stricter_clipping);
-    trainer.optimiser_mut().set_params_for_weight("l0f", stricter_clipping);
+    trainer.optimiser.set_params_for_weight("l0w", stricter_clipping);
+    trainer.optimiser.set_params_for_weight("l0f", stricter_clipping);
 
     let settings = LocalSettings { threads: 8, test_set: None, output_directory: "checkpoints", batch_queue_size: 512 };
 
