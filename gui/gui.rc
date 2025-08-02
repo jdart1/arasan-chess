@@ -624,7 +624,7 @@ END
 
 STRINGTABLE
 BEGIN
-    ID_VIEW_PV              "Show or hide the PV  toolbar\nToggle PV Toolbar"
+    ID_VIEW_PV              "Show or hide the PV toolbar\nToggle PV Toolbar"
     ID_BROWSE_NEXTGAME      "Load next game from a PGN file\nNext Game"
     ID_BROWSE_PREVIOUSGAME  "Load previous game from a PGN file\nPrevious Game"
     ID_BROWSE_SELECTGAME    "Select a game from a PGN file\nSelect a game"
