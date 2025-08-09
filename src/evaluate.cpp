@@ -10,6 +10,17 @@
 #include <cassert>
 #include <iostream>
 
+template <unsigned count> static void bulkCopy(const Bitboard *src, Bitboard *dest) {
+    constexpr size_t bytes = count * sizeof(Bitboard);
+#ifdef SIMD
+    if constexpr (((8 * bytes) >= 128) && (8 * bytes) % 128 == 0) {
+        simd::vec_copy<count, Bitboard>(src, dest);
+        return;
+    }
+#endif
+    std::memcpy(reinterpret_cast<void *>(dest), reinterpret_cast<const void *>(src), bytes);
+}
+
 #ifdef NNUE_TRACE
 static void printIndices(const nnue::IndexArray &indices) {
     unsigned i = 0;
@@ -277,8 +288,8 @@ void nnue::Evaluator::finnyUpdate(const nnue::Network &network, const Board &boa
                         remove, removed_count);
     // update occupancy data in the cache to match the computed accumulator
     // cacheEntry.occupancies = node->occupancies;
-    Bitboard::bulkCopy<N_COLORS * N_PIECES>(reinterpret_cast<const Bitboard *>(&boardOcc),
-                                            reinterpret_cast<Bitboard *>(&cacheEntry.occupancies));
+    bulkCopy<N_COLORS * N_PIECES>(reinterpret_cast<const Bitboard *>(&boardOcc),
+                                  reinterpret_cast<Bitboard *>(&cacheEntry.occupancies));
     // update node accumulator with newly computed data from the cache
     accum.copy_half(targetHalf, cacheEntry.acc, AccumulatorHalf::Lower);
     accum.setState(targetHalf, AccumulatorState::Computed);

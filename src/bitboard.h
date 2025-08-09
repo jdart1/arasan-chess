@@ -2,9 +2,6 @@
 #ifndef _BITBOARD_H
 #define _BITBOARD_H
 
-#ifdef SIMD
-#include "nnue/simd.h"
-#endif
 #include "types.h"
 
 #include <cstring>
@@ -501,19 +498,6 @@ class Bitboard
     static void init();
 
     static void cleanup();
-
-template <unsigned count>
-static void bulkCopy(const Bitboard *src, Bitboard *dest) {
-    constexpr size_t bytes = count * sizeof(Bitboard);
-#ifdef SIMD
-    if constexpr (((8 * bytes) >= 128) && (8 * bytes) % 128 == 0) {
-        simd::vec_copy<count, Bitboard>(src, dest);
-        return;
-    }
-#else
-    std::memcpy(reinterpret_cast<void*>(dest), reinterpret_cast<const void *>(src), bytes);
-#endif
-}
 
     static CACHE_ALIGN int MagicTable32[32];
 #if defined(_64BIT)
