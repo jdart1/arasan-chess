@@ -1,36 +1,34 @@
-// Copyright 2021, 2022 by Jon Dart. All Rights Reserved
+// Copyright 2021, 2022, 2025 by Jon Dart. All Rights Reserved
 
 #ifndef _UTIL_H
 #define _UTIL_H
 
-// Arasan uses stdendian, which defines the various swap functions as macros
-#ifdef _STDENDIAN_H_
-#if _BYTE_ORDER == _BIG_ENDIAN
-static uint16_t to_little_endian16(uint16_t x) { return bswap16(x); }
-static uint32_t to_little_endian32(uint32_t x) { return bswap32(x); }
-static uint64_t to_little_endian64(uint64_t x) { return bswap64(x); }
+#include "../stdendian.h"
+#include <cstdint>
+
+static inline int16_t to_little_endian16(int16_t input) {
+#if BYTE_ORDER == LITTLE_ENDIAN
+    return input;
 #else
-static uint16_t to_little_endian16(uint16_t x) { return (x); }
-static uint32_t to_little_endian32(uint32_t x) { return (x); }
-static uint64_t to_little_endian64(uint64_t x) { return (x); }
+    return bswap16(input);
 #endif
+}
+
+static inline int32_t to_little_endian32(int32_t input) {
+#if BYTE_ORDER == LITTLE_ENDIAN
+    return input;
 #else
-// Somewhat less general endian support
-#if defined (_MSC_VER) || defined(__MINGW32__) || defined(__MINGW64__) || (defined(__APPLE__) && defined(__MACH__))
-// assume little-endian
-static uint16_t to_little_endian16(uint16_t x) { return (x); }
-static uint32_t to_little_endian32(uint32_t x) { return (x); }
-static uint64_t to_little_endian64(uint64_t x) { return (x); }
-#elif __BYTE_ORDER == __BIG_ENDIAN
-static uint16_t to_little_endian16(uint16_t x) { return __builtin_bswap16(x); }
-static uint32_t to_little_endian32(uint32_t x) { return __builtin_bswap32(x); }
-static uint64_t to_little_endian64(uint64_t x) { return __builtin_bswap64(x); }
+    return bswap32(input);
+#endif
+}
+
+static inline int64_t to_little_endian64(int64_t input) {
+#if BYTE_ORDER == LITTLE_ENDIAN
+    return input;
 #else
-static uint16_t to_little_endian16(uint16_t x) { return (x); }
-static uint32_t to_little_endian32(uint32_t x) { return (x); }
-static uint64_t to_little_endian64(uint64_t x) { return (x); }
+    return bswap64(input);
 #endif
-#endif
+}
 
 template <typename T> T read_little_endian(std::istream &s) {
     char buf[sizeof(T)];

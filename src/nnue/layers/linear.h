@@ -4,6 +4,7 @@
 
 #include "nndefs.h"
 #include "typed.h"
+#include "util.h"
 #ifdef NNUE_TRACE
 #include <array>
 #endif
