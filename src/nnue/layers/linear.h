@@ -39,13 +39,7 @@ class LinearLayer : public TypedLayer<InputType, OutputType, inputSize, outputSi
 
     inline void dotProduct(size_t bucket, const InputType *input, OutputType *output) const noexcept {
 #if defined(SIMD)
-        if constexpr (outputSize == 1 && sizeof(WeightType) == 1) { // output layer
-            simd::dotProduct32x1(input, _weights[bucket][0], _biases[bucket], output);
-        } else if constexpr (inputSize >= 32 && sizeof(WeightType) == 1) {
-            simd::dotProductnxn<inputSize, roundedInputSize, outputSize>(input, _weights[bucket],
-                                                                         _biases[bucket],
-                                                                         output);
-        } else
+        // TBD - simd code only supports 8-bit weights, currently
 #endif
         {
             // generic implementation

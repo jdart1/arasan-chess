@@ -222,7 +222,7 @@ $(BUILD)\post_process_nn.exe
 
 !IfDef SYZYGY_TBS
 CFLAGS = $(CFLAGS) /I. -DSYZYGY_TBS
-STB_FLAGS = /TP /I. $(CFLAGS)
+STB_FLAGS = /TP /I. /I$(STB) $(CFLAGS)
 STB_PROFILE_FLAGS = $(STB_FLAGS)
 TB_OBJS = $(TB_OBJS) $(BUILD)\syzygy.obj $(BUILD)\tbprobe.obj
 TB_PROFILE_OBJS = $(TB_PROFILE_OBJS) $(PROFILE)\syzygy.obj $(PROFILE)\tbprobe.obj
