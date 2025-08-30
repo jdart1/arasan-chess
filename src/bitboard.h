@@ -107,10 +107,6 @@ class Bitboard
        return data;
     }
 
-    uint8_t uint8_t_value() const
-    {
-       return ((conv*)&data)->val4.b1;
-    }
 
     uint32_t FORCEINLINE hivalue() const
     {
