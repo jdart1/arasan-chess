@@ -13,21 +13,28 @@
 // If transpose == true, correct the input data format so that it is ordered by buckets.
 //
 template <typename InputType, typename WeightType, typename BiasType, typename OutputType,
-          size_t inputSize, size_t outputSize, size_t buckets, bool transpose = false, size_t alignment = DEFAULT_ALIGN>
+          size_t inputSize, size_t outputSize, size_t buckets, bool transpose = false,
+          size_t alignment = DEFAULT_ALIGN>
 class LinearLayer : public TypedLayer<InputType, OutputType, inputSize, outputSize, alignment> {
 
     static constexpr size_t roundedInputSize = std::max<size_t>(32, inputSize);
 
   public:
-    LinearLayer() {
-        zero();
-    }
+    LinearLayer() { zero(); }
 
     virtual ~LinearLayer() = default;
 
     // propagate data through the layer
-    virtual inline void forward(size_t bucket, const InputType *input, OutputType *output) const noexcept {
-        dotProduct(bucket, input, output);
+    virtual inline void forward(size_t bucket, const InputType *input,
+                                OutputType *output) const noexcept {
+#if defined(SIMD)
+        if constexpr (inputSize >= 32 && sizeof(BiasType) == 4 && (sizeof(WeightType) == 1 || sizeof(WeightType) == 4)) {
+            simd::dotProductnxn<InputType, WeightType, BiasType, OutputType,
+                                inputSize, roundedInputSize, outputSize>(input, _weights[bucket],
+                                                                         _biases[bucket], output);
+        } else
+#endif
+            dotProductGeneric(bucket, input, output);
 #ifdef NNUE_TRACE
         std::cout << "---- linear " << inputSize << 'x' << outputSize << " ----" << std::endl;
         for (unsigned i = 0; i < outputSize; ++i) {
@@ -37,19 +44,17 @@ class LinearLayer : public TypedLayer<InputType, OutputType, inputSize, outputSi
 #endif
     }
 
-    inline void dotProduct(size_t bucket, const InputType *input, OutputType *output) const noexcept {
-#if defined(SIMD)
-        // TBD - simd code only supports 8-bit weights, currently
-#endif
-        {
-            // generic implementation
-            for (size_t i = 0; i < outputSize; i++) {
-                output[i] = static_cast<OutputType>(this->_biases[bucket][i]);
-            }
-            for (size_t i = 0; i < outputSize; i++) {
-                for (size_t j = 0; j < inputSize; j++) {
-                    output[i] += static_cast<OutputType>(input[j] * this->_weights[bucket][i][j]);
-                }
+    inline void dotProductGeneric(size_t bucket, const InputType *input,
+                                  OutputType *output) const noexcept {
+        // generic implementation
+        for (size_t i = 0; i < outputSize; i++) {
+            output[i] = static_cast<OutputType>(this->_biases[bucket][i]);
+        }
+        for (size_t i = 0; i < outputSize; i++) {
+            for (size_t j = 0; j < inputSize; j++) {
+                auto x = static_cast<OutputType>(input[j]);
+                auto y = static_cast<OutputType>(this->_weights[bucket][i][j]);
+                output[i] += x*y;
             }
         }
     }
@@ -171,14 +176,22 @@ class LinearLayer : public TypedLayer<InputType, OutputType, inputSize, outputSi
 
     virtual const BiasType *getBiases(size_t bucket) const noexcept { return _biases[bucket]; }
 
-    virtual const WeightType *getCol(size_t bucket, size_t col) const noexcept { return _weights[bucket][col]; }
+    virtual const WeightType *getCol(size_t bucket, size_t col) const noexcept {
+        return _weights[bucket][col];
+    }
 
     virtual void setCol(size_t bucket, size_t index, const WeightType *col) {
         for (size_t i = 0; i < inputSize; ++i)
             _weights[bucket][index][i] = col[i];
     }
 
-    void setBiases(size_t bucket, const BiasType *b) { std::memcpy(_biases[bucket], b, outputSize * sizeof(BiasType)); }
+    void setBiases(size_t bucket, const BiasType *b) {
+        std::memcpy(_biases[bucket], b, outputSize * sizeof(BiasType));
+    }
+
+    unsigned numBuckets() const noexcept {
+        return buckets;
+    }
 
   protected:
     alignas(alignment) BiasType _biases[buckets][outputSize];

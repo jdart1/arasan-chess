@@ -58,7 +58,8 @@ endif
 NNUE_FLAGS := -Innue -DNETWORK=$(NETWORK)
 
 #PROF     = -pg
-#DEBUG    = -g -D_DEBUG=1 -DUNIT_TESTS
+#DEBUG    = -g -D_DEBUG=1
+#UNIT_TESTS := 1
 #TRACE    = -D_TRACE=1 -D_THREAD_TRACE
 
 shell        := $(SHELL)
@@ -240,6 +241,7 @@ GCCNEW := $(shell echo '$(GCCVER) >= $(GCCMINVERSION)' | bc)
 ifeq "$(GCCNEW)" "1"
 # options for GCC
 FLAGS := -Wall -Wextra -Wshadow -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(FLAGS)
+LDFLAGS := $(LDFLAGS)
 ifneq "$(GCC11)" "1"
 # c++17 support must be enabled explicitly
 FLAGS := $(FLAGS) -std=c++17
@@ -356,11 +358,9 @@ $(PROFILE)/%.o: $(STB)/%.c
 
 endif
 
-ifeq ("$(findstring UNIT_TESTS,$(DEBUG))","UNIT_TESTS")
-UNIT_TEST_SRC:=unit.cpp binformat.cpp
-endif
-ifeq ("$(findstring UNIT_TESTS,$(CXXFLAGS))","UNIT_TESTS")
-UNIT_TEST_SRC:=unit.cpp binformat.cpp
+ifdef UNIT_TESTS
+CXXFLAGS := $(CXXFLAGS) -DUNIT_TESTS
+UNIT_TEST_SRC:=unit.cpp binformat.cpp nnuetest.cpp
 endif
 
 ARASANX_SOURCES = arasanx.cpp tester.cpp bench.cpp protocol.cpp \

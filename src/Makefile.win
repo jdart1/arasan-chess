@@ -12,7 +12,7 @@ PLATFORM=MODERN
 #PLATFORM=XP
 
 #TRACE=/D_TRACE
-#DEBUG=/Zi -D_DEBUG
+DEBUG=/Zi -D_DEBUG
 BUILD_ROOT=..
 UTIL=util
 
@@ -59,7 +59,7 @@ CFLAGS = $(CFLAGS) $(BASIC_SIMD_FLAGS)
 
 !Ifdef UNIT_TESTS
 CFLAGS = $(CFLAGS) -DUNIT_TESTS
-TEST_OBJS = $(BUILD)\unit.obj $(BUILD)\binformat.obj
+TEST_OBJS = $(BUILD)\unit.obj $(BUILD)\binformat.obj $(BUILD)\nnuetest.obj
 TEST_PROFILE_OBJS = $(PROFILE)\unit.obj $(PROFILE)\binformat.obj
 !Endif
 
