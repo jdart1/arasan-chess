@@ -45,7 +45,9 @@ static inline vec_t vec_load(const vec_t *x) {
 static inline vec_t vec_load32(const vec32_t *x) {
     return vld1q_s32(reinterpret_cast<const int32_t *>(x));
 }
+static inline void vec_store32(vec32_t *x, vec32_t y) { vst1q_s32(reinterpret_cast<int32_t*>(x), y); }
 static inline vec_t vec_set_16(int16_t x) { return vdupq_n_s16(x); }
+static inline vec_t vec_set_32(int16_t x) { return vdupq_n_s32(x); }
 static const vec_t ones128 = vec_set_16(1);
 static const vec_t zeros128 = vec_set_16(0);
 static const vec_t zero = zeros128;
@@ -74,7 +76,22 @@ static inline vec_t vec_madd16(vec_t x, vec_t y) {
     const int32x4_t high = vmull_high_s16(x, y);
     return vpaddq_s32(low, high);
 }
-static inline vec32_t vec_rshift32(vec32_t x, unsigned shift) { return vshr_n_s32(x, shift); }
+static inline int32_t hsum32(int32x4_t reg) {
+#if defined(__aarch64__)
+    return vaddvq_s32(reg);
+#else
+    using ints = int32_t[4];
+    ints *inp = reinterpret_cast<ints *>(&reg);
+    int32_t sum = 0;
+    for (unsigned i = 0; i < 4; ++i) {
+        sum += (*inp)[i];
+    }
+    return sum;
+#endif
+}
+// must be templatized because shift must be a compile-time constant
+template<unsigned shift>
+static inline vec32_t vec_rshift32(vec32_t x) { return vshrq_n_s32(x, shift); }
 #else
 // x86 functions are templatized
 template <typename T> static inline T vec_load(const T *);
@@ -254,14 +271,14 @@ template <> __m128i vec_clamp16(__m128i x, __m128i maxValues) {
 template <> __m128i vec_clamp32(__m128i x, __m128i maxValues) {
     // SSE2 implementation of clamp: max(x, 0) then min(result, maxValues)
     // Since SSE2 doesn't have _mm_min_epi32/_mm_max_epi32, we use comparison and blending
-    
+
     // First clamp to minimum (zero): max(x, 0)
     __m128i mask_pos = _mm_cmpgt_epi32(x, zero128);
     __m128i clamped_min = _mm_and_si128(x, mask_pos);
-    
+
     // Then clamp to maximum: min(clamped_min, maxValues)
     __m128i mask_max = _mm_cmpgt_epi32(maxValues, clamped_min);
-    return _mm_or_si128(_mm_and_si128(clamped_min, mask_max), 
+    return _mm_or_si128(_mm_and_si128(clamped_min, mask_max),
                        _mm_andnot_si128(mask_max, maxValues));
 }
 // TBD: not currently used
@@ -275,20 +292,6 @@ template <> __m128i vec_rshift32(__m128i x, unsigned shift) { return _mm_srai_ep
 #endif
 
 #ifdef NEON
-static inline int32_t add4x32_neon(int32x4_t reg) {
-#if defined(__aarch64__)
-    return vaddvq_s32(reg);
-#else
-    using ints = int32_t[4];
-    ints *inp = reinterpret_cast<ints *>(&reg);
-    int32_t sum = 0;
-    for (unsigned i = 0; i < 4; ++i) {
-        sum += (*inp)[i];
-    }
-    return sum;
-#endif
-}
-
 template <typename vec_type, typename AccumType, size_t bytes>
 struct SimdOperationsNeon {
     static inline vec_type load(const AccumType *x) {

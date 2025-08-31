@@ -544,7 +544,7 @@ inline void i8dotProductnxn(const int8_t *input,
             // sum the products
             accum = vpadalq_s16(accum, prod);
         }
-        output[i] = add4x32_neon(accum) + biases[i];
+        output[i] = hsum32(accum) + biases[i];
     }
 #endif
 }
@@ -596,7 +596,7 @@ inline void dotProductnxn(const InputType *input,
             vec32_t w_vec = vec_load32(reinterpret_cast<const vec32_t *>(w + 4 * j));
             sum = vec_add32(sum, vec_mullo32(inp_vec, w_vec));
         }
-        output[i] += add4x32_neon(sum);
+        output[i] += hsum32(sum);
     }
 #endif
 #ifdef AVX512
@@ -682,17 +682,17 @@ static inline void pairwiseMult(const InType *input, OutType *output) {
     static_assert((size * 8) >= simdWidth && (size * 8) % simdWidth == 0);
 
 #ifdef NEON
-    int8x16_t *outp = reinterpret_cast<int8x16_t *>(output);
-    const int16x8_t packedMax = vec_set_16(clampMax);
-    const int16x8_t *inp0 = reinterpret_cast<const int16x8_t *>(input);
-    const int16x8_t *inp1 = reinterpret_cast<const int16x8_t *>(input + (size / 2));
+    vec16_t *outp = reinterpret_cast<vec16_t *>(output);
+    const vec16_t packedMax = vec_set_16(clampMax);
+    const vec16_t *inp0 = reinterpret_cast<const vec16_t *>(input);
+    const vec16_t *inp1 = reinterpret_cast<const vec16_t *>(input + (size / 2));
     for (size_t i = 0; i < chunks<InType, simdWidth>(size / 2); i += 2) {
         // load + do min/max
         const vec_t sum0a = vec_clamp16(inp0[i], packedMax);
         const vec_t sum0b = vec_clamp16(inp0[i + 1], packedMax);
         const vec_t sum1a = vec_clamp16(inp1[i], packedMax);
         const vec_t sum1b = vec_clamp16(inp1[i + 1], packedMax);
-        // multiply
+        // multiply with saturation
         const vec_t prod0 = vec_mullo16(sum0a, sum1a);
         const vec_t prod1 = vec_mullo16(sum0b, sum1b);
         // shift, then saturated narrow, pack into output register
@@ -752,12 +752,8 @@ static inline void sqrCRelUAndLinear(const InType *input, OutType *output,
         vec_t x = vec_clamp16(vec_load(inp + i), maxValues);
         sum = vec_add32(sum, vec_madd16(vec_mullo16(x,vec_load(w+i)),x));
     }
-    // horizontal add output register
-#ifdef NEON
-    output[0] = add4x32_neon(sum);
-#else
+    // horizontal sum output register
     output[0] = hsum32(sum);
-#endif
 }
 
 // Combination of CRelU activation and a linear layer with 1-dimensional output.
@@ -782,11 +778,7 @@ static inline void CRelUAndLinear(const InType *input, OutType *output,
         sum = vec_add32(sum, vec_madd16(x, vec_load(w+i)));
     }
     // horizontal add output register
-#ifdef NEON
-    output[0] = add4x32_neon(sum);
-#else
     output[0] = hsum32(sum);
-#endif
 }
 
 } // namespace simd
