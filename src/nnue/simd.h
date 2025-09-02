@@ -692,13 +692,10 @@ static inline void pairwiseMult(const InType *input, OutType *output) {
         const vec_t sum0b = vec_clamp16(inp0[i + 1], packedMax);
         const vec_t sum1a = vec_clamp16(inp1[i], packedMax);
         const vec_t sum1b = vec_clamp16(inp1[i + 1], packedMax);
-        // multiply with saturation
-        const vec_t prod0 = vec_mullo16(sum0a, sum1a);
-        const vec_t prod1 = vec_mullo16(sum0b, sum1b);
-        // shift, then saturated narrow, pack into output register
-        const vec_t shifted0 = vshrq_n_s16(prod0, shift);
-        const vec_t shifted1 = vshrq_n_s16(prod1, shift);
-        outp[i/2] = vcombine_s8(vqmovn_s16(shifted0), vqmovn_s16(shifted1));
+        // multiply and apply shift to match generic implementation
+        auto prod0 = vec_shr16<shift>(vec_mullo16(sum0a, sum1a));
+        auto prod1 = vec_shr16<shift>(vec_mullo16(sum0b, sum1b));
+        outp[i/2] = vcombine_s8(vqmovun_s16(prod0), vqmovun_s16(prod1));
     }
 #else
     const vec_t limit = vec_set_16<vec_t>(clampMax);
@@ -713,18 +710,17 @@ static inline void pairwiseMult(const InType *input, OutType *output) {
         const vec_t sum0b = vec_clamp16(inp0[i + 1], limit);
         const vec_t sum1a = vec_clamp16(inp1[i], limit);
         const vec_t sum1b = vec_clamp16(inp1[i + 1], limit);
-        const vec_t prod0 = vec_mullo16(sum0a, sum1a);
-        const vec_t prod1 = vec_mullo16(sum0b, sum1b);
+        // multiply and apply shift
+        auto prod0 = vec_shr16(vec_mullo16(sum0a, sum1a), shift);
+        auto prod1 = vec_shr16(vec_mullo16(sum0b, sum1b), shift);
 #ifdef AVX512
-        vec_t compacted =
-            _mm512_packs_epi16(_mm512_srli_epi16(prod0, shift), _mm512_srli_epi16(prod1, shift));
+        vec_t compacted = _mm512_packs_epi16(prod0, prod1);
         outp[i/2] = _mm512_permutexvar_epi64(_mm512_setr_epi64(0, 2, 4, 6, 1, 3, 5, 7), compacted);
 #elif defined(AVX2)
-        vec_t compacted =
-            _mm256_packs_epi16(_mm256_srli_epi16(prod0, shift), _mm256_srli_epi16(prod1, shift));
+        vec_t compacted = _mm256_packs_epi16(prod0, prod1);
         outp[i/2] = _mm256_permute4x64_epi64(compacted, 0b11011000);
 #elif defined(SSE2)
-        outp[i/2] = _mm_packs_epi16(_mm_srli_epi16(prod0, shift), _mm_srli_epi16(prod1, shift));
+        outp[i/2] = _mm_packs_epi16(prod0, prod1);
 #endif
     }
 #endif

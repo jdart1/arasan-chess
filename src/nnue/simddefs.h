@@ -1,3 +1,4 @@
+// Copyright 2021-2025 by Jon Dart. All Rights Reserved.
 #ifndef NNUE_SIMDDEFS_H
 #define NNUE_SIMDDEFS_H
 
@@ -68,8 +69,19 @@ static inline vec_t vec_clamp16(vec_t x, vec_t maxValues) {
 static inline vec_t vec_clamp32(vec_t x, vec_t maxValues) {
     return vminq_s32(vmaxq_s32(x, zero), maxValues);
 }
+static inline vec_t vec_shl16(vec_t x, unsigned shift) {
+    return vshlq_s16(x, vdupq_n_s16(shift));
+}
+template <unsigned shift>
+static inline vec_t vec_shr16(vec_t x) {
+    return vshrq_n_s16(x, shift);
+}
 static inline vec_t vec_mullo16(vec_t x, vec_t y) { return vmulq_s16(x, y); }
-static inline vec_t vec_mull16(vec_t x, vec_t y) { return vmulq_s16(x, y); }
+static inline vec_t vec_mulhi16(vec_t x, vec_t y) {
+    auto lo = vmull_s16(vget_low_s16(x), vget_low_s16(y));
+    auto hi = vmull_s16(vget_high_s16(x), vget_high_s16(y));
+    return vcombine_s16(vmovn_s32(vshrq_n_s32(lo, 16)), vmovn_s32(vshrq_n_s32(hi, 16)));
+}
 static inline vec32_t vec_mullo32(vec32_t x, vec32_t y) { return vmulq_s32(x, y); }
 static inline vec_t vec_madd16(vec_t x, vec_t y) {
     const int32x4_t low = vmull_s16(vget_low_s16(x), vget_low_s16(y));
@@ -108,8 +120,11 @@ template <typename T> static inline T vec_clamp16(T x, T maxValues);
 template <typename T> static inline T vec_clamp32(T x, T maxValues);
 template <typename T> static inline T vec_mullo16(T x, T y);
 template <typename T> static inline T vec_mullo32(T x, T y);
+template <typename T> static inline T vec_mulhi16(T x, T y);
 template <typename T> static inline T vec_madd16(T x, T y);
 template <typename T> static inline T vec_rshift32(T x, unsigned shift);
+template <typename T> static inline T vec_shl16(T x, unsigned shift);
+template <typename T> static inline T vec_shr16(T x, unsigned shift);
 template <typename T> static inline void madd_dpbusd_epi32(T &x, T y, T z);
 template <typename T> static inline int32_t hsum32(T x);
 #endif
@@ -180,8 +195,11 @@ template <> __m512i vec_clamp32(__m512i x, __m512i maxValues) {
 }
 template <> __m512i vec_mullo16(__m512i x, __m512i y) { return _mm512_mullo_epi16(x, y); }
 template <> __m512i vec_mullo32(__m512i x, __m512i y) { return _mm512_mullo_epi32(x, y); }
+template <> __m512i vec_mulhi16(__m512i x, __m512i y) { return _mm512_mulhi_epi16(x, y); }
 template <> __m512i vec_madd16(__m512i x, __m512i y) { return _mm512_madd_epi16(x, y); }
 template <> __m512i vec_rshift32(__m512i x, unsigned shift) { return _m512_srai_epi32(x, y); }
+template <> __m512i vec_shl16(__m512i x, unsigned shift) { return _mm512_slli_epi16(x, shift); }
+template <> __m512i vec_shr16(__m512i x, unsigned shift) { return _mm512_srai_epi16(x, shift); }
 template <> int32_t hsum32(__m512i prod) { return _mm512_reduce_add_epi32(prod); }
 #endif
 
@@ -215,8 +233,11 @@ template <> __m256i vec_clamp32(__m256i x, __m256i maxValues) {
 }
 template <> __m256i vec_mullo16(__m256i x, __m256i y) { return _mm256_mullo_epi16(x, y); }
 template <> __m256i vec_mullo32(__m256i x, __m256i y) { return _mm256_mullo_epi32(x, y); }
+template <> __m256i vec_mulhi16(__m256i x, __m256i y) { return _mm256_mulhi_epi16(x, y); }
 template <> __m256i vec_madd16(__m256i x, __m256i y) { return _mm256_madd_epi16(x, y); }
 template <> __m256i vec_rshift32(__m256i x, unsigned shift) { return _mm256_srai_epi32(x, shift); }
+template <> __m256i vec_shl16(__m256i x, unsigned shift) { return _mm256_slli_epi16(x, shift); }
+template <> __m256i vec_shr16(__m256i x, unsigned shift) { return _mm256_srai_epi16(x, shift); }
 template <> int32_t hsum32(__m256i x) {
     __m128i sum128 = _mm_add_epi32(_mm256_castsi256_si128(x), _mm256_extracti128_si256(x, 1));
     return hsum32<__m128i>(sum128);
@@ -249,6 +270,7 @@ template <> __m128i vec_mullo32(__m128i x, __m128i y) {
     return _mm_or_si128(evn_result, odd_result);
 #endif
 }
+template <> __m128i vec_mulhi16(__m128i x, __m128i y) { return _mm_mulhi_epi16(x, y); }
 template <> __m128i vec_madd16(__m128i x, __m128i y) { return _mm_madd_epi16(x, y); }
 template <> __m128i vec_set_16(int16_t x) { return _mm_set1_epi16(x); }
 template <> __m128i vec_set_32(int32_t x) { return _mm_set1_epi32(x); }
@@ -285,6 +307,8 @@ template <> __m128i vec_clamp32(__m128i x, __m128i maxValues) {
 // template <>
 // __m128i vec_madd16(__m128i x, __m128i y) { return _mm256_madd_epi16(x, y); }
 template <> __m128i vec_rshift32(__m128i x, unsigned shift) { return _mm_srai_epi32(x, shift); }
+template <> __m128i vec_shl16(__m128i x, unsigned shift) { return _mm_slli_epi16(x, shift); }
+template <> __m128i vec_shr16(__m128i x, unsigned shift) { return _mm_srai_epi16(x, shift); }
 #endif
 
 #if !defined(_MSC_VER) || defined(__clang__)

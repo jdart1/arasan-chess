@@ -40,7 +40,7 @@ static int compare_outputs(const OutputType* output, const OutputType* expected)
         if (output[i] != expected[i]) {
             std::cout << "diff at " << i << ' ' << int(output[i]) << ' ' << int(expected[i]) << std::endl;
             ++errs;
-            break;
+            if (i>10) break;
         }
     }
     return errs;
@@ -77,9 +77,12 @@ static int testPairwiseMult() {
     alignas(nnue::DEFAULT_ALIGN) OutputType output[inputSize/2];
     alignas(nnue::DEFAULT_ALIGN) OutputType expected[inputSize/2];
 
-    fill_random<InputType>(input, inputSize, 511);
+    fill_random<InputType>(input, inputSize, 362);
 
-    nnue::PairwiseMult<InputType, OutputType, inputSize, 255, 8> layer;
+    constexpr int32_t QUANT = 63;
+    constexpr int32_t QUANT_BITS = 6;
+
+    nnue::PairwiseMult<InputType, OutputType, inputSize, QUANT, QUANT_BITS> layer;
 
     layer.doForward(input,output);
 

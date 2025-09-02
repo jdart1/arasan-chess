@@ -39,10 +39,7 @@ class PairwiseMult : public TypedLayer<InputType, OutputType, size, size, alignm
         for (size_t i = 0; i < size/2; ++i) {
             int32_t x0 = static_cast<int32_t>(std::clamp<InputType>(input[i],0,maxVal));
             int32_t x1 = static_cast<int32_t>(std::clamp<InputType>(input[i + (size / 2)],0,maxVal));
-            output[i] = static_cast<OutputType>(
-                std::clamp<int32_t>(x0 * x1, std::numeric_limits<int16_t>::min(),
-                                    std::numeric_limits<int16_t>::max()) >>
-                shift);
+            output[i] = static_cast<OutputType>((x0 * x1) >> shift);
         }
     }
 };
