@@ -13,7 +13,6 @@
 #include "scoring.h"
 #include "search.h"
 #include "globals.h"
-#include "nnue.h"
 #include "nnuetest.h"
 #ifdef SYZYGY_TBS
 #include "syzygy.h"
@@ -501,7 +500,6 @@ static int testEval() {
             }
         };
 
-    globals::delayedInit();
     Scoring *s = new Scoring();
     for (const Case &c : cases) {
         s->clear();
@@ -1504,7 +1502,6 @@ static int testTB()
       };
 
    int errs = 0;
-   globals::delayedInit();
    if (globals::EGTBMenCount < 5) {
       std::cerr << "TB tests skipped: no 5-man TBs found" << std::endl;
       return 0;
@@ -1703,7 +1700,7 @@ static int testBinIO() {
     return errs;
 }
 
-int doUnit() {
+static int doUnit() {
 
    int errs = 0;
    errs += testWouldAttack();
@@ -1735,4 +1732,22 @@ int doUnit() {
    errs += testTB();
 #endif
    return errs;
+}
+
+int CDECL main([[maybe_unused]] int argc, [[maybe_unused]] char **argv) {
+    Bitboard::init();
+    Board::init();
+    // auto load the .rc file, if present
+    if (!globals::initOptions()) return -1;
+    Attacks::init();
+    Search::init();
+    if (!globals::initGlobals()) {
+        globals::cleanupGlobals();
+        exit(-1);
+    }
+    atexit(globals::cleanupGlobals);
+    globals::delayedInit(); // ensure all init is done including TBs, network
+    int errs = doUnit();
+    std::cout << "Unit tests ran: " << errs << " error(s)" << std::endl;
+    return errs;
 }

@@ -1,3 +1,4 @@
+# Copyright 2019-2025 by Jon Dart. All Rights Reserved.
 cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 project(arasan)
 
@@ -29,7 +30,6 @@ option(AVX512 "Use AVX512 instructions" OFF)
 option(BMI2 "Use BMI2 instructions" OFF)
 option(NEON "Use ARM NEON instructions" OFF)
 option(NUMA "Build for non-uniform memory access (NUMA) system" OFF)
-option(UNIT_TESTS "unit tests run on startup" OFF)
 
 set(EXE_NAME arasanx)
 
@@ -51,11 +51,6 @@ if(NUMA)
     list(APPEND EXTRA_SRC topo.h topo.cpp)
     add_compile_definitions(NUMA)
 endif(NUMA)
-
-if(UNIT_TESTS)
-    list(APPEND EXTRA_SRC unit.h unit.cpp)
-    add_compile_definitions(UNIT_TESTS)
-endif(UNIT_TESTS)
 
 if(SYZYGY_TBS)
     add_compile_definitions(SYZYGY_TBS)
@@ -189,6 +184,8 @@ add_executable (selfplay EXCLUDE_FROM_ALL util/selfplay.cpp ${UTIL_SRC} util/bin
 
 add_executable (post_process_nn EXCLUDE_FROM_ALL util/post_process_nn.cpp ${UTIL_SRC})
 
+add_executable (unit EXCLUDE_FROM_ALL unit.cpp nnuetest.cpp util/binformat.cpp ${UTIL_SRC})
+
 target_link_libraries(${EXE_NAME} PRIVATE Threads::Threads)
 target_link_libraries(playchess PRIVATE Threads::Threads)
 target_link_libraries(makeeco PRIVATE Threads::Threads)
@@ -196,8 +193,9 @@ target_link_libraries(ecocoder PRIVATE Threads::Threads)
 target_link_libraries(makebook PRIVATE Threads::Threads)
 target_link_libraries(selfplay PRIVATE Threads::Threads)
 target_link_libraries(post_process_nn PRIVATE Threads::Threads)
+target_link_libraries(unit PRIVATE Threads::Threads)
 
-set_target_properties(${EXE_NAME} playchess makebook makeeco ecocoder selfplay post_process_nn PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
+set_target_properties(${EXE_NAME} playchess makebook makeeco ecocoder selfplay post_process_nn unit PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
 
 add_custom_target(utils)
 

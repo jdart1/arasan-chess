@@ -12,7 +12,7 @@ PLATFORM=MODERN
 #PLATFORM=XP
 
 #TRACE=/D_TRACE
-DEBUG=/Zi -D_DEBUG
+#DEBUG=/Zi -D_DEBUG
 BUILD_ROOT=..
 UTIL=util
 
@@ -57,11 +57,7 @@ CFLAGS = $(CFLAGS) $(POPCNT_FLAGS) $(AVX2_FLAGS) $(BMI2_FLAGS) $(AVX512_FLAGS) /
 CFLAGS = $(CFLAGS) $(BASIC_SIMD_FLAGS)
 !Endif
 
-!Ifdef UNIT_TESTS
-CFLAGS = $(CFLAGS) -DUNIT_TESTS
 TEST_OBJS = $(BUILD)\unit.obj $(BUILD)\binformat.obj $(BUILD)\nnuetest.obj
-TEST_PROFILE_OBJS = $(PROFILE)\unit.obj $(PROFILE)\binformat.obj
-!Endif
 
 # Set executable name
 !Ifndef ARASANX
@@ -217,8 +213,11 @@ default: dirs $(BUILD)\$(ARASANX).exe
 
 profile: dirs $(PROFILE)\$(ARASANX).exe
 
-utils: dirs $(BUILD)\playchess.exe $(BUILD)\makebook.exe $(BUILD)\makeeco.exe $(BUILD)\ecocoder.exe $(BUILD)\selfplay.exe \
+utils: dirs $(BUILD)\playchess.exe $(BUILD)\makebook.exe \
+$(BUILD)\makeeco.exe $(BUILD)\ecocoder.exe $(BUILD)\selfplay.exe \
 $(BUILD)\post_process_nn.exe
+
+unit: dirs $(BUILD)\unit.exe
 
 !IfDef SYZYGY_TBS
 CFLAGS = $(CFLAGS) /I. -DSYZYGY_TBS
@@ -289,6 +288,8 @@ SELFPLAY_OBJS = $(BUILD)\selfplay.obj $(UTIL_OBJS) $(BUILD)\binformat.obj
 
 POST_PROCESS_NN_OBJS = $(BUILD)\post_process_nn.obj $(UTIL_OBJS)
 
+UNIT_OBJS = $(TEST_OBJS) $(UTIL_OBJS)
+
 {}.cpp{$(BUILD)}.obj:
     $(CC) $(OPT) $(LTO) $(DEBUG) $(CFLAGS) $(NNUE_FLAGS) /c /Fo$@ $<
 
@@ -318,6 +319,9 @@ $(BUILD)\selfplay.exe: dirs $(SELFPLAY_OBJS)
 
 $(BUILD)\post_process_nn.exe: dirs $(POST_PROCESS_NN_OBJS)
         $(LD) $(POST_PROCESS_NN_OBJS) $(LINKOPT) $(LDFLAGS) /out:$(BUILD)\post_process_nn.exe
+
+$(BUILD)\unit.exe: dirs $(UNIT_OBJS)
+        $(LD) $(UNIT_OBJS) $(LINKOPT) $(LDFLAGS) /out:$(BUILD)\unit.exe
 
 $(PROFILE)\$(ARASANX).exe: $(ARASANX_PROFILE_OBJS)
 !If "$(CC)"=="clang-cl"

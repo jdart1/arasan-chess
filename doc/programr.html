@@ -305,8 +305,9 @@ computation.</p>
 
 <h3>Unit tests</h3>
 
-<p>If compiled with -DUNIT_TESTS, Arasan will run a set of tests on
-program startup (this flag is off by default). These tests verify that
+<p>The Makefiles provide a "unit" target, which builds a unit test
+  program (unit on Linux/Mac, unit.exe on Windows). This program will
+  execute a series of tests, including ones which verify
 a set of critical functions operate correctly, verify that evaluation
 results are symmetrical between White and Black sides, and also run
 and verify the perft test over a set of positions.</p>

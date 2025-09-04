@@ -40,9 +40,10 @@ to pull these dependencies into your your source tree:
 
 `git submodule update --init --recursive`
 
-Arasan now requires a modern compiler with at least C++-17 support. Clang is the
-recommended compiler (can use clang-cl on Windows). Clang compiles are measurably faster, due
-to better code generation, especially in the NNUE code.
+Arasan now requires a modern compiler with at least C++-17
+support. Clang is the recommended compiler (can use clang-cl on
+Windows). Clang compiles are measurably faster, due to better code
+generation, especially in the NNUE code.
 
 The primary architectures supported and tested are x86, x86_64, and ARM.
 However, the code is designed to be portable. In particular, there is support
@@ -52,7 +53,7 @@ for big-endian architectures.
 
 32-bit Linux distros are not supported.
 
-There is a makefile in the src directory.
+There is a Makefile in the src directory.
 
 The Makefile requires the "bc" utility, available on most Linux distros.
 If using Cygwin, you should ensure you have installed this.
@@ -66,7 +67,7 @@ The following targets are defined in the makefile:
 
 - default: builds just the chess engine
 - profiled: PGO build of the chess engine
-- tuning: builds the parameter tuning program
+- unit: builds a program to execute unit tests
 - utils: builds utility programs including "makebook"
 - release: builds the release tarball
 - install: installs the chess engine on the system (requires root or sudo)
@@ -150,6 +151,7 @@ The following targets are defined in the makefile:
 
 - default: builds just the chess engine
 - profiled: build the chess engine using PGO
+- unit: builds a program to execute unit tests
 - utils: builds utility programs including "makebook"
 - release: builds the release zip file for Windows
 
@@ -186,7 +188,7 @@ obtain this by running (or re-running, if needed) the Visual Studio
 installer and selecting "MSVC v140 - VS2015 C++ Build tools" (not
 included by default). (Note Windows XP compilation support is
 deprecated and will be removed by Microsoft eventually. Note also I no
-longer have a functioning XP machine and so compatibility of current
+longer have a functioning XP machine, and so compatibility of current
 builds of Arasan is not tested.)
 
 ## Building the engine with Visual Studio
@@ -222,7 +224,6 @@ Cygwin builds with AVX2 do not work due to a <a href="https://gcc.gnu.org/bugzil
 # CMake
 
 There is a CMakeLists.txt file in the source directory, for building
-with [CMake](https://cmake.org/).  This should be considered somewhat
-experimental. It does not currently support PGO. It does support
+with [CMake](https://cmake.org/). It does not currently support PGO. It does support
 [cross-compliation for
 Android](https://developer.android.com/ndk/guides/cmake#android_platform).

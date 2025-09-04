@@ -123,12 +123,6 @@ int CDECL main(int argc, char **argv) {
     Board board;
     Protocol *p = new Protocol(board,trace,ics,cpusSet,memorySet);
 
-#ifdef UNIT_TESTS
-    globals::delayedInit(); // ensure all init is done including TBs, network
-    int errs = doUnit();
-    std::cout << "Unit tests ran: " << errs << " error(s)" << std::endl;
-#endif
-
     p->poll(globals::polling_terminated);
 
     delete p;

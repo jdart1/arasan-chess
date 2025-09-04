@@ -59,9 +59,7 @@ NNUE_FLAGS := -Innue -DNETWORK=$(NETWORK)
 
 #PROF     = -pg
 #DEBUG    = -g -D_DEBUG=1
-#UNIT_TESTS := 1
 #TRACE    = -D_TRACE=1 -D_THREAD_TRACE
-
 shell        := $(SHELL)
 UNAME        := $(shell uname -s|awk '{print tolower($$0)}')
 ifndef OSTYPE
@@ -284,6 +282,8 @@ default: dirs $(EXPORT)/$(ARASANX)
 utils: dirs $(EXPORT)/playchess $(EXPORT)/makebook $(EXPORT)/makeeco $(EXPORT)/ecocoder \
 $(EXPORT)/selfplay $(EXPORT)/post_process_nn
 
+unit: dirs $(EXPORT)/unit
+
 clean: dirs
 	rm -f $(BUILD)/*.o
 	rm -f $(PROFILE)/*.o
@@ -292,7 +292,7 @@ clean: dirs
 	rm -f $(PROFILE)/*.dyn
 	rm -f $(PROFILE)/*.nnue
 	rm -f $(PROF_DATA)/*.*
-	cd $(EXPORT) && rm -f arasanx* makeeco makebook playchess ecocoder selfplay checkbin
+	cd $(EXPORT) && rm -f arasanx* makeeco makebook playchess ecocoder selfplay post_process_nn unit
 
 dirs:
 	mkdir -p $(BUILD)
@@ -358,11 +358,6 @@ $(PROFILE)/%.o: $(STB)/%.c
 
 endif
 
-ifdef UNIT_TESTS
-CXXFLAGS := $(CXXFLAGS) -DUNIT_TESTS
-UNIT_TEST_SRC:=unit.cpp binformat.cpp nnuetest.cpp
-endif
-
 ARASANX_SOURCES = arasanx.cpp tester.cpp bench.cpp protocol.cpp \
 input.cpp globals.cpp board.cpp boardio.cpp material.cpp \
 chess.cpp attacks.cpp \
@@ -372,7 +367,7 @@ movearr.cpp notation.cpp options.cpp bitprobe.cpp \
 bookread.cpp bookwrit.cpp \
 search.cpp searchc.cpp learn.cpp \
 movegen.cpp hash.cpp calctime.cpp eco.cpp ecodata.cpp legal.cpp \
-stats.cpp threadp.cpp threadc.cpp evaluate.cpp $(UNIT_TEST_SRC)
+stats.cpp threadp.cpp threadc.cpp evaluate.cpp
 
 UTIL_SOURCES = globals.cpp  \
 board.cpp boardio.cpp material.cpp \
@@ -384,6 +379,17 @@ bookread.cpp bookwrit.cpp \
 search.cpp searchc.cpp learn.cpp \
 movegen.cpp hash.cpp calctime.cpp eco.cpp ecodata.cpp \
 legal.cpp stats.cpp threadp.cpp threadc.cpp evaluate.cpp
+
+UNIT_SOURCES = unit.cpp nnuetest.cpp binformat.cpp \
+globals.cpp board.cpp boardio.cpp material.cpp \
+chess.cpp attacks.cpp \
+bitboard.cpp chessio.cpp epdrec.cpp bhash.cpp  \
+scoring.cpp see.cpp \
+movearr.cpp notation.cpp options.cpp bitprobe.cpp \
+bookread.cpp bookwrit.cpp \
+search.cpp searchc.cpp learn.cpp \
+movegen.cpp hash.cpp calctime.cpp eco.cpp ecodata.cpp legal.cpp \
+stats.cpp threadp.cpp threadc.cpp evaluate.cpp
 
 MAKEBOOK_SOURCES = makebook.cpp $(UTIL_SOURCES)
 
@@ -397,19 +403,20 @@ SELFPLAY_SOURCES = selfplay.cpp $(UTIL_SOURCES) binformat.cpp
 
 POST_PROCESS_NN_SOURCES = post_process_nn.cpp $(UTIL_SOURCES)
 
-ARASANX_PROFILE_OBJS = $(patsubst %.cpp, $(PROFILE)/%.o, $(ARASANX_SOURCES)) $(ASM_PROFILE_OBJS) $(TB_PROFILE_OBJS) $(NUMA_PROFILE_OBJS)
-ARASANX_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(ARASANX_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
-MAKEBOOK_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEBOOK_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
-MAKEECO_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEECO_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
-ECOCODER_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(ECOCODER_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
-PLAYCHESS_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(PLAYCHESS_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
-SELFPLAY_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(SELFPLAY_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
-POST_PROCESS_NN_OBJS    = $(patsubst %.cpp, $(BUILD)/%.o, $(POST_PROCESS_NN_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
+ARASANX_PROFILE_OBJS := $(patsubst %.cpp, $(PROFILE)/%.o, $(ARASANX_SOURCES)) $(ASM_PROFILE_OBJS) $(TB_PROFILE_OBJS) $(NUMA_PROFILE_OBJS)
+ARASANX_OBJS    := $(patsubst %.cpp, $(BUILD)/%.o, $(ARASANX_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
+MAKEBOOK_OBJS   := $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEBOOK_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
+MAKEECO_OBJS    := $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEECO_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
+ECOCODER_OBJS   := $(patsubst %.cpp, $(BUILD)/%.o, $(ECOCODER_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
+PLAYCHESS_OBJS  := $(patsubst %.cpp, $(BUILD)/%.o, $(PLAYCHESS_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
+SELFPLAY_OBJS   := $(patsubst %.cpp, $(BUILD)/%.o, $(SELFPLAY_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
+POST_PROCESS_NN_OBJS    := $(patsubst %.cpp, $(BUILD)/%.o, $(POST_PROCESS_NN_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
+UNIT_OBJS       := $(patsubst %.cpp, $(BUILD)/%.o, $(UNIT_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
 
 $(EXPORT)/makebook:  $(MAKEBOOK_OBJS)
 	cd $(BUILD) && $(LD) $(LDFLAGS) $(LTO) $(OPT) $(MAKEBOOK_OBJS) $(DEBUG) $(CXXFLAGS) -o $(EXPORT)/makebook -lstdc++ $(LIBS) $(SMPLIB)
 
-$(EXPORT)/makeeco:  $(MAKEECO_OBJS)
+$(EXPORT1)/makeeco:  $(MAKEECO_OBJS)
 	cd $(BUILD) && $(LD) $(LDFLAGS) $(LTO) $(OPT) $(MAKEECO_OBJS) $(DEBUG) $(CXXFLAGS) -o $(EXPORT)/makeeco -lstdc++ $(LIBS) $(SMPLIB)
 
 $(EXPORT)/ecocoder:  $(ECOCODER_OBJS)
@@ -421,8 +428,11 @@ $(EXPORT)/playchess:  $(PLAYCHESS_OBJS)
 $(EXPORT)/selfplay:  $(SELFPLAY_OBJS)
 	cd $(BUILD) && $(LD) $(LDFLAGS) $(LTO) $(OPT) $(SELFPLAY_OBJS) $(DEBUG) $(CXXFLAGS) -o $(EXPORT)/selfplay -lstdc++ $(LIBS) $(SMPLIB)
 
-$(EXPORT)/post_process_nn:  $(POST_PROCESS_NN_OBJS)
+$(EXPORT)/post_process_nn: $(POST_PROCESS_NN_OBJS)
 	cd $(BUILD) && $(LD) $(LDFLAGS) $(LTO) $(OPT) $(POST_PROCESS_NN_OBJS) $(DEBUG) $(CXXFLAGS) -o $(EXPORT)/post_process_nn -lstdc++ $(LIBS) $(SMPLIB)
+
+$(EXPORT)/unit: $(UNIT_OBJS)
+	cd $(BUILD) && $(LD) $(LDFLAGS) $(LTO) $(OPT) $(UNIT_OBJS) $(DEBUG) $(CXXFLAGS) -o $(EXPORT)/unit -lstdc++ $(LIBS) $(SMPLIB)
 
 ifeq ($(PASS),1)
 profile: dirs $(PROFILE)/arasanx
@@ -456,7 +466,7 @@ else
 	rm -f $(PROFILE)/arasanx $(EXPORT)/arasanx
 endif
 
-.PHONY: all clean dirs profile bmi2 profile-run install release
+.PHONY: all clean dirs profile profile-run install release unit
 
 .EXPORT_ALL_VARIABLES:
 
