@@ -153,6 +153,7 @@ void nnue::Evaluator::updateAccumIncremental(const Network &network, const NodeI
 // Update the accumulator based on a position (incrementally if possible)
 void nnue::Evaluator::updateAccum(const nnue::Network &network, const Board &board, NodeInfo *node,
                                   const ColorType c) {
+    assert(node);
     AccumulatorHalf targetHalf = Network::AccumulatorType::getHalf(node->stm, c);
     if (node->accum.getState(targetHalf) == AccumulatorState::Computed) {
         // nothing to do: can happen if we revist a node because we widened the search window
@@ -205,7 +206,7 @@ void nnue::Evaluator::updateAccum(const nnue::Network &network, const Board &boa
     node->accum.setState(targetHalf, AccumulatorState::Computed);
 }
 
-// evaluate the net (full evaluation)
+// evaluate the net (incrementally if possible and the node parameter is non-null)
 nnue::Network::OutputType nnue::Evaluator::fullEvaluate(const nnue::Network &network, const Board &board,
                                                         NodeInfo *node) {
     if (node) {
