@@ -446,8 +446,7 @@ $(PROFILE)/arasanx:  $(ARASANX_PROFILE_OBJS)
 else
 ifeq ($(PASS),2)
 $(EXPORT)/$(ARASANX):  $(ARASANX_PROFILE_OBJS)
-	cd $(PROFILE) && $(LD) $(PROF_USE) $(OPT) $(LTO) $(ARASANX_PROFILE_OBJS) $(DEBUG) $(CXXFLAGS) -o $(PROFILE)/arasanx -lstdc++ $(LIBS) $(SMPLIB)
-	cp $(PROFILE)/arasanx $(EXPORT)/$(ARASANX)
+	cd $(PROFILE) && $(LD) $(PROF_USE) $(OPT) $(LTO) $(ARASANX_PROFILE_OBJS) $(DEBUG) $(CXXFLAGS) -o $@ -lstdc++ $(LIBS) $(SMPLIB)
 else
 # non-PGO build
 $(EXPORT)/$(ARASANX):  $(ARASANX_OBJS)
