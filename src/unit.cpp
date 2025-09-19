@@ -1709,7 +1709,6 @@ static int doUnit() {
    errs += testGetPinned();
    errs += testSee();
    errs += testPGN();
-   errs += testEval();
    errs += testBitbases();
    errs += testDrawEval();
    errs += testCheckStatus();
@@ -1720,11 +1719,12 @@ static int doUnit() {
    int tmp = errs;
    errs += testNNUE();
    if (tmp == errs) {
+       errs += testEval();
        errs += testPerft();
        errs += testSearch();
    }
    else {
-       std::cout << "NNUE tests failed, skipping search + perft tests" << std::endl;
+       std::cout << "NNUE tests failed, skipping eval, search & perft tests" << std::endl;
    }
    errs += testOptions();
    errs += testBinIO();
