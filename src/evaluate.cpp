@@ -182,7 +182,7 @@ void nnue::Evaluator::updateAccum(const nnue::Network &network, const Board &boa
             (n ->ply == 0) ||
             (TypeOfPiece(ds.piece) == King && Network::FeatureXformer::needsRefresh(c, ds.from, ds.to)) ||
             ((gain -= dn + 1) < 0)) {
-            // previous move was null, or was a King move that invalides the accumulator,
+            // previous move was null, or was a King move that invalidates the accumulator,
             // or we can't get any gain from incremental update
             incrementalOk = false;
             break;
