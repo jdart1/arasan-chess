@@ -8,6 +8,7 @@
 #include "options.h"
 #include "protocol.h"
 #include "threadc.h"
+#include "bitutil.h"
 #ifdef UNIT_TESTS
 #include "unit.h"
 #endif
@@ -95,7 +96,7 @@ int CDECL main(int argc, char **argv) {
         return -1;
     }
 
-    Bitboard::init();
+    BitUtils::init();
     Board::init();
     // do not auto load the .rc file
     if (!globals::initOptions(autoLoadRC, rcName, memorySet, cpusSet)) return -1;

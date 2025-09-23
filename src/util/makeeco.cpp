@@ -116,7 +116,7 @@ int CDECL main(int argc, char **argv)
 	 std::cerr << "Usage: makeeco eco_file" << std::endl;
 	 return -1;
    }
-   Bitboard::init();
+   BitUtils::init();
    Board::init();
    globals::initOptions();
    Attacks::init();

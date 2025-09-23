@@ -47,7 +47,7 @@ namespace mg {
                 assert(0);
             }
 #endif
-            num_attacks = king_attacks.bitCountOpt();
+            num_attacks = king_attacks.bitCount();
             if (num_attacks == 1) {
                 source = king_attacks.firstOne();
             }

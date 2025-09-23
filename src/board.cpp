@@ -375,8 +375,8 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
       else // not castling
       {
          assert(contents[start] != EmptyPiece);
-         const Bitboard bits(Bitboard::mask[start] |
-                             Bitboard::mask[dest]);
+         const Bitboard bits(BitUtils::mask[start] |
+                             BitUtils::mask[dest]);
          Square target = dest; // where we captured
          Piece capture = contents[dest]; // what we captured
          if (node && moveType != Promotion) {
@@ -630,8 +630,8 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
       else // not castling
       {
          assert(contents[start] != EmptyPiece);
-         const Bitboard bits(Bitboard::mask[start] |
-                           Bitboard::mask[dest]);
+         const Bitboard bits(BitUtils::mask[start] |
+                           BitUtils::mask[dest]);
          Square target = dest; // where we captured
          Piece capture = contents[dest]; // what we captured
          if (node && moveType != Promotion) {
@@ -1100,8 +1100,8 @@ void Board::undoMove( Move move, const BoardState &old_state )
       }
       else if (side == White)
       {
-         const Bitboard bits(Bitboard::mask[start] |
-                           Bitboard::mask[dest]);
+         const Bitboard bits(BitUtils::mask[start] |
+                             BitUtils::mask[dest]);
          // not castling
          Square target = dest;
          // fix up start square:
@@ -1223,8 +1223,8 @@ void Board::undoMove( Move move, const BoardState &old_state )
       }
       else // side == Black
       {
-         const Bitboard bits(Bitboard::mask[start] |
-                           Bitboard::mask[dest]);
+         const Bitboard bits(BitUtils::mask[start] |
+                             BitUtils::mask[dest]);
          // not castling
          Square target = dest;
          // fix up start square:

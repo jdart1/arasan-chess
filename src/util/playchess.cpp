@@ -28,7 +28,7 @@ static std::string trim(std::string s) {
 }
 
 int CDECL main(int argc, char **argv) {
-    Bitboard::init();
+    BitUtils::init();
     Board::init();
     globals::initOptions();
     Attacks::init();

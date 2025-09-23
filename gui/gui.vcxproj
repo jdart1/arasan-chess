@@ -174,8 +174,8 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\bhash.cpp" />
-    <ClCompile Include="..\src\bitboard.cpp" />
     <ClCompile Include="..\src\bitprobe.cpp" />
+    <ClCompile Include="..\src\bitutil.cpp" />
     <ClCompile Include="..\src\board.cpp" />
     <ClCompile Include="..\src\boardio.cpp" />
     <ClCompile Include="..\src\bookread.cpp">
@@ -277,6 +277,7 @@
     <ClInclude Include="..\src\bhash.h" />
     <ClInclude Include="..\src\bitboard.h" />
     <ClInclude Include="..\src\bitprobe.h" />
+    <ClInclude Include="..\src\bitutil.h" />
     <ClInclude Include="..\src\board.h" />
     <ClInclude Include="..\src\boardio.h" />
     <ClInclude Include="..\src\bookdefs.h" />

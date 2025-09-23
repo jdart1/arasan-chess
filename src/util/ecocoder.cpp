@@ -34,7 +34,7 @@ static void show_usage() {
 }
 
 int CDECL main(int argc, char **argv) {
-    Bitboard::init();
+    BitUtils::init();
     Board::init();
     Attacks::init();
     if (!globals::initGlobals()) {

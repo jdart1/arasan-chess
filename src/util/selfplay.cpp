@@ -616,7 +616,7 @@ static void launch_threads() {
 }
 
 int CDECL main(int argc, char **argv) {
-    Bitboard::init();
+    BitUtils::init();
     Board::init();
     globals::initOptions();
     Attacks::init();

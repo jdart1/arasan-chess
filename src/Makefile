@@ -361,7 +361,7 @@ endif
 ARASANX_SOURCES = arasanx.cpp tester.cpp bench.cpp protocol.cpp \
 input.cpp globals.cpp board.cpp boardio.cpp material.cpp \
 chess.cpp attacks.cpp \
-bitboard.cpp chessio.cpp epdrec.cpp bhash.cpp  \
+bitutil.cpp chessio.cpp epdrec.cpp bhash.cpp  \
 scoring.cpp see.cpp \
 movearr.cpp notation.cpp options.cpp bitprobe.cpp \
 bookread.cpp bookwrit.cpp \
@@ -372,7 +372,7 @@ stats.cpp threadp.cpp threadc.cpp evaluate.cpp
 UTIL_SOURCES = globals.cpp  \
 board.cpp boardio.cpp material.cpp \
 chess.cpp attacks.cpp \
-bitboard.cpp chessio.cpp epdrec.cpp bhash.cpp  \
+bitutil.cpp chessio.cpp epdrec.cpp bhash.cpp  \
 scoring.cpp see.cpp \
 movearr.cpp notation.cpp options.cpp bitprobe.cpp \
 bookread.cpp bookwrit.cpp \
@@ -383,7 +383,7 @@ legal.cpp stats.cpp threadp.cpp threadc.cpp evaluate.cpp
 UNIT_SOURCES = unit.cpp nnuetest.cpp binformat.cpp \
 globals.cpp board.cpp boardio.cpp material.cpp \
 chess.cpp attacks.cpp \
-bitboard.cpp chessio.cpp epdrec.cpp bhash.cpp  \
+bitutil.cpp chessio.cpp epdrec.cpp bhash.cpp  \
 scoring.cpp see.cpp \
 movearr.cpp notation.cpp options.cpp bitprobe.cpp \
 bookread.cpp bookwrit.cpp \
@@ -416,7 +416,7 @@ UNIT_OBJS       := $(patsubst %.cpp, $(BUILD)/%.o, $(UNIT_SOURCES)) $(TB_OBJS) $
 $(EXPORT)/makebook:  $(MAKEBOOK_OBJS)
 	cd $(BUILD) && $(LD) $(LDFLAGS) $(LTO) $(OPT) $(MAKEBOOK_OBJS) $(DEBUG) $(CXXFLAGS) -o $(EXPORT)/makebook -lstdc++ $(LIBS) $(SMPLIB)
 
-$(EXPORT1)/makeeco:  $(MAKEECO_OBJS)
+$(EXPORT)/makeeco:  $(MAKEECO_OBJS)
 	cd $(BUILD) && $(LD) $(LDFLAGS) $(LTO) $(OPT) $(MAKEECO_OBJS) $(DEBUG) $(CXXFLAGS) -o $(EXPORT)/makeeco -lstdc++ $(LIBS) $(SMPLIB)
 
 $(EXPORT)/ecocoder:  $(ECOCODER_OBJS)

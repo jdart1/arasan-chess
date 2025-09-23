@@ -235,7 +235,7 @@ NNUE_PROFILE_OBJS = $(PROFILE)\evaluate.obj
 
 ARASANX_OBJS = $(BUILD)\arasanx.obj $(BUILD)\tester.obj \
 $(BUILD)\protocol.obj $(BUILD)\input.obj \
-$(BUILD)\attacks.obj $(BUILD)\bhash.obj $(BUILD)\bitboard.obj \
+$(BUILD)\attacks.obj $(BUILD)\bhash.obj $(BUILD)\bitutil.obj \
 $(BUILD)\board.obj $(BUILD)\boardio.obj $(BUILD)\options.obj \
 $(BUILD)\chess.obj $(BUILD)\material.obj $(BUILD)\movegen.obj \
 $(BUILD)\scoring.obj $(BUILD)\searchc.obj \
@@ -250,7 +250,7 @@ $(TEST_OBJS) $(TB_OBJS) $(NNUE_OBJS) $(NUMA_OBJS)
 
 ARASANX_PROFILE_OBJS = $(PROFILE)\arasanx.obj $(PROFILE)\tester.obj \
 $(PROFILE)\protocol.obj $(PROFILE)\input.obj \
-$(PROFILE)\attacks.obj $(PROFILE)\bhash.obj $(PROFILE)\bitboard.obj \
+$(PROFILE)\attacks.obj $(PROFILE)\bhash.obj $(PROFILE)\bitutil.obj \
 $(PROFILE)\board.obj $(PROFILE)\boardio.obj $(PROFILE)\options.obj \
 $(PROFILE)\chess.obj $(PROFILE)\material.obj $(PROFILE)\movegen.obj \
 $(PROFILE)\scoring.obj $(PROFILE)\searchc.obj \
@@ -265,7 +265,7 @@ $(TEST_PROFILE_OBJS) $(NNUE_PROFILE_OBJS) $(TB_PROFILE_OBJS) $(NUMA_PROFILE_OBJS
 
 UTIL_OBJS = $(BUILD)\globals.obj $(BUILD)\board.obj \
 $(BUILD)\boardio.obj $(BUILD)\material.obj $(BUILD)\chess.obj \
-$(BUILD)\attacks.obj $(BUILD)\bitboard.obj $(BUILD)\chessio.obj \
+$(BUILD)\attacks.obj $(BUILD)\bitutil.obj $(BUILD)\chessio.obj \
 $(BUILD)\epdrec.obj $(BUILD)\bhash.obj \
 $(BUILD)\scoring.obj $(BUILD)\see.obj \
 $(BUILD)\movearr.obj $(BUILD)\notation.obj $(BUILD)\options.obj \

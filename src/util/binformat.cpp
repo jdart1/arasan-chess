@@ -392,7 +392,7 @@ bool BinFormats::writeMarlin(const BinFormats::PositionData &data, int result, s
         std::cerr << "bad fen" << std::endl;
         return false;
     }
-    serialize<uint64_t>(out, board.allOccupied.data);
+    serialize<uint64_t>(out, uint64_t(board.allOccupied));
     std::array<uint8_t, 16> pos;
     pos.fill(0);
     unsigned idx = 0;

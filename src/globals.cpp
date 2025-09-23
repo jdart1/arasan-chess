@@ -4,6 +4,7 @@
 #include "hash.h"
 #include "scoring.h"
 #include "search.h"
+#include "bitutil.h"
 #ifdef SYZYGY_TBS
 #include "syzygy.h"
 #endif
@@ -176,7 +177,7 @@ bool globals::loadNetwork(const std::string &fname, bool verbose) {
 void CDECL globals::cleanupGlobals(void) {
     if (openingBook.is_open()) openingBook.close();
     delete gameMoves;
-    Bitboard::cleanup();
+    BitUtils::cleanup();
     Board::cleanup();
     if (game_file.is_open()) game_file.close();
 }

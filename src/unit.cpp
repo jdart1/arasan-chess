@@ -1735,7 +1735,7 @@ static int doUnit() {
 }
 
 int CDECL main([[maybe_unused]] int argc, [[maybe_unused]] char **argv) {
-    Bitboard::init();
+    BitUtils::init();
     Board::init();
     // auto load the .rc file, if present
     if (!globals::initOptions()) return -1;
