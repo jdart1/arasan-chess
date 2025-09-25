@@ -226,7 +226,7 @@ inline uint64_t bswap64(uint64_t x) {
 #define le16toh(x)              ((uint16_t)(x))
 
 #define htobe32(x)              bswap32((x))
-#define htole32(x)              ((uint32_t((x))
+#define htole32(x)              ((uint32_t)(x))
 #define be32toh(x)              bswap32((x))
 #define le32toh(x)              ((uint32_t)(x))
 
