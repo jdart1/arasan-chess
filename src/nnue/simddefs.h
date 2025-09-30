@@ -233,6 +233,17 @@ template <> MaskType_t nnzMask(__m512i x) {
     // AVX512 returns a 64-bit mask for byte comparisons
     return _mm512_cmpgt_epu8_mask(x, _mm512_setzero_si512());
 }
+template <>
+[[maybe_unused]]
+void dpbusd_epi32(__m512i &acc, __m512i a, __m512i b) {
+#ifdef AVX512_VNNI
+    acc = _mm512_dpbusd_epi32(acc, a, b);
+#else
+    __m512i x = _mm512_maddubs_epi16(a, b);
+    x = _mm512_madd_epi16(x, ones512);
+    acc = _mm512_add_epi32(acc, x);
+#endif
+}
 #endif
 
 #if defined(AVX2)
@@ -284,6 +295,16 @@ template <> MaskType_t nnzMask(__m256i x) {
     auto nz = _mm256_cmpgt_epi8(x, zero);
     // extract hi-order bit of each byte and pack into dest integer
     return _mm256_movemask_epi8(nz);
+#endif
+}
+template <>
+[[maybe_unused]] void dpbusd_epi32(__m256i &acc, __m256i a, __m256i b) {
+#ifdef VNNI
+    acc = _mm256_dpbusd_epi32(acc, a, b);
+#else
+    __m256i x = _mm256_maddubs_epi16(a, b);
+    x = _mm256_madd_epi16(x, ones256);
+    acc = _mm256_add_epi32(acc, x);
 #endif
 }
 #endif
@@ -358,6 +379,28 @@ template <> MaskType_t nnzMask(__m128i x) {
     // set dest vector to 0xff for non-zero bytes in x, 0 for zero bytes
     return _mm_movemask_epi8(_mm_cmpgt_epi8(x, zero128));
 }
+template <>
+void dpbusd_epi32(__m128i &x, __m128i y, __m128i z) {
+#ifdef VNNI
+    x = _mm_dpbusd_epi32(x, y, z);
+#elif defined(SSE3)
+    auto sum32 = _mm_madd_epi16(_mm_maddubs_epi16(y, z), _mm_set1_epi16(1));
+    x = _mm_add_epi32(sum32, x);
+#else
+    // SSE2 implementation: emulate _mm_maddubs_epi16 manually
+    // _mm_maddubs_epi16 multiplies unsigned bytes with signed bytes and adds adjacent pairs
+    // Split into even and odd bytes
+    __m128i y_even = _mm_and_si128(y, _mm_set1_epi16(0x00FF));
+    __m128i y_odd = _mm_srli_epi16(y, 8);
+    __m128i z_even = _mm_srai_epi16(_mm_slli_epi16(z, 8), 8); // sign-extend even bytes
+    __m128i z_odd = _mm_srai_epi16(z, 8); // sign-extend odd bytes
+    // Multiply and add adjacent pairs to get 16-bit results (emulating _mm_maddubs_epi16)
+    __m128i prod = _mm_add_epi16(_mm_mullo_epi16(y_even, z_even), _mm_mullo_epi16(y_odd, z_odd));
+    // Horizontal add pairs of 16-bit values to 32-bit
+    __m128i sum32 = _mm_madd_epi16(prod, ones128);
+    x = _mm_add_epi32(sum32, x);
+#endif
+}
 #endif
 
 #if !defined(_MSC_VER) || defined(__clang__)
@@ -414,33 +457,6 @@ template <size_t bytes> static inline vec_t vec_sub(vec_t x, const vec_t *y) {
     else // (bytes==4)
         return vec_sub32(x, y);
 }
-
-#ifdef AVX2
-template <>
-[[maybe_unused]] void dpbusd_epi32(__m256i &acc, __m256i a, __m256i b) {
-#ifdef VNNI
-    acc = _mm256_dpbusd_epi32(acc, a, b);
-#else
-    __m256i x = _mm256_maddubs_epi16(a, b);
-    x = _mm256_madd_epi16(x, ones256);
-    acc = _mm256_add_epi32(acc, x);
-#endif
-}
-#endif
-
-#ifdef AVX512
-template <>
-[[maybe_unused]]
-void dpbusd_epi32(__m512i &acc, __m512i a, __m512i b) {
-#ifdef AVX512_VNNI
-    acc = _mm512_dpbusd_epi32(acc, a, b);
-#else
-    __m512i x = _mm512_maddubs_epi16(a, b);
-    x = _mm512_madd_epi16(x, ones512);
-    acc = _mm512_add_epi32(acc, x);
-#endif
-}
-#endif
 
 #endif // x86
 

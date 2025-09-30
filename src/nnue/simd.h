@@ -867,7 +867,7 @@ void calcNnzData(const uint8_t *input, size_t inputSize, IndexType *nzIndices, s
 #if defined(NEON)
     // We do not emulate the x86 approach, because NEON has no direct equivalent of
     // instructions such as _mm512_cmpgt_epu8_mask that pack the results of a comparision
-    // operation into a bitmask.
+    // operation into a mask vector.
     for (unsigned i = 0; i < inputSize; i += inputChunkSize) {
         auto x = vec_load8(reinterpret_cast<const vec8_t*>(input + i));
         uint8x16_t input_u8 = vreinterpretq_u8_s8(x);
@@ -890,8 +890,8 @@ void calcNnzData(const uint8_t *input, size_t inputSize, IndexType *nzIndices, s
             if (byte == 0) continue; // skip if no bits set
             auto indexLookup = bitmaskToIndices.lookup(byte); // list of indices
 
-            // Process individual elements but group them into sets of 4
-            // Track which groups of 4 have at least one non-zero element
+            // Process individual elements but group them into sets of 4.
+            // Track which groups of 4 have at least one non-zero element.
             for (unsigned k = 0; k < 8 && indexLookup[k]; ++k) {
                 // -1 to correct for addition of 1 in the lookup table
                 unsigned elementIdx = i + j * 8 + indexLookup[k] - 1;
