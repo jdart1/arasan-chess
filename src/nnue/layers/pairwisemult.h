@@ -7,25 +7,27 @@
 // Combination of the accumulator halves into a combined output, by:
 // 1. clamping to a range
 // 2. pairwise multiplication
-// 3. scaling the product
+// 3. scaling the product to account for quantization
+// Output size is 1/2 of input size
 template <typename InputType, typename OutputType, size_t size, unsigned clampMax,
-          unsigned shift, size_t alignment = DEFAULT_ALIGN>
+          unsigned scalingShift, unsigned outputQuant, size_t alignment = DEFAULT_ALIGN>
 class PairwiseMult : public TypedLayer<InputType, OutputType, size, size, alignment> {
   public:
     PairwiseMult() = default;
 
     virtual ~PairwiseMult() = default;
 
-    virtual void doForward(const InputType *input, OutputType *output) const noexcept {
+    virtual void forward(const InputType *input, OutputType *output) const noexcept {
 #if defined(SIMD)
-        if constexpr (sizeof(OutputType) == 1) {
-            simd::pairwiseMult<InputType, OutputType, size, clampMax, shift>(input, output);
+        if constexpr (sizeof(OutputType) == 1 && sizeof(InputType) == 2) {
+            simd::pairwiseMult<InputType, OutputType, size, clampMax, scalingShift, outputQuant>(input, output);
         } else
 #endif
-            pairwseMultGeneric(input, output);
+            pairwiseMultGeneric(input, output);
 #ifdef NNUE_TRACE
         std::cout << "---- PairwiseMult output " << std::endl;
-        for (size_t i = 0; i < size; ++i) {
+        constexpr size_t limit = size * sizeof(OutputType) / sizeof(InputType);
+        for (size_t i = 0; i < limit; ++i) {
             std::cout << static_cast<int>(output[i]) << ' ';
             if ((i + 1) % 64 == 0)
                 std::cout << std::endl;
@@ -37,9 +39,14 @@ class PairwiseMult : public TypedLayer<InputType, OutputType, size, size, alignm
     void pairwiseMultGeneric(const InputType *input, OutputType *output) const noexcept {
         InputType maxVal = static_cast<InputType>(clampMax);
         for (size_t i = 0; i < size/2; ++i) {
-            int32_t x0 = static_cast<int32_t>(std::clamp<InputType>(input[i],0,maxVal));
-            int32_t x1 = static_cast<int32_t>(std::clamp<InputType>(input[i + (size / 2)],0,maxVal));
-            output[i] = static_cast<OutputType>((x0 * x1) >> shift);
+            uint32_t x0 = static_cast<uint32_t>(std::clamp<InputType>(input[i],0,maxVal));
+            uint32_t x1 = static_cast<uint32_t>(std::clamp<InputType>(input[i + (size / 2)],0,maxVal));
+            // Pairwise multiply then shift. The shift value should ensure result fits in 8-bit output.
+            // Result is clamped to outputQuant (Q_L1) to maintain quantization scale
+            uint32_t product = (x0 * x1) >> (16 - scalingShift);
+            // if (i<20) std::cout << i << " " << "x0 = " << x0 << " x1 = " << x1 << " mult = " << x0*x1 << " shifted " << product << std::endl;
+            // output[i] = static_cast<OutputType>(std::clamp<int32_t>(product, 0, static_cast<int32_t>(outputQuant)));
+            output[i] = product;
         }
     }
 };

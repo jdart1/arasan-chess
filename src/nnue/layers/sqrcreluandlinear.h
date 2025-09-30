@@ -9,9 +9,10 @@
 // The weights are multiplied by the input and the high 16 bits discarded. Then the operation
 // is completed by multiplying by the input again (squaring)
 template <typename AccumulatorType, typename InputType, typename WeightType, typename BiasType, typename OutputType, size_t inputSize,
-          int clampMax, int NETWORK_QA, size_t buckets, bool transpose = false, size_t alignment = DEFAULT_ALIGN>
+          int clampMax, unsigned inputDequantifyShift, size_t buckets, bool transpose = false, size_t alignment = DEFAULT_ALIGN>
 class SqrCReLUAndLinear
-    : public LinearLayer<InputType, WeightType, BiasType, OutputType, inputSize, 1, buckets, transpose, alignment> {
+    : public LinearLayer<InputType, WeightType, BiasType, OutputType, inputSize, 1 /* output size */, buckets,
+                         0, 0, transpose, alignment> {
   public:
     SqrCReLUAndLinear() = default;
 
@@ -37,9 +38,7 @@ class SqrCReLUAndLinear
                                               32768) * x;
             }
         }
-        // convert sum to a range that corrects for the squaring, i.e.
-        // what it would have if this were a regular CReLU layer
-        output[0] = (sum / NETWORK_QA) + this->_biases[bucket][0];
+        output[0] = (sum >> inputDequantifyShift) + this->_biases[bucket][0];
 #ifdef NNUE_TRACE
         std::cout << "output bucket = " << bucket << std::endl;
         std::cout << "---- SqrCReLUAndLinear output " << std::endl;

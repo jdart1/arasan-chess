@@ -1,8 +1,10 @@
-// Copyright 2021, 2024 by Jon Dart. All Rights Reserved.
+// Copyright 2021, 2024-2025 by Jon Dart. All Rights Reserved.
 #ifndef _NNUE_TYPED_LAYER_H
 #define _NNUE_TYPED_LAYER_H
 
 #include "util.h"
+
+#include <istream>
 
 // typed layer
 template <typename InputType, typename OutputType, size_t inputSize,

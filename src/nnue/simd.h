@@ -3,6 +3,7 @@
 #define NNUE_SIMD_H
 
 #include "simddefs.h"
+#include "../bitutil.h"
 
 namespace simd {
 
@@ -452,36 +453,36 @@ void update(const AccumType *source, AccumType *target,
 #endif
 }
 
-template <size_t inputSize, size_t roundedInputSize, size_t outputSize>
-inline void i8dotProductnxn(const int8_t *input,
+template <size_t inputSize, size_t roundedInputSize, size_t outputSize, unsigned inputDequantifyShift,
+          unsigned outputDequantifyShift>
+inline void i8dotProductnxn(const uint8_t *input,
                             const int8_t weights[outputSize][roundedInputSize],
                             const int32_t *biases, int32_t *output) {
 #ifdef AVX512
     if constexpr (inputSize >= 64 && inputSize % 64 == 0) {
-        vec_copy<outputSize, int32_t>(biases, output);
         for (unsigned i = 0; i < outputSize; i++) {
             vec_t prod = zero512;
             const vec_t *w = reinterpret_cast<const vec_t *>(weights[i]);
-            for (unsigned j = 0; j < 64; ++j) {
-                const vec_t *inp = reinterpret_cast<const vec_t *>(&input[j]);
-                madd_dpbusd_epi32(prod, inp[0], w[j / 64]);
+            // 64 = 512/8
+            const vec_t *inp = reinterpret_cast<const vec_t *>(input);
+            for (unsigned j = 0; j < inputSize/64; ++j) {
+                madd_dpbusd_epi32(prod, inp[j], w[j]);
             }
-            output[i] += hsum32(prod);
+            output[i] = ((hsum32(prod) >> inputDequantifyShift) + biases[i]) >> outputDequantifyShift;
         }
         return;
     }
 #endif
 #ifdef AVX2
     if constexpr (inputSize >= 32 && inputSize % 32 == 0) {
-        vec_copy<outputSize, int32_t>(biases, output);
         for (unsigned i = 0; i < outputSize; i++) {
             __m256i prod = _mm256_setzero_si256();
             const __m256i *w = reinterpret_cast<const __m256i *>(weights[i]);
-            for (unsigned j = 0; j < inputSize; j += 32) {
-                const __m256i *inp = reinterpret_cast<const __m256i *>(&input[j]);
-                madd_dpbusd_epi32(prod, inp[0], w[j / 32]);
+            const __m256i *inp = reinterpret_cast<const __m256i *>(input);
+            for (unsigned j = 0; j < inputSize/32; ++j) {
+                dpbusd_epi32(prod, inp[j], w[j]);
             }
-            output[i] += hsum32(prod);
+            output[i] = ((hsum32(prod) >> inputDequantifyShift) + biases[i]) >> outputDequantifyShift;
         }
     }
 #elif defined(SSSE3)
@@ -498,11 +499,12 @@ inline void i8dotProductnxn(const int8_t *input,
             total = _mm_add_epi32(total, sum);
         }
 #ifdef SSE41
-        output[i] = _mm_cvtsi128_si32(total) + _mm_extract_epi32(total, 1) + biases[i];
+        auto prodsum = _mm_cvtsi128_si32(total) + _mm_extract_epi32(total, 1);
 #else
         total = _mm_add_epi32(total, _mm_shuffle_epi32(total, 1));
-        output[i] = _mm_cvtsi128_si32(total) + biases[i];
+        auto prodsum = _mm_cvtsi128_si32(total);
 #endif
+        output[i] =  ((prodsum >> inputDequantifyShift) + biases[i]) >> outputDequantifyShift;
     }
 #elif defined(SSE2)
     const vec_t zeros = _mm_setzero_si128();
@@ -528,8 +530,8 @@ inline void i8dotProductnxn(const int8_t *input,
         __m128i sum_high_64 = _mm_shuffle_epi32(sum, _MM_SHUFFLE(1, 0, 3, 2));
         sum = _mm_add_epi32(sum, sum_high_64);
         __m128i sum_second_32 = _mm_shufflelo_epi16(sum, _MM_SHUFFLE(1, 0, 3, 2));
-        sum = _mm_add_epi32(sum, sum_second_32);
-        output[i] = _mm_cvtsi128_si32(sum) + biases[i];
+        int32_t final_sum = _mm_cvtsi128_si32(_mm_add_epi32(sum, sum_second_32));
+        output[i] =  ((final_sum >> inputDequantifyShift) + biases[i]) >> outputDequantifyShift;
     }
 #elif defined(NEON)
     const int8x8_t *inp = reinterpret_cast<const int8x8_t *>(input);
@@ -544,14 +546,15 @@ inline void i8dotProductnxn(const int8_t *input,
             // sum the products
             accum = vpadalq_s16(accum, prod);
         }
-        output[i] = hsum32(accum) + biases[i];
+        output[i] = ((hsum32(accum) >> inputDequantifyShift) + biases[i]) >> outputDequantifyShift;
     }
 #endif
 }
 
 #ifndef NEON
 // specialization for a particular x86 architecture, using vec_type registers
-template <typename vec_type, unsigned simdWidth, size_t inputSize, size_t roundedInputSize, size_t outputSize>
+template <typename vec_type, unsigned simdWidth, size_t inputSize, size_t roundedInputSize, size_t outputSize,
+          unsigned inputDequantifyShift, unsigned outputDequantifyShift>
 static inline void i32dotProductnxn(const int32_t *input,
                                     const int32_t weights[outputSize][roundedInputSize],
                                     const int32_t *biases, int32_t *output) {
@@ -559,7 +562,6 @@ static inline void i32dotProductnxn(const int32_t *input,
     constexpr unsigned inputChunks = chunks<InputType, simdWidth>(inputSize);
     static_assert(inputChunks > 0);
     const vec_type *inp = reinterpret_cast<const vec_type *>(input);
-    vec_copy<outputSize, int32_t>(biases, output);
     for (size_t i = 0; i < outputSize; ++i) {
         // Weights are column order
         vec_type sum;
@@ -570,54 +572,77 @@ static inline void i32dotProductnxn(const int32_t *input,
             auto w = vec_load<vec_type>(col + j);
             sum = vec_add32(sum,vec_mullo32<vec_type>(x,w));
         }
-        output[i] += hsum32<vec_type>(sum);
+        int32_t out = hsum32(sum);
+        if constexpr (inputDequantifyShift) {
+            out >>= inputDequantifyShift;
+        }
+        out += biases[i];
+        if constexpr (outputDequantifyShift) {
+            out >>= outputDequantifyShift;
+        }
+        output[i] = out;
     }
 }
-#endif    
+#endif
 
 // dot product, input of at least size 4 (to allow 128-bit vector operations)
 template <typename InputType, typename WeightType, typename BiasType, typename OutputType,
-          size_t inputSize, size_t roundedInputSize, size_t outputSize>
+          size_t inputSize, size_t roundedInputSize, size_t outputSize, unsigned inputDequantifyShift,
+          unsigned outputDequantifyShift>
 inline void dotProductnxn(const InputType *input,
                           const WeightType weights[outputSize][roundedInputSize],
                           const BiasType *biases, OutputType *output) {
-    static_assert(inputSize >= 4);
-    if constexpr (sizeof(WeightType) == 1) {
-        i8dotProductnxn<inputSize, roundedInputSize, outputSize>(input, weights, biases, output);
-    } else if constexpr (sizeof(WeightType) == 4) {
+    static_assert(inputSize * sizeof(InputType) >= 128);
+    if constexpr (sizeof(InputType) == 1) {
+        i8dotProductnxn<inputSize, roundedInputSize, outputSize, inputDequantifyShift,
+                        outputDequantifyShift>(input, weights, biases, output);
+    } else if constexpr (sizeof(InputType) == 4) {
 #ifdef NEON
-    vec_copy<outputSize, int32_t>(biases, output);
-    constexpr size_t inputChunks = inputSize / 4;
-    for (size_t i = 0; i < outputSize; ++i) {
-        vec32_t sum = zero;
-        const int32_t *w = weights[i];
-        for (size_t j = 0; j < inputChunks; ++j) {
-            vec32_t inp_vec = vec_load32(reinterpret_cast<const vec32_t *>(input + 4 * j));
-            vec32_t w_vec = vec_load32(reinterpret_cast<const vec32_t *>(w + 4 * j));
-            sum = vec_add32(sum, vec_mullo32(inp_vec, w_vec));
+        constexpr unsigned inputChunks = chunks<InputType, simdWidth>(inputSize);
+        static_assert(inputChunks > 0);
+        const vec32_t *inp = reinterpret_cast<const vec32_t *>(input);
+        for (size_t i = 0; i < outputSize; ++i) {
+            // Weights are column order
+            vec32_t sum = vec_set_32(0);
+            const vec32_t *col = reinterpret_cast<const vec32_t *>(weights[i]);
+            for (size_t j = 0; j < inputChunks; ++j) {
+                auto x = vec_load32(inp + j);
+                auto w = vec_load32(col + j);
+                sum = vec_add32(sum,vec_mullo32(x,w));
+            }
+            int32_t out = hsum32(sum);
+            if constexpr (inputDequantifyShift) {
+                out >>= inputDequantifyShift;
+            }
+            out += biases[i];
+            if constexpr (outputDequantifyShift) {
+                out >>= outputDequantifyShift;
+            }
+            output[i] = out;
         }
-        output[i] += hsum32(sum);
-    }
+        return;
 #endif
 #ifdef AVX512
-    if (chunks<int32_t, 512>(inputSize) >= 1) {
-        // wide enough for avx512
-        i32dotProductnxn<__m512i, 512, inputSize, roundedInputSize, outputSize>(
-            input, weights, biases, output);
-        return;
-    }
+        if (chunks<int32_t, 512>(inputSize) >= 1) {
+            // wide enough for avx512
+            i32dotProductnxn<__m512i, 512, inputSize, roundedInputSize, outputSize,
+                             inputDequantifyShift, outputDequantifyShift>(input, weights, biases,
+                                                                          output);
+            return;
+        }
 #endif
 #ifdef AVX2
-    if (chunks<int32_t, 256>(inputSize) >= 1) {
-        // AVX512 falls back to here if the input is not wide enough
-        i32dotProductnxn<__m256i, 256, inputSize, roundedInputSize, outputSize>(input, weights,
-                                                                                biases, output);
-        return;
-    }
+        if (chunks<int32_t, 256>(inputSize) >= 1) {
+            // AVX512 falls back to here if the input is not wide enough
+            i32dotProductnxn<__m256i, 256, inputSize, roundedInputSize, outputSize, inputDequantifyShift,
+                             outputDequantifyShift>(input, weights, biases, output);
+            return;
+        }
 #endif
 #if defined(SSE2) || defined(SSE3)
-    i32dotProductnxn<__m128i, 128, inputSize, roundedInputSize, outputSize>(input, weights,
-                                                                            biases, output);
+        i32dotProductnxn<__m128i, 128, inputSize, roundedInputSize, outputSize,
+                         inputDequantifyShift, outputDequantifyShift>(input, weights, biases,
+                                                                      output);
 #endif
     }
 }
@@ -635,7 +660,25 @@ static inline void x86CReLU(const InType *in, OutType *out) {
         if constexpr (rshift) {
             x = vec_rshift32(x, rshift);
         }
-         x = vec_clamp32<vec_type>(x, maxValues);
+        x = vec_clamp32<vec_type>(x, maxValues);
+        // store
+        vec_store<vec_type>(outp + i, x);
+    }
+}
+
+template <typename vec_type, unsigned vec_width, typename InType, typename OutType, size_t size, unsigned clampMax, unsigned rshift>
+static inline void x86SqrCReLU(const InType *in, OutType *out) {
+    const vec_type *inp = reinterpret_cast<const vec_type *>(in);
+    vec_type *outp = reinterpret_cast<vec_type *>(out);
+    vec_type maxValues = vec_set_32<vec_type>(clampMax);
+    for (size_t i = 0; i < chunks<InType, vec_width>(size); ++i) {
+        // load
+        auto x = vec_load<vec_type>(inp + i);
+        x = vec_clamp32<vec_type>(x, maxValues);
+        x = vec_mullo32<vec_type>(x, x);
+        if constexpr (rshift) {
+            x = vec_rshift32(x, rshift);
+        }
         // store
         vec_store<vec_type>(outp + i, x);
     }
@@ -673,11 +716,51 @@ static inline void cReLU(const InType *in, OutType *out) {
 #endif // ifdef NEON
 }
 
+template <typename InType, typename OutType, size_t size, unsigned clampMax, unsigned rshift>
+static inline void sqrCReLU(const InType *in, OutType *out) {
+    // 32-bit only, currently
+    static_assert(sizeof(InType) == 4 && sizeof(OutType) == 4);
+#ifdef NEON
+    vec32_t maxValues = vec_set_32(clampMax);
+    const vec32_t *inp = reinterpret_cast<const vec32_t*>(in);
+    vec32_t *outp = reinterpret_cast<vec32_t*>(out);
+    for (size_t i = 0; i < chunks<InType, simdWidth>(size); ++i) {
+        // load
+        auto x = vec_load32(inp + i);
+        x = vec_clamp32(x, maxValues);
+        x = vec_mullo32(x, x);
+        if constexpr (rshift != 0) {
+            x = vec_rshift32<rshift>(x);
+        }
+        // store
+        vec_store32(outp + i, x);
+    }
+#else
+    // no AVX512 yet
+#if defined(AVX2)
+    if constexpr (size * 8 >= 256) {
+        return x86SqrCReLU<__m256i, 256, InType, OutType, size, clampMax, rshift>(in, out);
+    } else
+#endif
+#if defined(AVX2) || defined(SSE2) || defined(SSSE3)
+        return x86SqrCReLU<__m128i, 128, InType, OutType, size, clampMax, rshift>(in, out);
+#endif
+#endif // ifdef NEON
+}
+
 // performs activation by pairwise multiplication, as in the SFv4 net, transforming the outputs of
 // the 16-bit feature layer into a uint8_t vector
-template <typename InType, typename OutType, size_t size, unsigned clampMax, unsigned shift>
+template <typename InType, typename OutType, size_t size, unsigned clampMax, unsigned scalingShift, unsigned outputQuant>
 static inline void pairwiseMult(const InType *input, OutType *output) {
-    // currently assume fixed size types
+    // currently assumes fixed size types
+    // Note: inputs are clamped to 0..255 range. However, when multiplying, 255 * 255 = 65025, which
+    // produces 16-bit signed integer overflow. Multiplication must be signed, because the x86 architecture
+    // does not have unsigned SIMD integer multiply except for 32-bit inputs. Therefore we use the approach
+    // found in several engines including Obsidian, Plentychess, etc:
+    // 1. Shift one of the operands left by a scaling factor
+    // 2. Multiply by the other operand, retaining the high 16 bits
+    // 3. Pack the high bits into an 8-bit result vector. Scaling factor is chosen to put the
+    // outputs into the desired range.
     static_assert(sizeof(InType) == 2 && sizeof(OutType) == 1);
     static_assert((size * 8) >= simdWidth && (size * 8) % simdWidth == 0);
 
@@ -692,10 +775,10 @@ static inline void pairwiseMult(const InType *input, OutType *output) {
         const vec_t sum0b = vec_clamp16(inp0[i + 1], packedMax);
         const vec_t sum1a = vec_clamp16(inp1[i], packedMax);
         const vec_t sum1b = vec_clamp16(inp1[i + 1], packedMax);
-        // multiply and apply shift to match generic implementation
-        auto prod0 = vec_shr16<shift>(vec_mullo16(sum0a, sum1a));
-        auto prod1 = vec_shr16<shift>(vec_mullo16(sum0b, sum1b));
-        outp[i/2] = vcombine_s8(vqmovun_s16(prod0), vqmovun_s16(prod1));
+        // multiply and apply shift
+        auto prod0 = vec_mulhi16(vec_shl16(sum0a, scalingShift), sum1a);
+        auto prod1 = vec_mulhi16(vec_shl16(sum0b, scalingShift), sum1b);
+        outp[i/2] = vcombine_u8(vqmovun_s16(prod0), vqmovun_s16(prod1));
     }
 #else
     const vec_t limit = vec_set_16<vec_t>(clampMax);
@@ -711,17 +794,116 @@ static inline void pairwiseMult(const InType *input, OutType *output) {
         const vec_t sum1a = vec_clamp16(inp1[i], limit);
         const vec_t sum1b = vec_clamp16(inp1[i + 1], limit);
         // multiply and apply shift
-        auto prod0 = vec_shr16(vec_mullo16(sum0a, sum1a), shift);
-        auto prod1 = vec_shr16(vec_mullo16(sum0b, sum1b), shift);
+        auto prod0 = vec_mulhi16(vec_shl16(sum0a, scalingShift), sum1a);
+        auto prod1 = vec_mulhi16(vec_shl16(sum0b, scalingShift), sum1b);
+        // AVX2, AVX512 pack instructions interleave their inputs, so must
+        // permute the output to place it in the proper order.
 #ifdef AVX512
-        vec_t compacted = _mm512_packs_epi16(prod0, prod1);
+        vec_t compacted = _mm512_packus_epi16(prod0, prod1);
         outp[i/2] = _mm512_permutexvar_epi64(_mm512_setr_epi64(0, 2, 4, 6, 1, 3, 5, 7), compacted);
 #elif defined(AVX2)
-        vec_t compacted = _mm256_packs_epi16(prod0, prod1);
-        outp[i/2] = _mm256_permute4x64_epi64(compacted, 0b11011000);
+        vec_t compacted = _mm256_packus_epi16(prod0, prod1);
+        outp[i/2] =  _mm256_permute4x64_epi64(compacted, 0b11011000);
 #elif defined(SSE2)
-        outp[i/2] = _mm_packs_epi16(prod0, prod1);
+        outp[i/2] = _mm_packus_epi16(prod0, prod1);
 #endif
+    }
+#endif
+}
+
+// Lookup table for non-zero indices in a byte
+static const class BitmaskToIndices {
+
+public:
+
+    BitmaskToIndices() {
+        for (unsigned i = 0; i < 256; ++i) {
+            uint64_t j = i, k = 0;
+            data[i].dataAsInt64 = 0;
+            while (j) {
+                // note: bit indices start at 1
+                data[i].dataAsArray[k++] = BitUtils::firstOne(j) + 1;
+                j &= j - 1;
+            }
+        }
+    }
+
+    const auto &lookup(uint8_t x) const noexcept {
+        return data[x].dataAsArray;
+    }
+
+private:
+    union DataUnion {
+        uint8_t dataAsArray[8];
+        uint64_t dataAsInt64;
+    };
+
+    alignas(64) DataUnion data[256];
+
+} bitmaskToIndices;
+
+#ifdef NEON
+template<int lane, typename IndexType>
+static inline void check_lane(uint64x2_t comp_u64, unsigned i, unsigned& lastGroupIdx, IndexType* nzIndices, size_t& nzCount) {
+    if (vgetq_lane_u32(vreinterpretq_u32_u64(comp_u64), lane) != 0) {
+        unsigned groupIdx = (i / 4) + lane;
+        if (lastGroupIdx != groupIdx) {
+            nzIndices[nzCount++] = groupIdx;
+            lastGroupIdx = groupIdx;
+        }
+    }
+}
+#endif
+
+ // compute a vector of group indices (groups of 4 consecutive elements) for which
+// at least one element in the group is non-zero. This is optimized for DPBUSD
+// operations which work on 4-element groups.
+template <typename IndexType>
+void calcNnzData(const uint8_t *input, size_t inputSize, IndexType *nzIndices, size_t &nzCount) {
+    // bytes that will fit in a vector register of simdWidth bits:
+    static unsigned inputChunkSize = simdWidth / (8 * sizeof(int8_t));
+    nzCount = 0;
+    unsigned lastGroupIdx = UINT_MAX;
+#if defined(NEON)
+    // We do not emulate the x86 approach, because NEON has no direct equivalent of
+    // instructions such as _mm512_cmpgt_epu8_mask that pack the results of a comparision
+    // operation into a bitmask.
+    for (unsigned i = 0; i < inputSize; i += inputChunkSize) {
+        auto x = vec_load8(reinterpret_cast<const vec8_t*>(input + i));
+        uint8x16_t input_u8 = vreinterpretq_u8_s8(x);
+        uint8x16_t comp = vcgtq_u8(input_u8, vdupq_n_u8(0));
+        uint64x2_t comp_u64 = vreinterpretq_u64_u8(comp);
+
+        // check groups of 4 bytes
+        check_lane<0>(comp_u64, i, lastGroupIdx, nzIndices, nzCount);
+        check_lane<1>(comp_u64, i, lastGroupIdx, nzIndices, nzCount);
+        check_lane<2>(comp_u64, i, lastGroupIdx, nzIndices, nzCount);
+        check_lane<3>(comp_u64, i, lastGroupIdx, nzIndices, nzCount);
+    }
+#else
+    for (unsigned i = 0; i < inputSize; i += inputChunkSize) {
+        // obtain bitmask of the non-zero values in the current input chunk of simdWidth bits
+        MaskType_t mask = nnzMask(vec_load(reinterpret_cast<const vec_t*>(input + i)));
+        // process the output one byte at a time
+        for (unsigned j = 0; j < sizeof(MaskType_t) / sizeof(int8_t); ++j) {
+            const uint8_t byte = static_cast<uint8_t>((mask >> (j * 8)) & 0xFF); // next byte to process
+            if (byte == 0) continue; // skip if no bits set
+            auto indexLookup = bitmaskToIndices.lookup(byte); // list of indices
+
+            // Process individual elements but group them into sets of 4
+            // Track which groups of 4 have at least one non-zero element
+            for (unsigned k = 0; k < 8 && indexLookup[k]; ++k) {
+                // -1 to correct for addition of 1 in the lookup table
+                unsigned elementIdx = i + j * 8 + indexLookup[k] - 1;
+                unsigned groupIdx = elementIdx / 4; // group index for DPBUSD
+
+                // Only add if this is a new group (avoid duplicates)
+                if (groupIdx != lastGroupIdx) {
+                    nzIndices[nzCount++] = groupIdx;
+                    lastGroupIdx = groupIdx;
+                }
+            }
+        }
     }
 #endif
 }
@@ -730,7 +912,7 @@ static inline void pairwiseMult(const InType *input, OutType *output) {
 // Operations are re-arranged as suggested here: https://github.com/cosmobobak/viridithas/blob/master/nnue-speedups.md#lizard-simd-for-squared-clipped-relu, allowing efficient SIMD execution with 16-bit quantities (originally implemented in LizardChess).
 template <typename InType, typename OutType, typename WeightType, size_t inputSize /* features */, size_t outputSize>
 static inline void sqrCRelUAndLinear(const InType *input, OutType *output,
-                                     const int clampMax, const WeightType *weights) {
+                                    const int clampMax, const WeightType *weights) {
     static_assert(sizeof(InType) == 2, "only 16bit is supported");
     static_assert(inputSize*8 >= simdWidth && (inputSize*8) % simdWidth == 0,"width is not multiple of simdWidth");
 #ifdef NEON

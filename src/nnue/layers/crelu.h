@@ -17,7 +17,7 @@ public:
 
     virtual ~CReLU() = default;
 
-    virtual void doForward(const InputType *input, OutputType *output) const
+    virtual void forward(const InputType *input, OutputType *output) const
         noexcept {
 #if defined(SIMD)
         if constexpr (sizeof(InputType) == sizeof(OutputType) && sizeof(InputType) == 4 &&

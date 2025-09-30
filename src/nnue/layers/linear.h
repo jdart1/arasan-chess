@@ -8,39 +8,48 @@
 #ifdef NNUE_TRACE
 #include <array>
 #endif
+#include <iostream>
 
-// This class defines a linear transformation layer of the NNUE.
-// If transpose == true, correct the input data format so that it is ordered by buckets.
+// This class defines a linear transformation layer of the NNUE. Integer values are assumed.
+// If inputDequantifyShift is nonzero, is applied to the product part of the output as a right shift.
+// If outputDequantifyShift is nonzero, is applied to the complete output (bias + product) as a right shift.
 //
 template <typename InputType, typename WeightType, typename BiasType, typename OutputType,
-          size_t inputSize, size_t outputSize, size_t buckets, bool transpose = false,
+          size_t inputSize, size_t outputSize, size_t buckets, unsigned inputDequantifyShift,
+          unsigned outputDequantifyShift,
+          bool transpose = false,
           size_t alignment = DEFAULT_ALIGN>
 class LinearLayer : public TypedLayer<InputType, OutputType, inputSize, outputSize, alignment> {
 
     static constexpr size_t roundedInputSize = std::max<size_t>(32, inputSize);
 
   public:
-    LinearLayer() { zero(); }
+    LinearLayer() {
+        zero();
+        postProcess();
+    }
 
     virtual ~LinearLayer() = default;
+
+    // post-processing after initialization: no-op for this class
+    virtual void postProcess() {
+    }
 
     // propagate data through the layer
     virtual inline void forward(size_t bucket, const InputType *input,
                                 OutputType *output) const noexcept {
 #if defined(SIMD)
-        if constexpr (inputSize >= 32 && sizeof(BiasType) == 4 && (sizeof(WeightType) == 1 || sizeof(WeightType) == 4)) {
-            simd::dotProductnxn<InputType, WeightType, BiasType, OutputType,
-                                inputSize, roundedInputSize, outputSize>(input, _weights[bucket],
-                                                                         _biases[bucket], output);
+        if constexpr (inputSize >= 32 && sizeof(BiasType) == 4 &&
+                      (sizeof(WeightType) == 1 || sizeof(WeightType) == 4)) {
+            simd::dotProductnxn<InputType, WeightType, BiasType, OutputType, inputSize,
+                                roundedInputSize, outputSize, inputDequantifyShift,
+                                outputDequantifyShift>(input, _weights[bucket], _biases[bucket],
+                                                       output);
         } else
 #endif
             dotProductGeneric(bucket, input, output);
 #ifdef NNUE_TRACE
-        std::cout << "---- linear " << inputSize << 'x' << outputSize << " ----" << std::endl;
-        for (unsigned i = 0; i < outputSize; ++i) {
-            std::cout << int(output[i]) << ' ';
-        }
-        std::cout << std::endl;
+        trace();
 #endif
     }
 
@@ -48,14 +57,20 @@ class LinearLayer : public TypedLayer<InputType, OutputType, inputSize, outputSi
                                   OutputType *output) const noexcept {
         // generic implementation
         for (size_t i = 0; i < outputSize; i++) {
-            output[i] = static_cast<OutputType>(this->_biases[bucket][i]);
-        }
-        for (size_t i = 0; i < outputSize; i++) {
+            OutputType out = 0;
             for (size_t j = 0; j < inputSize; j++) {
                 auto x = static_cast<OutputType>(input[j]);
                 auto y = static_cast<OutputType>(this->_weights[bucket][i][j]);
-                output[i] += x*y;
+                out += x*y;
             }
+            if constexpr (inputDequantifyShift) {
+                out >>= inputDequantifyShift;
+            }
+            out += static_cast<OutputType>(this->_biases[bucket][i]);
+            if constexpr (outputDequantifyShift) {
+                out >>= outputDequantifyShift;
+            }
+            output[i] = out;
         }
     }
 
@@ -151,6 +166,7 @@ class LinearLayer : public TypedLayer<InputType, OutputType, inputSize, outputSi
             }
         }
 #endif
+        postProcess();
         return s;
     }
 
@@ -196,6 +212,17 @@ class LinearLayer : public TypedLayer<InputType, OutputType, inputSize, outputSi
   protected:
     alignas(alignment) BiasType _biases[buckets][outputSize];
     alignas(alignment) WeightType _weights[buckets][outputSize][roundedInputSize];
+
+#ifdef NNUE_TRACE
+    void trace() const noexcept {
+        std::cout << "---- linear " << inputSize << 'x' << outputSize << " ----" << std::endl;
+        for (unsigned i = 0; i < outputSize; ++i) {
+            std::cout << static_cast<int>(output[i]) << ' ';
+        }
+        std::cout << std::endl;
+    }
+#endif
+
 };
 
 #endif

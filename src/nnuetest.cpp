@@ -19,14 +19,16 @@
 namespace nnue {
 #include "layers/crelu.h"
 #include "layers/pairwisemult.h"
+#include "layers/sparselinear.h"
 #include "layers/linear.h"
+#include "layers/sqrcrelu.h"
 }
 
 // Helper to fill arrays with random values
 template<typename T>
-static void fill_random(T* arr, size_t n, int weight_range) {
+static void fill_random(T* arr, size_t n, int minValue, int maxValue) {
     static std::mt19937 rng(42);
-    std::uniform_int_distribution<int32_t> dist(-weight_range, weight_range);
+    std::uniform_int_distribution<int32_t> dist(minValue, maxValue);
     for (size_t i = 0; i < n; ++i) {
         arr[i] = dist(rng);
     }
@@ -53,11 +55,11 @@ static int testCReLU() {
     alignas(nnue::DEFAULT_ALIGN) OutputType output[inputSize];
     alignas(nnue::DEFAULT_ALIGN) OutputType expected[inputSize];
 
-    fill_random<InputType>(input, inputSize, 511);
+    fill_random<InputType>(input, inputSize, -511, 511);
 
     nnue::CReLU<InputType, OutputType, inputSize, clamp, shift> layer;
 
-    layer.doForward(input,output);
+    layer.forward(input,output);
 
     // compute expected result using non-SIMD code
     layer.cReLUGeneric(input,expected);
@@ -70,6 +72,31 @@ static int testCReLU() {
     return err;
 }
 
+template<typename InputType, typename OutputType, size_t inputSize, unsigned clampMax, unsigned shift>
+static int testSqrCReLU() {
+    int err = 0;
+    alignas(nnue::DEFAULT_ALIGN) InputType input[inputSize];
+    alignas(nnue::DEFAULT_ALIGN) OutputType output[inputSize] = {0};
+    alignas(nnue::DEFAULT_ALIGN) OutputType expected[inputSize] = {0};
+
+    fill_random<InputType>(input, inputSize, -clampMax, clampMax);
+
+    nnue::SqrCReLU<InputType, OutputType, inputSize, clampMax, shift> layer;
+
+    layer.forward(input, output);
+
+    // compute expected result using non-SIMD code
+    layer.sqrCReLUGeneric(input, expected);
+
+    err = compare_outputs<OutputType, inputSize>(output, expected);
+    if (err) {
+        std::cerr << "SqrCReLU test with size " << inputSize << " and parameters " 
+                  << clampMax << ", " << shift << " failed" << std::endl;
+    }
+
+    return err;
+}
+
 template<typename InputType, typename OutputType, size_t inputSize>
 static int testPairwiseMult() {
     int err = 0;
@@ -77,14 +104,15 @@ static int testPairwiseMult() {
     alignas(nnue::DEFAULT_ALIGN) OutputType output[inputSize/2];
     alignas(nnue::DEFAULT_ALIGN) OutputType expected[inputSize/2];
 
-    fill_random<InputType>(input, inputSize, 362);
+    fill_random<InputType>(input, inputSize, -362, 362);
 
     constexpr int32_t QUANT = 63;
     constexpr int32_t QUANT_BITS = 6;
+    constexpr int32_t OUTPUT_QUANT = 64;
 
-    nnue::PairwiseMult<InputType, OutputType, inputSize, QUANT, QUANT_BITS> layer;
+    nnue::PairwiseMult<InputType, OutputType, inputSize, QUANT, QUANT_BITS, OUTPUT_QUANT> layer;
 
-    layer.doForward(input,output);
+    layer.forward(input,output);
 
     // compute expected result using non-SIMD code
     layer.pairwiseMultGeneric(input,expected);
@@ -99,7 +127,7 @@ static int testPairwiseMult() {
 }
 
 template<typename InputType, typename WeightType, typename BiasType, typename OutputType, size_t inputSize,
-         size_t outputSize>
+         size_t outputSize, unsigned inputShift, unsigned outputShift>
 static int testLinearLayer() {
 
     int err = 0;
@@ -107,17 +135,17 @@ static int testLinearLayer() {
     alignas(nnue::DEFAULT_ALIGN) OutputType output[outputSize];
     alignas(nnue::DEFAULT_ALIGN) OutputType expected[outputSize];
 
-    fill_random<InputType>(input, inputSize, 511);
+    fill_random<InputType>(input, inputSize, -362, 362);
 
-    nnue::LinearLayer<InputType, WeightType, BiasType, OutputType, inputSize, outputSize, 1> layer;
+    nnue::LinearLayer<InputType, WeightType, BiasType, OutputType, inputSize, outputSize, 1 /* buckets*/,inputShift, outputShift> layer;
 
     //initialize layer weights and biases
     BiasType biasdata[outputSize];
     for (size_t b = 0; b < layer.numBuckets(); ++b) {
-        fill_random(biasdata, outputSize, 1024);
+        fill_random(biasdata, outputSize, -1024, 1024);
         for (size_t i = 0; i < outputSize; ++i) {
             WeightType weightdata[inputSize];
-            fill_random(weightdata, inputSize, 127);
+            fill_random(weightdata, inputSize, -127, 127);
             layer.setCol(b,i,weightdata);
         }
         layer.setBiases(b,biasdata);
@@ -137,21 +165,84 @@ static int testLinearLayer() {
     return err;
 }
 
+template<typename InputType, typename WeightType, typename BiasType, typename OutputType, size_t inputSize,
+         size_t outputSize, unsigned inputShift, unsigned outputShift>
+static int testSparseLinear() {
+
+    int err = 0;
+
+    alignas(nnue::DEFAULT_ALIGN) InputType input[inputSize];
+    alignas(nnue::DEFAULT_ALIGN) OutputType output[outputSize];
+    alignas(nnue::DEFAULT_ALIGN) OutputType expected[outputSize];
+
+    // Note: the input to the SparseLinear layer is unsigned, but the SIMD implementation
+    // currently requires that the values not exceed 127 (max value for a signed char).
+    fill_random<InputType>(input, inputSize, 0, 127);
+
+    nnue::SparseLinear<InputType, WeightType, BiasType, OutputType, inputSize, outputSize, 1 /* buckets*/, inputShift, outputShift> layer;
+
+    // initialize layer weights and biases
+    // TBD: would like to move this inside the class, but there are compile issues with including
+    // <random> into linear.h
+    BiasType biasdata[outputSize];
+    for (size_t b = 0; b < layer.numBuckets(); ++b) {
+        fill_random(biasdata, outputSize, -1024, 1024);
+        for (size_t i = 0; i < outputSize; ++i) {
+            WeightType weightdata[inputSize];
+            fill_random(weightdata, inputSize, -127, 127);
+            layer.setCol(b,i,weightdata);
+        }
+        layer.setBiases(b,biasdata);
+    }
+    // build the optimized weight layout
+    layer.postProcess();
+
+    layer.forward(0,input,output);
+
+    // compute expected result using non-SIMD code
+    layer.dotProductGeneric(0,input,expected);
+
+    err = compare_outputs<OutputType,outputSize>(output,expected);
+    if (err) {
+        std::cerr << "SparseLinear " << inputSize << 'x' << outputSize << " with byte size "
+                  << sizeof(InputType) << " failed." << std::endl;
+    }
+
+    return err;
+}
+
+template<typename InputType, typename WeightType, typename BiasType, typename OutputType, size_t inputSize,
+         size_t outputSize, unsigned inputShift, unsigned outputShift>
+static int testOptimizedLinear() {
+
+    int err = 0;
+    alignas(nnue::DEFAULT_ALIGN) InputType input[inputSize];
+    alignas(nnue::DEFAULT_ALIGN) OutputType output[outputSize];
+    alignas(nnue::DEFAULT_ALIGN) OutputType expected[outputSize];
+
+    nnue::SparseLinear<InputType, WeightType, BiasType, OutputType, inputSize, outputSize, 1 /* buckets*/, inputShift, outputShift> layer(1250, 127);;
+
+    layer.forward(0,input,output);
+
+    // compute expected result using non-SIMD code
+    nnue::LinearLayer<InputType, WeightType, BiasType, OutputType, inputSize, outputSize, 1 /* buckets*/, inputShift, outputShift> layer2;
+    layer2.fillRandom(127, 1250);
+    layer.dotProductGeneric(0,input,expected);
+
+    err = compare_outputs<OutputType,outputSize>(output,expected);
+    if (err) {
+        std::cerr << "LinearLayer " << inputSize << 'x' << outputSize << " with byte size "
+                  << sizeof(InputType) << " failed." << std::endl;
+    }
+
+    return err;
+}
+
 static int testIndices(const Board &board, std::set<nnue::IndexType> &w_expected,
                        std::set<nnue::IndexType> &b_expected) {
     nnue::IndexArray wIndices, bIndices;
     auto wCount = nnue::Evaluator::getIndices(White, board, wIndices);
     auto bCount = nnue::Evaluator::getIndices(Black, board, bIndices);
-    /*
-    std::cout << "White" << std::endl;
-    for (size_t i = 0; i < wCount; ++i)
-        std::cout << wIndices[i] << ' ';
-    std::cout << std::endl;
-    std::cout << "Black" << std::endl;
-    for (size_t i = 0; i < bCount; ++i)
-        std::cout << bIndices[i] << ' ';
-    std::cout << std::endl;
-    */
 
     int errs = 0;
     for (auto it = wIndices.begin(); it != wIndices.begin() + wCount; it++) {
@@ -183,6 +274,79 @@ static int testIndices(const Board &board, std::set<nnue::IndexType> &w_expected
             std::cerr << i << ' ';
         }
         std::cerr << std::endl;
+    }
+    return errs;
+}
+
+// test the calcNnzData support function used by the SparseLinear class
+template <size_t size>
+static int testNnz() {
+    int errs = 0;
+    alignas(nnue::DEFAULT_ALIGN) uint8_t input[size];
+    alignas(nnue::DEFAULT_ALIGN) uint16_t output[size/4]; // groups of 4
+    size_t outputCount = 0;
+    // input is unsigned
+    fill_random(input, size, 0, 127);
+    static std::mt19937 rng(89);
+    std::uniform_int_distribution<int> dist1(0,100);
+
+    // make array sparse
+    for (size_t i = 0; i < size; ++i) {
+        auto x = dist1(rng);
+        if (x < 75) {
+            input[i] = 0;
+        }
+    }
+
+    // Calculate expected number of groups with non-zero elements
+    size_t expectedGroupCount = 0;
+    for (size_t groupIdx = 0; groupIdx < size/4; ++groupIdx) {
+        bool hasNonZero = false;
+        for (size_t k = 0; k < 4; ++k) {
+            if (input[groupIdx * 4 + k] != 0) {
+                hasNonZero = true;
+                break;
+            }
+        }
+        if (hasNonZero) {
+            expectedGroupCount++;
+        }
+    }
+
+    // Ensure we have at least one group with all zeros for testing
+    if (expectedGroupCount == size/4) { // very unlikely - all groups have non-zero
+        for (size_t k = 0; k < 4; ++k) {
+            input[k] = 0; // zero out first group
+        }
+        expectedGroupCount--;
+    }
+
+    simd::calcNnzData(input, size, output, outputCount);
+
+    // Build expected set of group indices with non-zero elements
+    std::set<uint16_t> expectedGroups;
+    for (size_t groupIdx = 0; groupIdx < size/4; ++groupIdx) {
+        for (size_t k = 0; k < 4; ++k) {
+            if (input[groupIdx * 4 + k] != 0) {
+                expectedGroups.insert(groupIdx);
+                break;
+            }
+        }
+    }
+
+    // Build actual set of output group indices
+    std::set<uint16_t> actualGroups(output, output + outputCount);
+
+    // Compare the sets
+    if (expectedGroups != actualGroups) {
+        std::cerr << "testNnz failed - group sets don't match" << std::endl;
+        std::cerr << " expected: ";
+        for (auto val : expectedGroups) std::cerr << val << ' ';
+        std::cerr << std::endl;
+        std::cerr << " actual: ";
+        for (auto val : actualGroups) std::cerr << val << ' ';
+        std::cerr << std::endl;
+        ++errs;
     }
     return errs;
 }
@@ -298,16 +462,26 @@ int testNNUE() {
 
     int errs = 0;
 
-    //errs += testCReLU<int16_t,int16_t,1024>();
     errs += testCReLU<int32_t,int32_t,1024,255,6>();
     errs += testCReLU<int32_t,int32_t,1024,255,0>();
     errs += testCReLU<int32_t,int32_t,16, 255, 6>(); // should not use SIMD
     errs += testCReLU<int32_t,int32_t,16, 255, 0>(); // should not use SIMD
+    errs += testSqrCReLU<int32_t,int32_t,1024,255,6>();
+    errs += testSqrCReLU<int32_t,int32_t,32,64,0>();
+    errs += testSqrCReLU<int32_t,int32_t,16,64,0>(); // should not use SIMD
     errs += testPairwiseMult<int16_t,int8_t,1024>();
-    errs += testLinearLayer<int8_t, int8_t, int32_t, int32_t,16,1024>();
-    errs += testLinearLayer<int32_t,int32_t,int32_t,int32_t,32,16>();
-    errs += testLinearLayer<int32_t,int32_t,int32_t,int32_t,32,32>();
-    errs += testLinearLayer<int32_t,int32_t,int32_t,int32_t,32,1>();
+    errs += testLinearLayer<int8_t, int8_t, int32_t, int32_t,16,1024,2,2>();
+    errs += testLinearLayer<int32_t,int32_t,int32_t,int32_t,16,32,0,6>();
+    errs += testLinearLayer<int32_t,int32_t,int32_t,int32_t,32,32,6,0>();
+    errs += testLinearLayer<int32_t,int32_t,int32_t,int32_t,32,1,0,0>();
+    int tmp = errs;
+    errs += testNnz<1024>();
+    if (errs - tmp > 0) {
+        std::cerr << "testNnz failed: skipping SparseLinear test" << std::endl;
+    }
+    else {
+        errs += testSparseLinear<uint8_t,int8_t,int32_t,int32_t,1024,16,7,0>();
+    }
 
     errs += testWholeNetwork();
 

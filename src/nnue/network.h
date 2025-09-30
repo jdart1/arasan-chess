@@ -30,7 +30,7 @@ class Network {
     using OutputLayer =
         SqrCReLUAndLinear<AccumulatorType, int16_t, int16_t, int16_t, OutputType,
                           NetworkParams::HIDDEN_WIDTH * 2, NetworkParams::NETWORK_QA,
-                          NetworkParams::NETWORK_QA, NetworkParams::OUTPUT_BUCKETS, true>;
+                          NetworkParams::NETWORK_QA_BITS, NetworkParams::OUTPUT_BUCKETS, true>;
 
     static constexpr size_t BUFFER_SIZE = 4096;
 
