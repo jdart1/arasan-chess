@@ -131,7 +131,9 @@ class BookEntry {
 
     void updateWinLoss( ColorType side, ResultType result );
 
-    uint8_t computeWeight() const;
+    bool omitMove() const noexcept;
+
+    uint8_t computeWeight() const noexcept;
 };
 
 class BookEntryJson : public BookEntry {
@@ -177,7 +179,15 @@ void BookEntry::updateWinLoss(ColorType side, ResultType result) {
     }
 }
 
-uint8_t BookEntry::computeWeight() const
+bool BookEntry::omitMove() const noexcept
+{
+    // omit moves that have no explicit weight, and are
+    // marked as blunders or lead only to losses
+    return (rec == book::NO_RECOMMEND && (moveEval == BLUNDER_MOVE ||
+                                          loss == count()));
+}
+
+uint8_t BookEntry::computeWeight() const noexcept
 {
    if (rec != book::NO_RECOMMEND) {
       return rec*book::MAX_WEIGHT/100;
@@ -698,10 +708,12 @@ int CDECL main(int argc, char **argv)
            int added = 0;
            for (auto be = (BookEntry*)it.second; be != nullptr; be = be->next) {
                if ((be->count() >= minFrequency) || be->first) {
-                   ++added;
                    try {
-                       writer.add(it.first, be->move_index,
+                       if (!be->omitMove()) {
+                               writer.add(it.first, be->move_index,
                                   be->computeWeight(), be->win, be->loss, be->draw);
+                               ++added;
+                       }
                    } catch(BookFullException &ex) {
                        std::cerr << ex.what() << std::endl;
                        return -1;
