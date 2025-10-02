@@ -14,13 +14,7 @@
 
 macro_rules! net_id {
     () => {
-        "arasan4"
-    };
-}
-
-macro_rules! net_id {
-    () => {
-        "arasan3"
+        "arasan5"
     };
 }
 
@@ -29,9 +23,14 @@ const NET_ID: &str = net_id!();
 fn main() {
     const NUM_INPUT_BUCKETS: usize = 9;
     const NUM_OUTPUT_BUCKETS: usize = 8;
-    const L1: usize = 1536;
+    const L1_INPUT_SIZE: usize = 1536;
+    const L2_INPUT_SIZE: usize = 16;
+    const L3_INPUT_SIZE: usize = 32;
     const INITIAL_LR: f32 = 0.001;
-    let FINAL_LR = INITIAL_LR * 0.4f32.powi(4);
+    const Q_FT: i16 = 255;
+    const Q_PW: i32 = 127;
+    const Q_H: i32 = 64;
+    let final_lr = INITIAL_LR * 0.4f32.powi(4);
     const SUPERBATCHES: usize = 240;
 
     #[rustfmt::skip]
@@ -61,29 +60,39 @@ fn main() {
 
                     weights
                 })
-                .quantise::<i16>(255),
-            SavedFormat::id("l0b").quantise::<i16>(255),
-            SavedFormat::id("l1w").quantise::<i16>(64),
-            SavedFormat::id("l1b").quantise::<i16>(255 * 64),
-        ])
+                .quantise::<i16>(Q_FT),
+            SavedFormat::id("l0b").quantise::<i16>(Q_FT),
+            // 1st hidden layer 
+            SavedFormat::id("l1w").round().quantise::<i8>(Q_H.try_into().unwrap()),
+            SavedFormat::id("l1b").round().quantise::<i32>(Q_H * Q_PW),
+            // 2nd hidden layer
+            SavedFormat::id("l2w").round().quantise::<i32>(Q_H * Q_H),
+            SavedFormat::id("l2b").round().quantise::<i32>(Q_H * Q_H * Q_H),
+            // 3rd hidden layer
+            SavedFormat::id("l3w").round().quantise::<i32>(Q_H * Q_H * Q_H),
+            SavedFormat::id("l3b").round().quantise::<i32>(Q_H * Q_H * Q_H * Q_H)
+            ])
         .loss_fn(|output, target| output.sigmoid().squared_error(target))
         .build(|builder, stm_inputs, ntm_inputs, output_buckets| {
             // input layer factoriser
-            let l0f = builder.new_weights("l0f", Shape::new(L1, 768), InitSettings::Zeroed);
+            let l0f = builder.new_weights("l0f", Shape::new(L1_INPUT_SIZE, 768), InitSettings::Zeroed);
             let expanded_factoriser = l0f.repeat(NUM_INPUT_BUCKETS);
 
-            // input layer weights
-            let mut l0 = builder.new_affine("l0", 768 * NUM_INPUT_BUCKETS, L1);
+            // ft layer weights - add weights for factorization
+            let mut l0 = builder.new_affine("l0", 768 * NUM_INPUT_BUCKETS, L1_INPUT_SIZE);
             l0.weights = l0.weights + expanded_factoriser;
-
-            // output layer weights
-            let l1 = builder.new_affine("l1", 2 * L1, NUM_OUTPUT_BUCKETS);
-
+            
+            // affine layers
+            let l1 = builder.new_affine("l1", L1_INPUT_SIZE, NUM_OUTPUT_BUCKETS * L2_INPUT_SIZE);
+            let l2 = builder.new_affine("l2", L2_INPUT_SIZE, NUM_OUTPUT_BUCKETS * L3_INPUT_SIZE);
+            let l3 = builder.new_affine("l3", L3_INPUT_SIZE, NUM_OUTPUT_BUCKETS);
             // inference
-            let stm_hidden = l0.forward(stm_inputs).screlu();
-            let ntm_hidden = l0.forward(ntm_inputs).screlu();
-            let hidden_layer = stm_hidden.concat(ntm_hidden);
-            l1.forward(hidden_layer).select(output_buckets)
+            let stm_hidden = l0.forward(stm_inputs).crelu().pairwise_mul();
+            let ntm_hidden = l0.forward(ntm_inputs).crelu().pairwise_mul();
+            let l1input = stm_hidden.concat(ntm_hidden);
+            let l2input = l1.forward(l1input).select(output_buckets).screlu();
+            let l3input = l2.forward(l2input).select(output_buckets).crelu();
+            l3.forward(l3input).select(output_buckets)
         });
 
     let schedule = TrainingSchedule {
@@ -96,8 +105,7 @@ fn main() {
             end_superbatch: SUPERBATCHES,
         },
         wdl_scheduler: wdl::ConstantWDL { value: 0.0 },
-        lr_scheduler: lr::CosineDecayLR { initial_lr: INITIAL_LR, final_lr: FINAL_LR, final_superbatch: SUPERBATCHES },
-//        lr_scheduler: lr::StepLR { start: 0.0015, gamma: 0.45, step: 60 },
+        lr_scheduler: lr::CosineDecayLR { initial_lr: INITIAL_LR, final_lr: final_lr, final_superbatch: SUPERBATCHES },
         save_rate: 60,
     };
 

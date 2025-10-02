@@ -5,11 +5,13 @@
 #include "accum.h"
 #include "nnparams.h"
 #include "features/arasanv3.h"
-// for testing include >1 layer type
-#include "layers/creluandlinear.h"
-#include "layers/sqrcreluandlinear.h"
+#include "layers/crelu.h"
+#include "layers/linear.h"
 #include "layers/pairwisemult.h"
+#include "layers/sqrcrelu.h"
 #include "util.h"
+
+#include <memory>
 
 class Network {
 
@@ -17,31 +19,65 @@ class Network {
 
   public:
 
-    static constexpr size_t FeatureXformerOutputSize = NetworkParams::HIDDEN_WIDTH;
-
     static constexpr size_t FeatureXformerRows = 12 * NetworkParams::KING_BUCKETS * 64;
 
     using OutputType = int32_t;
-    using XformerBiasType = int16_t;
-    using FeatureXformer = ArasanV3Feature<uint16_t, int16_t, XformerBiasType, int16_t, FeatureXformerRows,
-        NetworkParams::HIDDEN_WIDTH, NetworkParams::KING_BUCKETS_MAP>;
+    using FeatureXformer = ArasanV3Feature<uint16_t, int16_t, int16_t, int16_t, FeatureXformerRows,
+        NetworkParams::HIDDEN_WIDTH_1, NetworkParams::KING_BUCKETS_MAP>;
     using AccumulatorType = FeatureXformer::AccumulatorType;
     using AccumulatorOutputType = int16_t;
+    using L1InputType = uint8_t;
+    using L1WeightType = int8_t;
+    using L2InputType = int32_t;
+    using L3InputType = int32_t;
+
+    static constexpr auto Q_H = NetworkParams::Q_HIDDEN;
+    static constexpr auto Q_H_BITS = NetworkParams::Q_HIDDEN_BITS;
+
+    // definitions of the network layers:
+    // Pairwise multiplication of the accumulator outputs.
+    // Input quantization of the accumulator is Q_FT: y = sum(w * Q_FT) + b * Q_FT
+    // Pairwise multiplcation adds another Q_FT quantization:
+    // y = sum(w * Q_FT * Q_FT) + b * Q_FT * Q_FT
+    // But output of the pairwise layer is then dequantized by back to Q_PW via a shift:
+    // y = sum(w * Q_PW) + b * Q_PW
+    using FTActivation =
+        PairwiseMult<AccumulatorOutputType, L1InputType, NetworkParams::HIDDEN_WIDTH_1 * 2,
+                     NetworkParams::Q_FT, NetworkParams::FT_SCALING_SHIFT, NetworkParams::Q_HIDDEN>;
+    // L1 layer, 8 bit inputs/weights, 32 bit outputs. Weights and biases quantized to Q_H
+    // y = sum(Q_PW * x * Q_H * w) + Q_H * b1
+    // Dequantize back to Q_H range:
+    // y = sum(x * Q_H * w1) + Q_H * b1
+    using L1 = LinearLayer<L1InputType, L1WeightType, int32_t, int32_t,
+                           NetworkParams::HIDDEN_WIDTH_1, NetworkParams::HIDDEN_WIDTH_2,
+                           NetworkParams::OUTPUT_BUCKETS, NetworkParams::Q_PW_BITS, 0, true>;
+    // SqrCReLU activation.
+    // Because we are now operating on 32-bit quantities, do not dequantize the output, to
+    // preserve precision.
+    // y = (x * Q_H * Q_H)
+    using L1Activation = SqrCReLU<int32_t, int32_t, NetworkParams::HIDDEN_WIDTH_2, Q_H, 0>;
+    // L2 layer, 16x32, 32-bit inputs and weights. Bias is quantized to Q_H * Q_H * Q_H, weights to Q_H
+    // y = sum(x * Q_H * Q_H * Q_H * w2) + Q_H * Q_H * Q_H * b2
+    using L2 =
+         LinearLayer<L2InputType, int32_t, int32_t, L3InputType, NetworkParams::HIDDEN_WIDTH_2,
+                     NetworkParams::HIDDEN_WIDTH_3, NetworkParams::OUTPUT_BUCKETS, 0, 0, true>;
+    // CReLU activation
+    // does not change the scaling
+    using L2Activation =
+        CReLU<int32_t, int32_t, NetworkParams::HIDDEN_WIDTH_3, Q_H * Q_H * Q_H, 0>;
+    // Output layer, 32 bits. Weights quantized to Q_H, biases to Q_H * Q_H * Q_H
+    // y = sum(x * Q_H * Q_H * Q_H * Q_H * w2) + Q_H * Q_H * Q_H * b2
+    // Dequantize the output to Q_H * Q_H * Q_H range
     using OutputLayer =
-        SqrCReLUAndLinear<AccumulatorType, int16_t, int16_t, int16_t, OutputType,
-                          NetworkParams::HIDDEN_WIDTH * 2, NetworkParams::NETWORK_QA,
-                          NetworkParams::NETWORK_QA_BITS, NetworkParams::OUTPUT_BUCKETS, true>;
+        LinearLayer<L3InputType, int32_t, int32_t, OutputType, NetworkParams::HIDDEN_WIDTH_3, 1,
+                    NetworkParams::OUTPUT_BUCKETS, Q_H_BITS, 0, true>;
 
-    static constexpr size_t BUFFER_SIZE = 4096;
+    Network()
+        : transformer(new FeatureXformer()), ftActivation(new FTActivation()), l1(new L1()),
+          l1Activation(new L1Activation()), l2(new L2()), l2Activation(new L2Activation()),
+          outputLayer(new OutputLayer()) {}
 
-    Network() : transformer(new FeatureXformer()) {
-        outputLayer = new OutputLayer();
-    }
-
-    virtual ~Network() {
-        delete transformer;
-        delete outputLayer;
-    }
+    virtual ~Network() = default;
 
     inline static unsigned getIndex(ColorType kside, Square kp, Piece p, Square sq) {
 #ifdef NDEBUG
@@ -53,23 +89,41 @@ class Network {
 #endif
     }
 
-    // evaluate the net (layers past the first one)
+    // evaluate the net (layers past the feature transformer)
     int32_t evaluate(const AccumulatorType &accum, [[maybe_unused]] ColorType sideToMove, unsigned bucket) const {
-        alignas(nnue::DEFAULT_ALIGN) std::byte buffer[BUFFER_SIZE];
-        // propagate data through the remaining layers
 #ifdef NNUE_TRACE
         std::cout << "output bucket=" << bucket << std::endl;
         std::cout << "accumulator:" << std::endl;
         std::cout << accum << std::endl;
 #endif
-        // evaluate the output layer, in the correct bucket
-        outputLayer->forward(bucket, accum.getOutput(), reinterpret_cast<OutputType *>(buffer));
-        int32_t nnOut = reinterpret_cast<int32_t *>(buffer)[0];
+        alignas(DEFAULT_ALIGN) L1InputType buffer1[NetworkParams::HIDDEN_WIDTH_1];
+        alignas(DEFAULT_ALIGN) L2InputType buffer2[NetworkParams::HIDDEN_WIDTH_2];
+        alignas(DEFAULT_ALIGN) L2InputType buffer3[NetworkParams::HIDDEN_WIDTH_2];
+        alignas(DEFAULT_ALIGN) L3InputType buffer4[NetworkParams::HIDDEN_WIDTH_3];
+        alignas(DEFAULT_ALIGN) L3InputType buffer5[NetworkParams::HIDDEN_WIDTH_3];
+        alignas(DEFAULT_ALIGN) OutputType output[1];
+
+        // pairwise mult, reduces 2 x 16-bit vectors to 1 8-bit vector
+        ftActivation->forward(accum.getOutput(), buffer1);
+        // L1 affine layer
+        l1->forward(bucket, buffer1, buffer2);
+        // activation
+        l1Activation->forward(buffer2, buffer3);
+        // L2 affine layer
+        l2->forward(bucket, buffer3, buffer4);
+        // activation
+        l2Activation->forward(buffer4, buffer5);
+        // output to single int32_t
+        outputLayer->forward(bucket, buffer5, output);
+
+        int32_t nnOut = output[0];
+
+        // max scaled output is NetworkParams::OUTPUT_SCALE * 64 = 32000
+        int32_t scaled = static_cast<int32_t>(static_cast<int64_t>(nnOut * NetworkParams::OUTPUT_SCALE) / (Q_H * Q_H));
 #ifdef NNUE_TRACE
-        std::cout << "NN output, after scaling: "
-                  << (nnOut * NetworkParams::OUTPUT_SCALE) / (NetworkParams::NETWORK_QA * NetworkParams::NETWORK_QB) << std::endl;
+        std::cout << "NN output, after scaling: " << scaled << std::endl;
 #endif
-        return (nnOut * NetworkParams::OUTPUT_SCALE) / (NetworkParams::NETWORK_QA * NetworkParams::NETWORK_QB);
+        return scaled;
     }
 
     friend std::istream &operator>>(std::istream &i, Network &);
@@ -95,28 +149,41 @@ class Network {
     }
 
     FeatureXformer *getTransformer() const noexcept {
-        return transformer;
+        return transformer.get();
     }
 
   protected:
-    FeatureXformer *transformer;
-    OutputLayer *outputLayer;
+    std::unique_ptr<FeatureXformer> transformer;
+    std::unique_ptr<FTActivation> ftActivation;
+    std::unique_ptr<L1> l1;
+    std::unique_ptr<L1Activation> l1Activation;
+    std::unique_ptr<L2> l2;
+    std::unique_ptr<L2Activation> l2Activation;
+    std::unique_ptr<OutputLayer> outputLayer;
     uint32_t version;
 };
 
 inline std::istream &operator>>(std::istream &s, Network &network) {
-    // Arasan network files start with a 4-byte version
-    network.version = read_little_endian<uint32_t>(s);
-    if (s.fail()) return s;
-    if (network.version != NetworkParams::NN_VERSION) {
-        std::cerr << "Error: incorrect network version" << std::endl;
-        s.setstate(std::ios::badbit);
-        return s;
+    // Arasan network files start with a 4-byte version header
+
+    char header[NetworkParams::NN_HEADER_SIZE];
+    (void)s.read(header, NetworkParams::NN_HEADER_SIZE);
+    if (!s.good()) return s;
+    for (size_t i = 0; i < NetworkParams::NN_HEADER_SIZE; ++i) {
+        if (header[i] != NetworkParams::NN_HEADER[i]) {
+            std::cerr << "Error: incorrect network version" << std::endl;
+            s.setstate(std::ios::badbit);
+            return s;
+        }
     }
     // read feature layer
     (void)network.transformer->read(s);
-    if (s.fail()) return s;
-    // read bucketed output layer
+    if (!s.good()) return s;
+    // read bucketed hidden layers
+    (void)network.l1->read(s);
+    if (!s.good()) return s;
+    (void)network.l2->read(s);
+    if (!s.good()) return s;
     (void)network.outputLayer->read(s);
     return s;
 }
