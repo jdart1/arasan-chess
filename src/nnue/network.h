@@ -8,6 +8,7 @@
 #include "layers/crelu.h"
 #include "layers/linear.h"
 #include "layers/pairwisemult.h"
+#include "layers/sparselinear.h"
 #include "layers/sqrcrelu.h"
 #include "util.h"
 
@@ -33,6 +34,8 @@ class Network {
 
     static constexpr auto Q_H = NetworkParams::Q_HIDDEN;
     static constexpr auto Q_H_BITS = NetworkParams::Q_HIDDEN_BITS;
+    static constexpr auto Q_PW = NetworkParams::Q_PW;
+    static constexpr auto Q_PW_BITS = NetworkParams::Q_PW_BITS;
 
     // definitions of the network layers:
     // Pairwise multiplication of the accumulator outputs.
@@ -41,36 +44,36 @@ class Network {
     // y = sum(w * Q_FT * Q_FT) + b * Q_FT * Q_FT
     // But output of the pairwise layer is then dequantized by back to Q_PW via a shift:
     // y = sum(w * Q_PW) + b * Q_PW
+    // Outputs must be in range 0..127 to work properly with the following SparseLinear layer.
     using FTActivation =
         PairwiseMult<AccumulatorOutputType, L1InputType, NetworkParams::HIDDEN_WIDTH_1 * 2,
                      NetworkParams::Q_FT, NetworkParams::FT_SCALING_SHIFT, NetworkParams::Q_HIDDEN>;
-    // L1 layer, 8 bit inputs/weights, 32 bit outputs. Weights and biases quantized to Q_H
-    // y = sum(Q_PW * x * Q_H * w) + Q_H * b1
-    // Dequantize back to Q_H range:
-    // y = sum(x * Q_H * w1) + Q_H * b1
-    using L1 = LinearLayer<L1InputType, L1WeightType, int32_t, int32_t,
-                           NetworkParams::HIDDEN_WIDTH_1, NetworkParams::HIDDEN_WIDTH_2,
-                           NetworkParams::OUTPUT_BUCKETS, NetworkParams::Q_PW_BITS, 0, true>;
+    // L1 layer, 8 bit inputs/weights, 32 bit outputs. Weights quantized to Q_H, biases to Q_PW * Q_H.
+    // y = sum(Q_PW * x * Q_H * w) + Q_PW * Q_H * b1
+    // Because after this layer, we are operating on 32-bit quantities, do not dequantize the output.
+    using L1 = SparseLinear<L1InputType, L1WeightType, int32_t /* biases */, int32_t /* output */,
+                            NetworkParams::HIDDEN_WIDTH_1, NetworkParams::HIDDEN_WIDTH_2,
+                            NetworkParams::OUTPUT_BUCKETS, 0, 0, true>;
     // SqrCReLU activation.
-    // Because we are now operating on 32-bit quantities, do not dequantize the output, to
-    // preserve precision.
-    // y = (x * Q_H * Q_H)
-    using L1Activation = SqrCReLU<int32_t, int32_t, NetworkParams::HIDDEN_WIDTH_2, Q_H, 0>;
+    // Input in range 0 .. 8192 (Q_H * Q_PW)
+    // y = sum(x * Q_H * Q_PW * Q_H * Q_PW) + (Q_H * Q_PW * Q_H * Q_PW)*b
+    // shift output back to Q_H * Q_H range:
+    // y = sum(x * Q_H * Q_H) + (Q_H * Q_H)
+    using L1Activation = SqrCReLU<int32_t, int32_t, NetworkParams::HIDDEN_WIDTH_2, Q_H * Q_PW, 2*Q_PW_BITS>;
     // L2 layer, 16x32, 32-bit inputs and weights. Bias is quantized to Q_H * Q_H * Q_H, weights to Q_H
-    // y = sum(x * Q_H * Q_H * Q_H * w2) + Q_H * Q_H * Q_H * b2
+    // y = sum(x * Q_H * Q_H * Q_H * w2) + Q_H * Q_H * Q_H * b
     using L2 =
          LinearLayer<L2InputType, int32_t, int32_t, L3InputType, NetworkParams::HIDDEN_WIDTH_2,
                      NetworkParams::HIDDEN_WIDTH_3, NetworkParams::OUTPUT_BUCKETS, 0, 0, true>;
     // CReLU activation
     // does not change the scaling
     using L2Activation =
-        CReLU<int32_t, int32_t, NetworkParams::HIDDEN_WIDTH_3, Q_H * Q_H * Q_H, 0>;
-    // Output layer, 32 bits. Weights quantized to Q_H, biases to Q_H * Q_H * Q_H
-    // y = sum(x * Q_H * Q_H * Q_H * Q_H * w2) + Q_H * Q_H * Q_H * b2
-    // Dequantize the output to Q_H * Q_H * Q_H range
+        CReLU<int32_t, int32_t, NetworkParams::HIDDEN_WIDTH_3, Q_H * Q_H, 0>;
+    // Output layer, 32 bits. Weights quantized to Q_H * Q_H * Q_H, biases to Q_H * Q_H * Q_H * Q_H
+    // y = sum(x * Q_H * Q_H * Q_H * Q_H * Q_H * w2) + Q_H * Q_H * Q_H * Q_H * b
     using OutputLayer =
         LinearLayer<L3InputType, int32_t, int32_t, OutputType, NetworkParams::HIDDEN_WIDTH_3, 1,
-                    NetworkParams::OUTPUT_BUCKETS, Q_H_BITS, 0, true>;
+                    NetworkParams::OUTPUT_BUCKETS, 0, 0, true>;
 
     Network()
         : transformer(new FeatureXformer()), ftActivation(new FTActivation()), l1(new L1()),
@@ -119,7 +122,7 @@ class Network {
         int32_t nnOut = output[0];
 
         // max scaled output is NetworkParams::OUTPUT_SCALE * 64 = 32000
-        int32_t scaled = static_cast<int32_t>(static_cast<int64_t>(nnOut * NetworkParams::OUTPUT_SCALE) / (Q_H * Q_H));
+        int32_t scaled = static_cast<int32_t>(static_cast<int64_t>(nnOut * NetworkParams::OUTPUT_SCALE) / (Q_H * Q_H * Q_H * Q_H));
 #ifdef NNUE_TRACE
         std::cout << "NN output, after scaling: " << scaled << std::endl;
 #endif
