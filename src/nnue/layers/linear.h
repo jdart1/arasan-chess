@@ -49,7 +49,7 @@ class LinearLayer : public TypedLayer<InputType, OutputType, inputSize, outputSi
 #endif
             dotProductGeneric(bucket, input, output);
 #ifdef NNUE_TRACE
-        trace();
+        trace(output);
 #endif
     }
 
@@ -214,7 +214,7 @@ class LinearLayer : public TypedLayer<InputType, OutputType, inputSize, outputSi
     alignas(alignment) WeightType _weights[buckets][outputSize][roundedInputSize];
 
 #ifdef NNUE_TRACE
-    void trace() const noexcept {
+    void trace(OutputType *output) const noexcept {
         std::cout << "---- linear " << inputSize << 'x' << outputSize << " ----" << std::endl;
         for (unsigned i = 0; i < outputSize; ++i) {
             std::cout << static_cast<int>(output[i]) << ' ';
