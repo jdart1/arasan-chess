@@ -58,7 +58,7 @@ endif
 NNUE_FLAGS := -Innue -DNETWORK=$(NETWORK)
 
 #PROF     = -pg
-#DEBUG    = -g -D_DEBUG=1
+DEBUG    = -g -D_DEBUG=1
 #TRACE    = -D_TRACE=1 -D_THREAD_TRACE
 shell        := $(SHELL)
 UNAME        := $(shell uname -s|awk '{print tolower($$0)}')
