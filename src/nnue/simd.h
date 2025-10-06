@@ -750,7 +750,7 @@ static inline void sqrCReLU(const InType *in, OutType *out) {
 
 // performs activation by pairwise multiplication, as in the SFv4 net, transforming the outputs of
 // the 16-bit feature layer into a uint8_t vector
-template <typename InType, typename OutType, size_t size, unsigned clampMax, unsigned scalingShift, unsigned outputQuant>
+template <typename InType, typename OutType, size_t size, unsigned clampMax, unsigned scalingShift>
 static inline void pairwiseMult(const InType *input, OutType *output) {
     // currently assumes fixed size types
     // Note: inputs are clamped to 0..255 range. However, when multiplying, 255 * 255 = 65025, which
