@@ -42,7 +42,7 @@ class PairwiseMult : public TypedLayer<InputType, OutputType, size, size, alignm
             uint32_t x0 = static_cast<uint32_t>(std::clamp<InputType>(input[i],0,maxVal));
             uint32_t x1 = static_cast<uint32_t>(std::clamp<InputType>(input[i + (size / 2)],0,maxVal));
             // Pairwise multiply then shift to rescale output.
-            return product = (x0 * x1) >> scalingShift;
+            output[i] = static_cast<OutputType>( (x0 * x1) >> scalingShift );
         }
     }
 };
