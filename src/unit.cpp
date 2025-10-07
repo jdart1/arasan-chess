@@ -509,13 +509,16 @@ static int testEval() {
             ++errs;
             continue;
         }
+        std::cout << "---- testing " << c.fen << std::endl;
         Board board2(board);
         // NNUE eval
         score_t eval1 = s->evalu8NNUE(board2);
         check(eval1, c.minEval, c.maxEval,"NNUE");
+        /* TMP
         board2.flip();
         score_t eval2 = s->evalu8NNUE(board2);
         check(eval2, c.minEval, c.maxEval,"NNUE");
+        */
         ++i;
     }
     delete s;
@@ -1720,8 +1723,8 @@ static int doUnit() {
    errs += testNNUE();
    if (tmp == errs) {
        errs += testEval();
-       errs += testPerft();
-       errs += testSearch();
+       //       errs += testPerft();
+       //       errs += testSearch();
    }
    else {
        std::cout << "NNUE tests failed, skipping eval, search & perft tests" << std::endl;

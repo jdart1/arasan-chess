@@ -34,46 +34,44 @@ class Network {
 
     static constexpr auto Q_H = NetworkParams::Q_HIDDEN;
     static constexpr auto Q_H_BITS = NetworkParams::Q_HIDDEN_BITS;
-    static constexpr auto Q_PW = NetworkParams::Q_PW;
-    static constexpr auto Q_PW_BITS = NetworkParams::Q_PW_BITS;
 
     // definitions of the network layers:
     // Pairwise multiplication of the accumulator outputs.
     // Input quantization of the accumulator is Q_FT: y = sum(w * Q_FT) + b * Q_FT
     // Pairwise multiplcation adds another Q_FT quantization:
     // y = sum(w * Q_FT * Q_FT) + b * Q_FT * Q_FT
-    // But output of the pairwise layer is then dequantized by back to Q_PW via a shift:
-    // y = sum(w * Q_PW) + b * Q_PW
+    // But output of the pairwise layer is then dequantized by back to Q_H range via a shift:
+    // y = sum(w * Q_H) + b * Q_H
     // Outputs must be in range 0..127 to work properly with the following SparseLinear layer.
     using FTActivation =
         PairwiseMult<AccumulatorOutputType, L1InputType, NetworkParams::HIDDEN_WIDTH_1 * 2,
-                     NetworkParams::Q_FT, NetworkParams::FT_SCALING_SHIFT, NetworkParams::Q_HIDDEN>;
-    // L1 layer, 8 bit inputs/weights, 32 bit outputs. Weights quantized to Q_H, biases to Q_PW * Q_H.
-    // y = sum(Q_PW * x * Q_H * w) + Q_PW * Q_H * b1
+                     NetworkParams::Q_FT, NetworkParams::FT_SCALING_SHIFT, Q_H>;
+    // L1 layer, 8 bit inputs/weights, 32 bit outputs. Weights quantized to Q_H, biases to Q_H * Q_H.
+    // y = sum(Q_H * x * Q_H * w) + Q_H * Q_H * b1
     // Because after this layer, we are operating on 32-bit quantities, do not dequantize the output.
     using L1 = SparseLinear<L1InputType, L1WeightType, int32_t /* biases */, int32_t /* output */,
                             NetworkParams::HIDDEN_WIDTH_1, NetworkParams::HIDDEN_WIDTH_2,
                             NetworkParams::OUTPUT_BUCKETS, 0, 0, true>;
     // SqrCReLU activation.
-    // Input in range 0 .. 8192 (Q_H * Q_PW)
-    // y = sum(x * Q_H * Q_PW * Q_H * Q_PW) + (Q_H * Q_PW * Q_H * Q_PW)*b
+    // Input clamped to range 0 .. 4096 (Q_H * Q_H)
+    // y = sum(x * Q_H * Q_H * Q_H * Q_H) + (Q_H * Q_H * Q_H * Q_H)*b
     // shift output back to Q_H * Q_H range:
     // y = sum(x * Q_H * Q_H) + (Q_H * Q_H)
-    using L1Activation = SqrCReLU<int32_t, int32_t, NetworkParams::HIDDEN_WIDTH_2, Q_H * Q_PW, 2*Q_PW_BITS>;
-    // L2 layer, 16x32, 32-bit inputs and weights. Bias is quantized to Q_H * Q_H * Q_H, weights to Q_H
+    using L1Activation = SqrCReLU<int32_t, int32_t, NetworkParams::HIDDEN_WIDTH_2, Q_H * Q_H, 2*Q_H_BITS>;
+    // L2 layer, 16x32, 32-bit inputs and weights. Weights quantized to Q_H, biases to Q_H * Q_H * Q_H
     // y = sum(x * Q_H * Q_H * Q_H * w2) + Q_H * Q_H * Q_H * b
     using L2 =
          LinearLayer<L2InputType, int32_t, int32_t, L3InputType, NetworkParams::HIDDEN_WIDTH_2,
                      NetworkParams::HIDDEN_WIDTH_3, NetworkParams::OUTPUT_BUCKETS, 0, 0, true>;
-    // CReLU activation
+    // CReLU activation, clamp to Q_H * QH * Q_H
     // does not change the scaling
     using L2Activation =
-        CReLU<int32_t, int32_t, NetworkParams::HIDDEN_WIDTH_3, Q_H * Q_H, 0>;
-    // Output layer, 32 bits. Weights quantized to Q_H * Q_H * Q_H, biases to Q_H * Q_H * Q_H * Q_H
+        CReLU<int32_t, int32_t, NetworkParams::HIDDEN_WIDTH_3, Q_H * Q_H * Q_H, 0>;
+    // Output layer, 32 bits. Weights quantized to Q_H, biases to Q_H * Q_H * Q_H * Q_H
     // y = sum(x * Q_H * Q_H * Q_H * Q_H * Q_H * w2) + Q_H * Q_H * Q_H * Q_H * b
     using OutputLayer =
         LinearLayer<L3InputType, int32_t, int32_t, OutputType, NetworkParams::HIDDEN_WIDTH_3, 1,
-                    NetworkParams::OUTPUT_BUCKETS, 0, 0, true>;
+                    NetworkParams::OUTPUT_BUCKETS, 0, true>;
 
     Network()
         : transformer(new FeatureXformer()), ftActivation(new FTActivation()), l1(new L1()),

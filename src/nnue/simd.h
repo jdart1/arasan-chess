@@ -750,17 +750,17 @@ static inline void sqrCReLU(const InType *in, OutType *out) {
 
 // performs activation by pairwise multiplication, as in the SFv4 net, transforming the outputs of
 // the 16-bit feature layer into a uint8_t vector
-template <typename InType, typename OutType, size_t size, unsigned clampMax, unsigned scalingShift, unsigned outputQuant>
+template <typename InType, typename OutType, size_t size, unsigned clampMax, unsigned scalingShift>
 static inline void pairwiseMult(const InType *input, OutType *output) {
-    // currently assumes fixed size types
+    // Currently assumes fixed size types.
     // Note: inputs are clamped to 0..255 range. However, when multiplying, 255 * 255 = 65025, which
     // produces 16-bit signed integer overflow. Multiplication must be signed, because the x86 architecture
     // does not have unsigned SIMD integer multiply except for 32-bit inputs. Therefore we use the approach
     // found in several engines including Obsidian, Plentychess, etc:
-    // 1. Shift one of the operands left by a scaling factor
-    // 2. Multiply by the other operand, retaining the high 16 bits
-    // 3. Pack the high bits into an 8-bit result vector. Scaling factor is chosen to put the
-    // outputs into the desired range.
+    // 1. Shift one of the operands left by 16 - desired right shift
+    // 2. Multiply by the other operand, retaining the high 16 bits, effectively left-shifting by 16
+    // 3. Pack the high bits from the product into an 8-bit result vector
+    // Scaling factor is chosen to put the outputs into 8-bit signed range.
     static_assert(sizeof(InType) == 2 && sizeof(OutType) == 1);
     static_assert((size * 8) >= simdWidth && (size * 8) % simdWidth == 0);
 
@@ -776,8 +776,8 @@ static inline void pairwiseMult(const InType *input, OutType *output) {
         const vec_t sum1a = vec_clamp16(inp1[i], packedMax);
         const vec_t sum1b = vec_clamp16(inp1[i + 1], packedMax);
         // multiply and apply shift
-        auto prod0 = vec_mulhi16(vec_shl16(sum0a, scalingShift), sum1a);
-        auto prod1 = vec_mulhi16(vec_shl16(sum0b, scalingShift), sum1b);
+        auto prod0 = vec_mulhi16(vec_shl16(sum0a, 16 - scalingShift), sum1a);
+        auto prod1 = vec_mulhi16(vec_shl16(sum0b, 16 - scalingShift), sum1b);
         outp[i/2] = vcombine_u8(vqmovun_s16(prod0), vqmovun_s16(prod1));
     }
 #else
@@ -794,8 +794,8 @@ static inline void pairwiseMult(const InType *input, OutType *output) {
         const vec_t sum1a = vec_clamp16(inp1[i], limit);
         const vec_t sum1b = vec_clamp16(inp1[i + 1], limit);
         // multiply and apply shift
-        auto prod0 = vec_mulhi16(vec_shl16(sum0a, scalingShift), sum1a);
-        auto prod1 = vec_mulhi16(vec_shl16(sum0b, scalingShift), sum1b);
+        auto prod0 = vec_mulhi16(vec_shl16(sum0a, 16 - scalingShift), sum1a);
+        auto prod1 = vec_mulhi16(vec_shl16(sum0b, 16 - scalingShift), sum1b);
         // AVX2, AVX512 pack instructions interleave their inputs, so must
         // permute the output to place it in the proper order.
 #ifdef AVX512

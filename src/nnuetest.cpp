@@ -106,11 +106,10 @@ static int testPairwiseMult() {
 
     fill_random<InputType>(input, inputSize, -362, 362);
 
-    constexpr int32_t QUANT = 63;
-    constexpr int32_t QUANT_BITS = 6;
-    constexpr int32_t OUTPUT_QUANT = 64;
+    constexpr int32_t QUANT = 255;
+    constexpr int32_t QUANT_BITS = 9;
 
-    nnue::PairwiseMult<InputType, OutputType, inputSize, QUANT, QUANT_BITS, OUTPUT_QUANT> layer;
+    nnue::PairwiseMult<InputType, OutputType, inputSize, QUANT, QUANT_BITS> layer;
 
     layer.forward(input,output);
 
