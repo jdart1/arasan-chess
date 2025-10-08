@@ -119,7 +119,7 @@ class Network {
 
         int32_t nnOut = output[0];
 
-        // max scaled output is NetworkParams::OUTPUT_SCALE * 64 = 32000
+        // max scaled output is NetworkParams::OUTPUT_SCALE * 64 = 256 centipawns
         int32_t scaled = static_cast<int32_t>(static_cast<int64_t>(nnOut * NetworkParams::OUTPUT_SCALE) / (Q_H * Q_H * Q_H * Q_H));
 #ifdef NNUE_TRACE
         std::cout << "NN output, after scaling: " << scaled << std::endl;

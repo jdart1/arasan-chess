@@ -21,8 +21,8 @@ struct NetworkParams {
 
     static constexpr unsigned FT_SCALING_SHIFT = 9;
 
-    // network output value is multiplied by this to obtain position score
-    static constexpr int OUTPUT_SCALE = 500;
+    // dequantized network output value is multiplied by this to obtain position score
+    static constexpr int OUTPUT_SCALE = 400;
 
     // clang-format off
     static constexpr unsigned KING_BUCKETS_MAP[] = {
