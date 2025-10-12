@@ -116,8 +116,12 @@ Move BookReader::pick(const Board &b, bool trace) {
         }
         reward += freqAdjust;
         // add a random amount based on randomness parameter
-        std::normal_distribution<double> dist(0, 0.02 + 0.005 * std::pow(bookSelectionOptions.random,0.7));
+        auto sd = 0.02 + 0.005 * std::pow(bookSelectionOptions.random,0.7);
+        std::normal_distribution<double> dist(0, 0.02 + sd);
         double rand = dist(engine);
+        // truncate the range somewhat
+        double limit = sd * (0.75 + bookSelectionOptions.random/50);
+        rand = std::clamp(rand, -limit, limit);
         if (trace)
             std::cout << " random: " << rand;
         reward += rand;
