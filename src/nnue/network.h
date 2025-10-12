@@ -51,7 +51,7 @@ class Network {
     // Because after this layer, we are operating on 32-bit quantities, do not dequantize the output.
     using L1 = SparseLinear<L1InputType, L1WeightType, int32_t /* biases */, int32_t /* output */,
                             NetworkParams::HIDDEN_WIDTH_1, NetworkParams::HIDDEN_WIDTH_2,
-                            NetworkParams::OUTPUT_BUCKETS, 0, 0, true>;
+                            NetworkParams::OUTPUT_BUCKETS, 0, 0, false>;
     // SqrCReLU activation.
     // Input clamped to range 0 .. 4096 (Q_H * Q_H)
     // y = sum(x * Q_H * Q_H * Q_H * Q_H) + (Q_H * Q_H * Q_H * Q_H)*b
@@ -62,7 +62,7 @@ class Network {
     // y = sum(x * Q_H * Q_H * Q_H * w2) + Q_H * Q_H * Q_H * b
     using L2 =
          LinearLayer<L2InputType, int32_t, int32_t, L3InputType, NetworkParams::HIDDEN_WIDTH_2,
-                     NetworkParams::HIDDEN_WIDTH_3, NetworkParams::OUTPUT_BUCKETS, 0, 0, true>;
+                     NetworkParams::HIDDEN_WIDTH_3, NetworkParams::OUTPUT_BUCKETS, 0, 0, false>;
     // CReLU activation, clamp to Q_H * QH * Q_H
     // does not change the scaling
     using L2Activation =
@@ -71,7 +71,7 @@ class Network {
     // y = sum(x * Q_H * Q_H * Q_H * Q_H * Q_H * w2) + Q_H * Q_H * Q_H * Q_H * b
     using OutputLayer =
         LinearLayer<L3InputType, int32_t, int32_t, OutputType, NetworkParams::HIDDEN_WIDTH_3, 1,
-                    NetworkParams::OUTPUT_BUCKETS, 0, true>;
+                    NetworkParams::OUTPUT_BUCKETS, 0, false>;
 
     Network()
         : transformer(new FeatureXformer()), ftActivation(new FTActivation()), l1(new L1()),

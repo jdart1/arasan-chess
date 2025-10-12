@@ -65,13 +65,13 @@ fn main() {
                 .quantise::<i16>(Q_FT),
             SavedFormat::id("l0b").quantise::<i16>(Q_FT),
             // 1st hidden layer 
-            SavedFormat::id("l1w").round().quantise::<i8>(Q_H.try_into().unwrap()),
+            SavedFormat::id("l1w").round().quantise::<i8>(Q_H.try_into().unwrap()).transpose(),
             SavedFormat::id("l1b").round().quantise::<i32>(Q_H * Q_H),
             // 2nd hidden layer
-            SavedFormat::id("l2w").round().quantise::<i32>(Q_H),
+            SavedFormat::id("l2w").round().quantise::<i32>(Q_H).transpose(),
             SavedFormat::id("l2b").round().quantise::<i32>(Q_H * Q_H * Q_H),
             // 3rd hidden layer
-            SavedFormat::id("l3w").round().quantise::<i32>(Q_H),
+            SavedFormat::id("l3w").round().quantise::<i32>(Q_H).transpose(),
             SavedFormat::id("l3b").round().quantise::<i32>(Q_H * Q_H * Q_H * Q_H)
             ])
         .loss_fn(|output, target| output.sigmoid().squared_error(target))
