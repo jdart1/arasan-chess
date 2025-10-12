@@ -94,8 +94,6 @@ class Network {
     int32_t evaluate(const AccumulatorType &accum, [[maybe_unused]] ColorType sideToMove, unsigned bucket) const {
 #ifdef NNUE_TRACE
         std::cout << "output bucket=" << bucket << std::endl;
-        std::cout << "accumulator:" << std::endl;
-        std::cout << accum << std::endl;
 #endif
         alignas(DEFAULT_ALIGN) L1InputType buffer1[NetworkParams::HIDDEN_WIDTH_1];
         alignas(DEFAULT_ALIGN) L2InputType buffer2[NetworkParams::HIDDEN_WIDTH_2];
