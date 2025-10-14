@@ -37,12 +37,19 @@ class PairwiseMult : public TypedLayer<InputType, OutputType, size, size, alignm
     }
 
     void pairwiseMultGeneric(const InputType *input, OutputType *output) const noexcept {
-        InputType maxVal = static_cast<InputType>(clampMax);
-        for (size_t i = 0; i < size/2; ++i) {
-            uint32_t x0 = static_cast<uint32_t>(std::clamp<InputType>(input[i],0,maxVal));
-            uint32_t x1 = static_cast<uint32_t>(std::clamp<InputType>(input[i + (size / 2)],0,maxVal));
-            // Pairwise multiply then shift to rescale output.
-            output[i] = static_cast<OutputType>( (x0 * x1) >> scalingShift );
+        constexpr InputType maxVal = static_cast<InputType>(clampMax);
+        constexpr InputType minVal = 0;
+        // process halves, stm first
+        for (int half = 0; half < 2; ++half) {
+            constexpr size_t QTRSZ = size / 4; // 1/2 of 1/2 of the whole accum
+            const InputType *inp = input + (size/2)*half;
+            OutputType *outp = output + QTRSZ*half;
+            for (size_t i = 0; i < QTRSZ; ++i) {
+                uint32_t x0 = static_cast<uint32_t>(std::clamp(inp[i], minVal, maxVal));
+                uint32_t x1 = static_cast<uint32_t>(std::clamp(inp[i + QTRSZ], minVal, maxVal));
+                // Pairwise multiply then shift to rescale output.
+                *outp++ = static_cast<OutputType>( (x0 * x1) >> scalingShift );
+            }
         }
     }
 };

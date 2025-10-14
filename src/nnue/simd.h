@@ -765,48 +765,55 @@ static inline void pairwiseMult(const InType *input, OutType *output) {
     static_assert((size * 8) >= simdWidth && (size * 8) % simdWidth == 0);
 
 #ifdef NEON
-    vec16_t *outp = reinterpret_cast<vec16_t *>(output);
     const vec16_t packedMax = vec_set_16(clampMax);
-    const vec16_t *inp0 = reinterpret_cast<const vec16_t *>(input);
-    const vec16_t *inp1 = reinterpret_cast<const vec16_t *>(input + (size / 2));
-    for (size_t i = 0; i < chunks<InType, simdWidth>(size / 2); i += 2) {
-        // load + do min/max
-        const vec_t sum0a = vec_clamp16(inp0[i], packedMax);
-        const vec_t sum0b = vec_clamp16(inp0[i + 1], packedMax);
-        const vec_t sum1a = vec_clamp16(inp1[i], packedMax);
-        const vec_t sum1b = vec_clamp16(inp1[i + 1], packedMax);
-        // multiply and apply shift
-        auto prod0 = vec_mulhi16(vec_shl16(sum0a, 16 - scalingShift), sum1a);
-        auto prod1 = vec_mulhi16(vec_shl16(sum0b, 16 - scalingShift), sum1b);
-        outp[i/2] = vcombine_u8(vqmovun_s16(prod0), vqmovun_s16(prod1));
+    const size_t iterations = chunks<InType, simdWidth>(size/2);
+    assert( iterations > 1 && (iterations % 4) == 0);
+    size_t offset = 0;
+    for (size_t half = 0; half < 2; ++half, offset += size / 2) {
+        vec16_t *outp = reinterpret_cast<vec16_t *>(output + (offset / 2));
+        const vec16_t *inp0 = reinterpret_cast<const vec16_t *>(input + offset);
+        const vec16_t *inp1 = reinterpret_cast<const vec16_t *>(input + offset + size / 4);
+        for (size_t i = 0; i < iterations / 2; i += 2) {
+            // load + do min/max
+            const vec_t sum0a = vec_clamp16(inp0[i], packedMax);
+            const vec_t sum0b = vec_clamp16(inp1[i], packedMax);
+            const vec_t sum1a = vec_clamp16(inp0[i + 1], packedMax);
+            const vec_t sum1b = vec_clamp16(inp1[i + 1], packedMax);
+            // multiply and apply shift
+            auto prod0 = vec_mulhi16(vec_shl16(sum0a, 16 - scalingShift), sum0b);
+            auto prod1 = vec_mulhi16(vec_shl16(sum1a, 16 - scalingShift), sum1b);
+            *outp++ = vcombine_u8(vqmovun_s16(prod0), vqmovun_s16(prod1));
+        }
     }
 #else
     const vec_t limit = vec_set_16<vec_t>(clampMax);
-    const vec_t *inp0 = reinterpret_cast<const vec_t *>(input);
-    const vec_t *inp1 = reinterpret_cast<const vec_t *>(input + (size / 2));
-    vec_t *outp = reinterpret_cast<vec_t *>(output);
-
     const size_t iterations = chunks<InType, simdWidth>(size/2);
-    assert( iterations > 1 && (iterations % 2) == 0);
-    for (size_t i = 0; i < iterations; i += 2) {
-        const vec_t sum0a = vec_clamp16(inp0[i], limit);
-        const vec_t sum0b = vec_clamp16(inp0[i + 1], limit);
-        const vec_t sum1a = vec_clamp16(inp1[i], limit);
-        const vec_t sum1b = vec_clamp16(inp1[i + 1], limit);
-        // multiply and apply shift
-        auto prod0 = vec_mulhi16(vec_shl16(sum0a, 16 - scalingShift), sum1a);
-        auto prod1 = vec_mulhi16(vec_shl16(sum0b, 16 - scalingShift), sum1b);
-        // AVX2, AVX512 pack instructions interleave their inputs, so must
-        // permute the output to place it in the proper order.
+    assert( iterations > 1 && (iterations % 4) == 0);
+    size_t offset = 0;
+    for (size_t half = 0; half < 2; ++half, offset += size / 2) {
+        vec_t *outp = reinterpret_cast<vec_t *>(output + (offset / 2));
+        const vec_t *inp0 = reinterpret_cast<const vec_t *>(input + offset);
+        const vec_t *inp1 = reinterpret_cast<const vec_t *>(input + offset + size / 4);
+        for (size_t j = 0; j < iterations / 2; j += 2) {
+            const vec_t sum0a = vec_clamp16(inp0[j], limit);
+            const vec_t sum0b = vec_clamp16(inp1[j], limit);
+            const vec_t sum1a = vec_clamp16(inp0[j + 1], limit);
+            const vec_t sum1b = vec_clamp16(inp1[j + 1], limit);
+            // multiply and apply shift
+            auto prod0 = vec_mulhi16(vec_shl16(sum0a, 16 - scalingShift), sum0b);
+            auto prod1 = vec_mulhi16(vec_shl16(sum1a, 16 - scalingShift), sum1b);
+            // AVX2, AVX512 pack instructions interleave their inputs, so must
+            // permute the output to place it in the proper order.
 #ifdef AVX512
-        vec_t compacted = _mm512_packus_epi16(prod0, prod1);
-        outp[i/2] = _mm512_permutexvar_epi64(_mm512_setr_epi64(0, 2, 4, 6, 1, 3, 5, 7), compacted);
+            vec_t compacted = _mm512_packus_epi16(prod0, prod1);
+            *outp++ = _mm512_permutexvar_epi64(_mm512_setr_epi64(0, 2, 4, 6, 1, 3, 5, 7), compacted);
 #elif defined(AVX2)
-        vec_t compacted = _mm256_packus_epi16(prod0, prod1);
-        outp[i/2] =  _mm256_permute4x64_epi64(compacted, 0b11011000);
+            vec_t compacted = _mm256_packus_epi16(prod0, prod1);
+            *outp++ =  _mm256_permute4x64_epi64(compacted, 0b11011000);
 #elif defined(SSE2)
-        outp[i/2] = _mm_packus_epi16(prod0, prod1);
+            *outp++ = _mm_packus_epi16(prod0, prod1);
 #endif
+        }
     }
 #endif
 }
