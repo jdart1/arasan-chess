@@ -491,11 +491,9 @@ static int testEval() {
             double eval1 = static_cast<double>(eval)/Scoring::PAWN_VALUE;
             if (eval1 < minEval || eval1 > maxEval) {
                 std::cout << "testEval case " << i << ' ' << txt << " eval exceeds bounds: ";
-                std::ios_base::fmtflags original_flags = std::cout.flags();
-                std::cout << eval1;
-                std::cout << ", expected [" << std::setprecision(2) << minEval << "," << maxEval
+                Scoring::printScore(eval,std::cout);
+                std::cout << ", expected [" << minEval << "," << maxEval
                           << ']' << std::endl;
-                std::cout.flags(original_flags);
                 ++errs;
             }
         };
