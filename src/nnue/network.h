@@ -45,13 +45,19 @@ class Network {
     // Outputs must be in range 0..127 to work properly with the following SparseLinear layer.
     using FTActivation =
         PairwiseMult<AccumulatorOutputType, L1InputType, NetworkParams::HIDDEN_WIDTH_1 * 2,
-                     NetworkParams::Q_FT, NetworkParams::FT_SCALING_SHIFT, Q_H>;
+                     NetworkParams::Q_FT, NetworkParams::FT_SCALING_SHIFT>;
     // L1 layer, 8 bit inputs/weights, 32 bit outputs. Weights quantized to Q_H, biases to Q_H * Q_H.
     // y = sum(Q_H * x * Q_H * w) + Q_H * Q_H * b1
     // Because after this layer, we are operating on 32-bit quantities, do not dequantize the output.
+#ifdef SIMD
     using L1 = SparseLinear<L1InputType, L1WeightType, int32_t /* biases */, int32_t /* output */,
                             NetworkParams::HIDDEN_WIDTH_1, NetworkParams::HIDDEN_WIDTH_2,
                             NetworkParams::OUTPUT_BUCKETS, 0, 0, false>;
+#else
+    using L1 = LinearLayer<L1InputType, L1WeightType, int32_t /* biases */, int32_t /* output */,
+                           NetworkParams::HIDDEN_WIDTH_1, NetworkParams::HIDDEN_WIDTH_2,
+                           NetworkParams::OUTPUT_BUCKETS, 0, 0, false>;
+#endif
     // SqrCReLU activation.
     // Input clamped to range 0 .. 4096 (Q_H * Q_H)
     // y = sum(x * Q_H * Q_H * Q_H * Q_H) + (Q_H * Q_H * Q_H * Q_H)*b
