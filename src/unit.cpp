@@ -1721,8 +1721,8 @@ static int doUnit() {
    errs += testNNUE();
    if (tmp == errs) {
        errs += testEval();
-       //       errs += testPerft();
-       //       errs += testSearch();
+       errs += testPerft();
+       errs += testSearch();
    }
    else {
        std::cout << "NNUE tests failed, skipping eval, search & perft tests" << std::endl;

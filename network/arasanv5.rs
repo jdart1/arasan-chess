@@ -72,7 +72,7 @@ fn main() {
             SavedFormat::id("l2b").round().quantise::<i32>(Q_H * Q_H * Q_H),
             // 3rd hidden layer
             SavedFormat::id("l3w").round().quantise::<i32>(Q_H).transpose(),
-            SavedFormat::id("l3b").round().quantise::<i32>(Q_H * Q_H * Q_H * Q_H)
+            SavedFormat::id("l3b").round().quantise::<i32>(Q_H * Q_H * Q_H)
             ])
         .loss_fn(|output, target| output.sigmoid().squared_error(target))
         .build(|builder, stm_inputs, ntm_inputs, output_buckets| {
