@@ -30,6 +30,7 @@ fn main() {
     const INITIAL_LR: f32 = 0.001;
     const Q_FT: i16 = 255;
     const Q_H: i32 = 64;
+    const Q_H2: i32 = 128;
     let final_lr = INITIAL_LR * 0.4f32.powi(4);
     const SUPERBATCHES: usize = 240;
 
@@ -68,11 +69,11 @@ fn main() {
             SavedFormat::id("l1w").round().quantise::<i8>(Q_H.try_into().unwrap()).transpose(),
             SavedFormat::id("l1b").round().quantise::<i32>(Q_H * Q_H),
             // 2nd hidden layer
-            SavedFormat::id("l2w").round().quantise::<i32>(Q_H).transpose(),
-            SavedFormat::id("l2b").round().quantise::<i32>(Q_H * Q_H * Q_H),
+            SavedFormat::id("l2w").round().quantise::<i32>(Q_H2).transpose(),
+            SavedFormat::id("l2b").round().quantise::<i32>(Q_H2 * Q_H * Q_H),
             // 3rd hidden layer
-            SavedFormat::id("l3w").round().quantise::<i32>(Q_H).transpose(),
-            SavedFormat::id("l3b").round().quantise::<i32>(Q_H * Q_H * Q_H)
+            SavedFormat::id("l3w").round().quantise::<i32>(Q_H2).transpose(),
+            SavedFormat::id("l3b").round().quantise::<i32>(Q_H2 * Q_H2 * Q_H)
             ])
         .loss_fn(|output, target| output.sigmoid().squared_error(target))
         .build(|builder, stm_inputs, ntm_inputs, output_buckets| {

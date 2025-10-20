@@ -34,6 +34,8 @@ class Network {
 
     static constexpr auto Q_H = NetworkParams::Q_HIDDEN;
     static constexpr auto Q_H_BITS = NetworkParams::Q_HIDDEN_BITS;
+    static constexpr auto Q_H2 = NetworkParams::Q_HIDDEN2;
+    static constexpr auto Q_H2_BITS = NetworkParams::Q_HIDDEN2_BITS;
 
     // definitions of the network layers:
     // Pairwise multiplication of the accumulator outputs.
@@ -64,18 +66,18 @@ class Network {
     // shift output back to Q_H * Q_H range:
     // y = sum(x * Q_H * Q_H) + (Q_H * Q_H)
     using L1Activation = SqrCReLU<int32_t, int32_t, NetworkParams::HIDDEN_WIDTH_2, Q_H * Q_H, 2*Q_H_BITS>;
-    // L2 layer, 16x32, 32-bit inputs and weights. Weights quantized to Q_H, biases to Q_H * Q_H * Q_H
-    // y = sum(x * Q_H * Q_H * Q_H * w2) + Q_H * Q_H * Q_H * b
-    // dequantize output
+    // L2 layer, 16x32, 32-bit inputs and weights. Weights quantized to Q_H2, biases to Q_H2 * Q_H * Q_H
+    // y = sum(x * Q_H2 * Q_H * Q_H * w2) + Q_H2 * Q_H * Q_H * b
+    // dequantize output by Q_H_BITS
     using L2 =
          LinearLayer<L2InputType, int32_t, int32_t, L3InputType, NetworkParams::HIDDEN_WIDTH_2,
                      NetworkParams::HIDDEN_WIDTH_3, NetworkParams::OUTPUT_BUCKETS, 0, Q_H_BITS, false>;
-    // CReLU activation, clamp to Q_H * QH * Q_H
+    // CReLU activation, clamp to Q_H * Q_H2
     // does not change the scaling
     using L2Activation =
-        CReLU<int32_t, int32_t, NetworkParams::HIDDEN_WIDTH_3, Q_H * Q_H, 0>;
-    // Output layer, 32 bits. Weights quantized to Q_H, biases to Q_H * Q_H * Q_H
-    // y = sum(x * Q_H * Q_H * Q_H * Q_H * w2) + Q_H * Q_H * Q_H * b
+        CReLU<int32_t, int32_t, NetworkParams::HIDDEN_WIDTH_3, Q_H * Q_H2, 0>;
+    // Output layer, 32 bits. Weights quantized to Q_H2, biases to Q_H * Q_H2 * Q_H2
+    // y = sum(x * Q_H * Q_H2 * Q_H2 * w2) + Q_H * Q_H2 * Q_H2 * b
     using OutputLayer =
         LinearLayer<L3InputType, int32_t, int32_t, OutputType, NetworkParams::HIDDEN_WIDTH_3, 1,
                     NetworkParams::OUTPUT_BUCKETS, 0, false>;
@@ -125,7 +127,7 @@ class Network {
         int32_t nnOut = output[0];
 
         // max scaled output is NetworkParams::OUTPUT_SCALE * 64 = 256 centipawns
-        int32_t scaled = static_cast<int32_t>((static_cast<int64_t>(nnOut) * NetworkParams::OUTPUT_SCALE) / (Q_H * Q_H * Q_H));
+        int32_t scaled = static_cast<int32_t>((static_cast<int64_t>(nnOut) * NetworkParams::OUTPUT_SCALE) / (Q_H2 * Q_H2 * Q_H));
 #ifdef NNUE_TRACE
     std::cout << "NN output, before scaling = " << nnOut << ", after scaling: " << scaled << std::endl;
 #endif

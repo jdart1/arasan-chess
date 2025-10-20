@@ -16,9 +16,10 @@ struct NetworkParams {
 
     // quantization factors, i.e. integer value that corresponds to 1.0 in the float domain
     static constexpr unsigned Q_FT = 255; // Feature transformer quantization
-    static constexpr unsigned Q_HIDDEN = 64; // hidden layers weight/bias quantization
+    static constexpr unsigned Q_HIDDEN = 64; // first hidden layer weight/bias quantization
     static constexpr unsigned Q_HIDDEN_BITS = 6;
-
+    static constexpr unsigned Q_HIDDEN2 = 128; // other hidden layers weight/bias quantization
+    static constexpr unsigned Q_HIDDEN2_BITS = 7;
     static constexpr unsigned FT_SCALING_SHIFT = 9;
 
     // dequantized network output value is multiplied by this to obtain position score

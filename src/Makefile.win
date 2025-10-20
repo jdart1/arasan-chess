@@ -106,7 +106,7 @@ NUMA_LIBS=$(HWLOC)/lib/libhwloc.lib
 NUMA_OBJS=$(BUILD)/topo.obj
 NUMA_PROFILE_OBJS=$(PROFILE)/topo.obj
 !Endif
-NETWORK = arasanv5-20251014.nnue
+NETWORK = arasanv5-20251017.nnue
 NNUE_FLAGS=/Innue -DNETWORK=$(NETWORK)
 
 !Ifdef ARASAN_VERSION
