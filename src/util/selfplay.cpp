@@ -86,14 +86,14 @@ static struct SelfPlayOptions {
     unsigned posCount = 10000000;
     unsigned depthLimit = 9;
     bool adjudicateDraw = true;
-    bool adjudicate7manDraw = false;
     bool adjudicateTB = true;
-    int adjudicateTBMen = 3; // don't adjudicate with more men so low-mat configs are included
+    int adjudicateTBMen = 3;
+    int adjudicateTBMenPawnless = 5;
     score_t adjudicateWinScore = 20*Scoring::PAWN_VALUE;
     unsigned adjudicateWinPlies = 3;
     unsigned outputPlyFrequency = 1; // output every nth move
     unsigned drawAdjudicationPlies = 10;
-    unsigned TBAdjudicationPlies = 10;
+    unsigned TBAdjudicationPlies = 4;
     unsigned drawAdjudicationMinPly = 150;
     int adjudicateMinMove50Count = 40; // mininum move 50 count
     std::string posFileName;
@@ -116,6 +116,16 @@ static struct SelfPlayOptions {
     bool verbose = false;
     unsigned verboseReportingInterval = 1000000;
     bool checkHash = false; // use hash table to check for possible dups
+
+    bool adjudicateTBOk(const Board &board) const noexcept {
+        if (adjudicateTB) {
+            return (board.men() <= std::min<int>(adjudicateTBMen,globals::EGTBMenCount)) ||
+                (!board.hasPawns() && board.men() <= std::min<int>(adjudicateTBMenPawnless,globals::EGTBMenCount));
+        }
+        else {
+            return false;
+        }
+    }
 } sp_options;
 
 struct ThreadData {
@@ -424,29 +434,26 @@ static void selfplay(ThreadData &td) {
             } else if (stats.state == Draw || stats.state == Stalemate) {
                 terminated = true;
                 result = Result::Draw;
-            } else if (!terminated &&
-                       board.state.moveCount >= sp_options.adjudicateMinMove50Count) {
-                if ((sp_options.adjudicateDraw ||
-                     (sp_options.adjudicate7manDraw && board.men() <= 7)) &&
+            } else if (sp_options.adjudicateTBOk(board) &&
+                       ++tb_score_count >= sp_options.TBAdjudicationPlies) {
+                if (stats.display_value >= Constants::TABLEBASE_WIN) {
+                    result =
+                        (board.sideToMove() == White) ? Result::WhiteWin : Result::BlackWin;
+                } else if (stats.display_value <= -Constants::TABLEBASE_WIN) {
+                    result =
+                        (board.sideToMove() == White) ? Result::BlackWin : Result::WhiteWin;
+                } else {
+                    // draw, blessed loss, or cursed win
+                    result = Result::Draw;
+                }
+                adjudicated = true;
+            } else if (board.state.moveCount >= sp_options.adjudicateMinMove50Count) {
+                if (sp_options.adjudicateDraw &&
                     ply >= sp_options.drawAdjudicationMinPly &&
                     low_score_count >= sp_options.drawAdjudicationPlies) {
                     // adjudicate draw
                     stats.state = Draw;
                     result = Result::Draw;
-                    adjudicated = true;
-                } else if (sp_options.adjudicateTB && board.men() <=
-                           std::min<int>(sp_options.adjudicateTBMen,globals::EGTBMenCount) &&
-                           ++tb_score_count >= sp_options.TBAdjudicationPlies) {
-                    if (stats.display_value >= Constants::TABLEBASE_WIN) {
-                        result =
-                            (board.sideToMove() == White) ? Result::WhiteWin : Result::BlackWin;
-                    } else if (stats.display_value <= -Constants::TABLEBASE_WIN) {
-                        result =
-                            (board.sideToMove() == White) ? Result::BlackWin : Result::WhiteWin;
-                    } else {
-                        // draw, blessed loss, or cursed win
-                        result = Result::Draw;
-                    }
                     adjudicated = true;
                 }
             }
