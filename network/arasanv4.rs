@@ -18,12 +18,6 @@ macro_rules! net_id {
     };
 }
 
-macro_rules! net_id {
-    () => {
-        "arasan3"
-    };
-}
-
 const NET_ID: &str = net_id!();
 
 fn main() {
@@ -31,7 +25,7 @@ fn main() {
     const NUM_OUTPUT_BUCKETS: usize = 8;
     const L1: usize = 1536;
     const INITIAL_LR: f32 = 0.001;
-    let FINAL_LR = INITIAL_LR * 0.4f32.powi(4);
+    let final_lr = INITIAL_LR * 0.4f32.powi(4);
     const SUPERBATCHES: usize = 240;
 
     #[rustfmt::skip]
@@ -49,6 +43,8 @@ fn main() {
             8, 8, 8, 8]))
         .output_buckets(MaterialCount::<NUM_OUTPUT_BUCKETS>)
         .save_format(&[
+            // Arasan header
+            SavedFormat::custom([0x9a, 0x2d, 0x80, 0x7c]), // little endian
             // merge in the factoriser weights
             SavedFormat::id("l0w")
                 .add_transform(|builder, _, mut weights| {
@@ -96,7 +92,7 @@ fn main() {
             end_superbatch: SUPERBATCHES,
         },
         wdl_scheduler: wdl::ConstantWDL { value: 0.0 },
-        lr_scheduler: lr::CosineDecayLR { initial_lr: INITIAL_LR, final_lr: FINAL_LR, final_superbatch: SUPERBATCHES },
+        lr_scheduler: lr::CosineDecayLR { initial_lr: INITIAL_LR, final_lr: final_lr, final_superbatch: SUPERBATCHES },
 //        lr_scheduler: lr::StepLR { start: 0.0015, gamma: 0.45, step: 60 },
         save_rate: 60,
     };

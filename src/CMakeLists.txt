@@ -180,8 +180,6 @@ add_executable (makeeco EXCLUDE_FROM_ALL util/makeeco.cpp ${UTIL_SRC})
 
 add_executable (selfplay EXCLUDE_FROM_ALL util/selfplay.cpp ${UTIL_SRC} util/binformat.cpp)
 
-add_executable (post_process_nn EXCLUDE_FROM_ALL util/post_process_nn.cpp ${UTIL_SRC})
-
 add_executable (unit EXCLUDE_FROM_ALL unit.cpp nnuetest.cpp util/binformat.cpp ${UTIL_SRC})
 
 target_link_libraries(${EXE_NAME} PRIVATE Threads::Threads)
@@ -190,12 +188,10 @@ target_link_libraries(makeeco PRIVATE Threads::Threads)
 target_link_libraries(ecocoder PRIVATE Threads::Threads)
 target_link_libraries(makebook PRIVATE Threads::Threads)
 target_link_libraries(selfplay PRIVATE Threads::Threads)
-target_link_libraries(post_process_nn PRIVATE Threads::Threads)
 target_link_libraries(unit PRIVATE Threads::Threads)
 
-set_target_properties(${EXE_NAME} playchess makebook makeeco ecocoder selfplay post_process_nn unit PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
+set_target_properties(${EXE_NAME} playchess makebook makeeco ecocoder selfplay unit PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
 
 add_custom_target(utils)
 
-add_dependencies(utils playchess makeeco ecocoder makebook selfplay post_process_nn)
-
+add_dependencies(utils playchess makeeco ecocoder makebook selfplay)

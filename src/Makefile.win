@@ -214,8 +214,7 @@ default: dirs $(BUILD)\$(ARASANX).exe
 profile: dirs $(PROFILE)\$(ARASANX).exe
 
 utils: dirs $(BUILD)\playchess.exe $(BUILD)\makebook.exe \
-$(BUILD)\makeeco.exe $(BUILD)\ecocoder.exe $(BUILD)\selfplay.exe \
-$(BUILD)\post_process_nn.exe
+$(BUILD)\makeeco.exe $(BUILD)\ecocoder.exe $(BUILD)\selfplay.exe
 
 unit: dirs $(BUILD)\unit.exe
 
@@ -286,8 +285,6 @@ PLAYCHESS_OBJS = $(BUILD)\playchess.obj $(UTIL_OBJS)
 
 SELFPLAY_OBJS = $(BUILD)\selfplay.obj $(UTIL_OBJS) $(BUILD)\binformat.obj
 
-POST_PROCESS_NN_OBJS = $(BUILD)\post_process_nn.obj $(UTIL_OBJS)
-
 UNIT_OBJS = $(TEST_OBJS) $(UTIL_OBJS)
 
 {}.cpp{$(BUILD)}.obj:
@@ -316,9 +313,6 @@ $(BUILD)\playchess.exe: dirs $(PLAYCHESS_OBJS)
 
 $(BUILD)\selfplay.exe: dirs $(SELFPLAY_OBJS)
         $(LD) $(SELFPLAY_OBJS) $(LINKOPT) $(LDFLAGS) /out:$(BUILD)\selfplay.exe
-
-$(BUILD)\post_process_nn.exe: dirs $(POST_PROCESS_NN_OBJS)
-        $(LD) $(POST_PROCESS_NN_OBJS) $(LINKOPT) $(LDFLAGS) /out:$(BUILD)\post_process_nn.exe
 
 $(BUILD)\unit.exe: dirs $(UNIT_OBJS)
         $(LD) $(UNIT_OBJS) $(LINKOPT) $(LDFLAGS) /out:$(BUILD)\unit.exe

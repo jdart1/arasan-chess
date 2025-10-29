@@ -280,7 +280,7 @@ endif
 default: dirs $(EXPORT)/$(ARASANX)
 
 utils: dirs $(EXPORT)/playchess $(EXPORT)/makebook $(EXPORT)/makeeco $(EXPORT)/ecocoder \
-$(EXPORT)/selfplay $(EXPORT)/post_process_nn
+$(EXPORT)/selfplay
 
 unit: dirs $(EXPORT)/unit
 
@@ -292,7 +292,7 @@ clean: dirs
 	rm -f $(PROFILE)/*.dyn
 	rm -f $(PROFILE)/*.nnue
 	rm -f $(PROF_DATA)/*.*
-	cd $(EXPORT) && rm -f arasanx* makeeco makebook playchess ecocoder selfplay post_process_nn unit
+	cd $(EXPORT) && rm -f arasanx* makeeco makebook playchess ecocoder selfplay unit
 
 dirs:
 	mkdir -p $(BUILD)
@@ -401,8 +401,6 @@ PLAYCHESS_SOURCES = playchess.cpp $(UTIL_SOURCES)
 
 SELFPLAY_SOURCES = selfplay.cpp $(UTIL_SOURCES) binformat.cpp
 
-POST_PROCESS_NN_SOURCES = post_process_nn.cpp $(UTIL_SOURCES)
-
 ARASANX_PROFILE_OBJS := $(patsubst %.cpp, $(PROFILE)/%.o, $(ARASANX_SOURCES)) $(ASM_PROFILE_OBJS) $(TB_PROFILE_OBJS) $(NUMA_PROFILE_OBJS)
 ARASANX_OBJS    := $(patsubst %.cpp, $(BUILD)/%.o, $(ARASANX_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
 MAKEBOOK_OBJS   := $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEBOOK_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
@@ -410,7 +408,6 @@ MAKEECO_OBJS    := $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEECO_SOURCES)) $(TB_OBJS
 ECOCODER_OBJS   := $(patsubst %.cpp, $(BUILD)/%.o, $(ECOCODER_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
 PLAYCHESS_OBJS  := $(patsubst %.cpp, $(BUILD)/%.o, $(PLAYCHESS_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
 SELFPLAY_OBJS   := $(patsubst %.cpp, $(BUILD)/%.o, $(SELFPLAY_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
-POST_PROCESS_NN_OBJS    := $(patsubst %.cpp, $(BUILD)/%.o, $(POST_PROCESS_NN_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
 UNIT_OBJS       := $(patsubst %.cpp, $(BUILD)/%.o, $(UNIT_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
 
 $(EXPORT)/makebook:  $(MAKEBOOK_OBJS)
@@ -427,9 +424,6 @@ $(EXPORT)/playchess:  $(PLAYCHESS_OBJS)
 
 $(EXPORT)/selfplay:  $(SELFPLAY_OBJS)
 	cd $(BUILD) && $(LD) $(LDFLAGS) $(LTO) $(OPT) $(SELFPLAY_OBJS) $(DEBUG) $(CXXFLAGS) -o $(EXPORT)/selfplay -lstdc++ $(LIBS) $(SMPLIB)
-
-$(EXPORT)/post_process_nn: $(POST_PROCESS_NN_OBJS)
-	cd $(BUILD) && $(LD) $(LDFLAGS) $(LTO) $(OPT) $(POST_PROCESS_NN_OBJS) $(DEBUG) $(CXXFLAGS) -o $(EXPORT)/post_process_nn -lstdc++ $(LIBS) $(SMPLIB)
 
 $(EXPORT)/unit: $(UNIT_OBJS)
 	cd $(BUILD) && $(LD) $(LDFLAGS) $(LTO) $(OPT) $(UNIT_OBJS) $(DEBUG) $(CXXFLAGS) -o $(EXPORT)/unit -lstdc++ $(LIBS) $(SMPLIB)
