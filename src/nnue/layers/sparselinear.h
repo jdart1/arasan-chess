@@ -81,11 +81,7 @@ public:
             vec_set_zero(accum[i]);
 #endif
         }
-        // TBD: unroll loop
-        for (size_t i = 0; i < nnzContext.nzCount; ++i) {
-            // nzIndices contains group indices (groups of 4 elements)
-            unsigned groupIdx = nnzContext.nzIndices[i];
-
+        auto loadFromGroup = [&input](unsigned groupIdx) {
             // Load 4 consecutive input bytes as 32-bit value and broadcast.
             // inps vector register will have layout:
             // (index0 index1 index2 index3 index 0 index 1 index 2 index 3 ...)
@@ -96,18 +92,51 @@ public:
 #else
             vec_t inps = vec_set_32<vec_t>(inp4);
 #endif
+            return inps;
+        };
+        auto loadWeights = [this, &bucket](unsigned groupIdx, unsigned outIdx) {
+#ifdef NEON
+            return vec_load32(reinterpret_cast<const vec32_t*>(&_optimizedWeights[bucket][groupIdx][outIdx][0]));
+#else
+            return vec_load<vec_t>(reinterpret_cast<const vec_t*>(&_optimizedWeights[bucket][groupIdx][outIdx][0]));
+#endif
+        };
+        auto limit1 = 4 * (nnzContext.nzCount / 4);
+        size_t i = 0;
+        for (; i < limit1; i+=4) {
+            // nzIndices contains group indices (groups of 4 elements)
+            const unsigned groupIdx1 = nnzContext.nzIndices[i];
+            const unsigned groupIdx2 = nnzContext.nzIndices[i+1];
+            const unsigned groupIdx3 = nnzContext.nzIndices[i+2];
+            const unsigned groupIdx4 = nnzContext.nzIndices[i+3];
+            vec_t inp1 = loadFromGroup(groupIdx1);
+            vec_t inp2 = loadFromGroup(groupIdx2);
+            vec_t inp3 = loadFromGroup(groupIdx3);
+            vec_t inp4 = loadFromGroup(groupIdx4);
             // iterate over the output dimensions, in chunks that correspond to a SIMD
             // register width
             for (size_t outIdx = 0; outIdx < outputSize; outIdx += outputChunkSize) {
                 // Load weights for this group of outputs
                 // we load weights in chunks, each of which is outputChunkSize bytes
-#ifdef NEON
-                auto weights = vec_load32(reinterpret_cast<const vec32_t*>(&_optimizedWeights[bucket][groupIdx][outIdx][0]));
-#else
-                vec_t weights = vec_load<vec_t>(reinterpret_cast<const vec_t*>(&_optimizedWeights[bucket][groupIdx][outIdx][0]));
-#endif
                 // multiply/sum into accumulator
-                dpbusd_epi32(accum[outIdx/outputChunkSize], inps, weights);
+                dpbusd_epi32(accum[outIdx/outputChunkSize], inp1, loadWeights(groupIdx1,outIdx));
+                dpbusd_epi32(accum[outIdx/outputChunkSize], inp2, loadWeights(groupIdx2,outIdx));
+                dpbusd_epi32(accum[outIdx/outputChunkSize], inp3, loadWeights(groupIdx3,outIdx));
+                dpbusd_epi32(accum[outIdx/outputChunkSize], inp4, loadWeights(groupIdx4,outIdx));
+            }
+        }
+        auto limit2 = i + (nnzContext.nzCount % 4);
+        for (; i < limit2; ++i) {
+            // nzIndices contains group indices (groups of 4 elements)
+            const unsigned groupIdx1 = nnzContext.nzIndices[i];
+            vec_t inp1 = loadFromGroup(groupIdx1);
+            // iterate over the output dimensions, in chunks that correspond to a SIMD
+            // register width
+            for (size_t outIdx = 0; outIdx < outputSize; outIdx += outputChunkSize) {
+                // Load weights for this group of outputs
+                // we load weights in chunks, each of which is outputChunkSize bytes
+                // multiply/sum into accumulator
+                dpbusd_epi32(accum[outIdx/outputChunkSize], inp1, loadWeights(groupIdx1,outIdx));
             }
         }
         // add biases and copy to output, applying scaling if needed
