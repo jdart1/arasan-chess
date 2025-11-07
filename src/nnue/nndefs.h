@@ -10,9 +10,12 @@ static constexpr size_t DEFAULT_ALIGN = 32;
 
 static constexpr size_t MAX_INDICES = 34; // 16 pieces per side plus room for end of list marker
 
-using IndexType = unsigned;
+using IndexType = uint32_t;
 
-static constexpr IndexType LAST_INDEX = 1000000;
+// for SIMD sparse dot product operations
+using PackedIndexType = uint16_t;
+
+static constexpr IndexType LAST_INDEX = 10000;
 
 using IndexArray = std::array<IndexType,MAX_INDICES>;
 

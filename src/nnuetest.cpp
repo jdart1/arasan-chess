@@ -284,71 +284,54 @@ template <size_t size>
 static int testNnz() {
     int errs = 0;
     alignas(nnue::DEFAULT_ALIGN) uint8_t input[size];
-    alignas(nnue::DEFAULT_ALIGN) uint16_t output[size/4]; // groups of 4
+    alignas(nnue::DEFAULT_ALIGN) uint16_t output[size / 4];  // Output is int32_t indices
     size_t outputCount = 0;
-    // input is unsigned
-    fill_random(input, size, 0, 127);
     static std::mt19937 rng(89);
     std::uniform_int_distribution<int> dist1(0,100);
 
-    // make array sparse
-    for (size_t i = 0; i < size; ++i) {
+    // Build expected set of non-zero int32_t chunk indices
+    std::set<uint16_t> nonZeroChunks;
+    auto input32 = reinterpret_cast<int32_t*>(input);
+    constexpr size_t numChunks = size / 4;
+
+    // Ensure at least one chunk is non-zero
+    input32[0] = 1;
+    nonZeroChunks.insert(0);
+    for (size_t i = 1; i < numChunks; ++i) {
         auto x = dist1(rng);
         if (x < 75) {
-            input[i] = 0;
-        }
-    }
-
-    // Calculate expected number of groups with non-zero elements
-    size_t expectedGroupCount = 0;
-    for (size_t groupIdx = 0; groupIdx < size/4; ++groupIdx) {
-        bool hasNonZero = false;
-        for (size_t k = 0; k < 4; ++k) {
-            if (input[groupIdx * 4 + k] != 0) {
-                hasNonZero = true;
-                break;
-            }
-        }
-        if (hasNonZero) {
-            expectedGroupCount++;
-        }
-    }
-
-    // Ensure we have at least one group with all zeros for testing
-    if (expectedGroupCount == size/4) { // very unlikely - all groups have non-zero
-        for (size_t k = 0; k < 4; ++k) {
-            input[k] = 0; // zero out first group
-        }
-        expectedGroupCount--;
-    }
-
-    simd::calcNnzData(input, size, output, outputCount);
-
-    // Build expected set of group indices with non-zero elements
-    std::set<uint16_t> expectedGroups;
-    for (size_t groupIdx = 0; groupIdx < size/4; ++groupIdx) {
-        for (size_t k = 0; k < 4; ++k) {
-            if (input[groupIdx * 4 + k] != 0) {
-                expectedGroups.insert(groupIdx);
-                break;
+            input32[i] = 0;
+        } else {
+            input32[i] = 5 * dist1(rng) / 4;
+            if (input32[i]) {
+                nonZeroChunks.insert(i);
             }
         }
     }
 
-    // Build actual set of output group indices
-    std::set<uint16_t> actualGroups(output, output + outputCount);
+    simd::calcNnzData<size>(input, output, outputCount);
 
-    // Compare the sets
-    if (expectedGroups != actualGroups) {
-        std::cerr << "testNnz failed - group sets don't match" << std::endl;
-        std::cerr << " expected: ";
-        for (auto val : expectedGroups) std::cerr << val << ' ';
-        std::cerr << std::endl;
-        std::cerr << " actual: ";
-        for (auto val : actualGroups) std::cerr << val << ' ';
-        std::cerr << std::endl;
+    if (outputCount != nonZeroChunks.size()) {
+        std::cerr << "testNNz failed: outputCount = " << outputCount << ", expected " << nonZeroChunks.size() << std::endl;
         ++errs;
     }
+
+    // Verify all returned indices are in the expected set
+    for (size_t i = 0; i < outputCount; ++i) {
+        if (nonZeroChunks.find(output[i]) == nonZeroChunks.end()) {
+            std::cerr << "testNnz failed: unexpected index " << output[i] << std::endl;
+            ++errs;
+        } else {
+            nonZeroChunks.erase(output[i]);
+        }
+    }
+
+    // Verify all expected indices were returned
+    if (!nonZeroChunks.empty()) {
+        std::cerr << "testNnz failed: missing " << nonZeroChunks.size() << " expected indices" << std::endl;
+        ++errs;
+    }
+
     return errs;
 }
 
@@ -483,8 +466,7 @@ int testNNUE() {
     else {
         errs += testSparseLinear<uint8_t,int8_t,int32_t,int32_t,1024,16,7,0>();
     }
-
-    errs += testWholeNetwork();
+    if (!errs) errs += testWholeNetwork();
 
     return errs;
 }

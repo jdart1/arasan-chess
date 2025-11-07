@@ -5,6 +5,10 @@
 #include "simddefs.h"
 #include "../bitutil.h"
 
+namespace nnue {
+#include "nndefs.h"
+}
+
 namespace simd {
 
 template <typename T, unsigned simdWidth> inline static constexpr size_t chunks(unsigned len) {
@@ -153,7 +157,7 @@ fullUpdateLoopNeon(AccumType *target, const WeightType (*weights)[inputSize][out
             }
         }
         // perform updates in registers
-        for (size_t i = 0; indices[i] != 1000000; ++i) {
+        for (size_t i = 0; indices[i] != nnue::LAST_INDEX; ++i) {
             const auto w = (*weights)[indices[i]];
             for (size_t j = 0; j < regCount; ++j) {
                 regs[j] =
@@ -233,7 +237,7 @@ inline void fullUpdateLoop(AccumType *target, const WeightType (*weights)[inputS
             }
         }
         // perform updates in registers
-        for (size_t i = 0; indices[i] != 1000000; ++i) {
+        for (size_t i = 0; indices[i] != nnue::LAST_INDEX; ++i) {
             const vec_type *w = reinterpret_cast<const vec_type *>((*weights)[indices[i]]);
             for (size_t j = 0; j < regCount; ++j) {
                 regs[j] = vec_add<bytes>(regs[j], w + offset + j);
@@ -826,92 +830,72 @@ public:
     BitmaskToIndices() {
         for (unsigned i = 0; i < 256; ++i) {
             uint64_t j = i, k = 0;
-            data[i].dataAsInt64 = 0;
+            data[i].dataAsInt64[0] = data[i].dataAsInt64[1] = 0;
             while (j) {
-                // note: bit indices start at 1
-                data[i].dataAsArray[k++] = BitUtils::firstOne(j) + 1;
+                data[i].dataAsArray[k++] = BitUtils::firstOne(j);
                 j &= j - 1;
             }
         }
     }
 
-    const auto &lookup(uint8_t x) const noexcept {
-        return data[x].dataAsArray;
+    const auto *lookup(uint8_t x) const noexcept {
+        return &data[x].dataAsArray[0];
     }
 
 private:
     union DataUnion {
-        uint8_t dataAsArray[8];
-        uint64_t dataAsInt64;
+        nnue::PackedIndexType dataAsArray[8];
+        int64_t dataAsInt64[2];
     };
 
     alignas(64) DataUnion data[256];
 
 } bitmaskToIndices;
 
-#ifdef NEON
-template<int lane, typename IndexType>
-static inline void check_lane(uint64x2_t comp_u64, unsigned i, unsigned& lastGroupIdx, IndexType* nzIndices, size_t& nzCount) {
-    if (vgetq_lane_u32(vreinterpretq_u32_u64(comp_u64), lane) != 0) {
-        unsigned groupIdx = (i / 4) + lane;
-        if (lastGroupIdx != groupIdx) {
-            nzIndices[nzCount++] = groupIdx;
-            lastGroupIdx = groupIdx;
-        }
-    }
-}
-#endif
-
- // compute a vector of group indices (groups of 4 consecutive elements) for which
-// at least one element in the group is non-zero. This is optimized for DPBUSD
-// operations which work on 4-element groups.
-template <typename IndexType>
-void calcNnzData(const uint8_t *input, size_t inputSize, IndexType *nzIndices, size_t &nzCount) {
-    // bytes that will fit in a vector register of simdWidth bits:
-    static unsigned inputChunkSize = simdWidth / (8 * sizeof(int8_t));
+// Find indices of nonzero int32_t values in input array, following the Stockfish algorithm.
+template <size_t inputSize>
+void calcNnzData(const uint8_t *input, nnue::PackedIndexType *nzIndices, size_t &nzCount) {
     nzCount = 0;
-    unsigned lastGroupIdx = UINT_MAX;
 #if defined(NEON)
-    // We do not emulate the x86 approach, because NEON has no direct equivalent of
-    // instructions such as _mm512_cmpgt_epu8_mask that pack the results of a comparision
-    // operation into a mask vector.
-    for (unsigned i = 0; i < inputSize; i += inputChunkSize) {
-        auto x = vec_load8(reinterpret_cast<const vec8_t*>(input + i));
-        uint8x16_t input_u8 = vreinterpretq_u8_s8(x);
-        uint8x16_t comp = vcgtq_u8(input_u8, vdupq_n_u8(0));
-        uint64x2_t comp_u64 = vreinterpretq_u64_u8(comp);
-
-        // check groups of 4 bytes
-        check_lane<0>(comp_u64, i, lastGroupIdx, nzIndices, nzCount);
-        check_lane<1>(comp_u64, i, lastGroupIdx, nzIndices, nzCount);
-        check_lane<2>(comp_u64, i, lastGroupIdx, nzIndices, nzCount);
-        check_lane<3>(comp_u64, i, lastGroupIdx, nzIndices, nzCount);
-    }
+    // TBD
 #else
-    for (unsigned i = 0; i < inputSize; i += inputChunkSize) {
-        // obtain bitmask of the non-zero values in the current input chunk of simdWidth bits
-        MaskType_t mask = nnzMask(vec_load(reinterpret_cast<const vec_t*>(input + i)));
-        // process the output one byte at a time
-        for (unsigned j = 0; j < sizeof(MaskType_t) / sizeof(int8_t); ++j) {
-            const uint8_t byte = static_cast<uint8_t>((mask >> (j * 8)) & 0xFF); // next byte to process
-            if (byte == 0) continue; // skip if no bits set
-            auto indexLookup = bitmaskToIndices.lookup(byte); // list of indices
+    // x86
+    constexpr unsigned Int32sPerVec = sizeof(vec_t) / sizeof(int32_t);
+    constexpr unsigned ChunkSize = std::max<unsigned>(Int32sPerVec, 8);
+    constexpr unsigned NumChunks = inputSize / (4 * ChunkSize);
+    constexpr unsigned InputsPerChunk = ChunkSize / Int32sPerVec;
+    constexpr unsigned OutputsPerChunk = ChunkSize / 8;
+    using vec128_t = __m128i;
+    // input is processed in 32-bit chunks
+    const auto inputVector = reinterpret_cast<const vec_t *>(input);
+    unsigned count = 0;
+    auto base = zero128;
+    const auto increment = vec_set_16<vec128_t>(8);
 
-            // Process individual elements but group them into sets of 4.
-            // Track which groups of 4 have at least one non-zero element.
-            for (unsigned k = 0; k < 8 && indexLookup[k]; ++k) {
-                // -1 to correct for addition of 1 in the lookup table
-                unsigned elementIdx = i + j * 8 + indexLookup[k] - 1;
-                unsigned groupIdx = elementIdx / 4; // group index for DPBUSD
-
-                // Only add if this is a new group (avoid duplicates)
-                if (groupIdx != lastGroupIdx) {
-                    nzIndices[nzCount++] = groupIdx;
-                    lastGroupIdx = groupIdx;
-                }
-            }
+    for (unsigned i = 0; i < NumChunks; ++i) {
+        uint32_t nnz = 0;
+        // Compute a bitmask for the non-zero values in this input chunk
+        for (unsigned j = 0; j < InputsPerChunk; j++) {
+            nnz |= nnzMask32(inputVector[i * InputsPerChunk + j]) << (j * Int32sPerVec);
+        }
+        // Process the bitmask, using 128-bit vector instructions.
+        for (unsigned j = 0; j < OutputsPerChunk; ++j) {
+            // extract a byte
+            uint16_t byteValue = (nnz >> (j * 8)) & 0xFF;
+            // look up an unpacked list of non-zero bits for the byte value
+            const auto offsets =
+                _mm_load_si128(reinterpret_cast<const vec128_t *>(bitmaskToIndices.lookup(byteValue)));
+            // This stores a full set of 8 16-bit output values, not all of which will be indices with
+            // non-zero values.
+            // However, because the output window is then shifted by the bit count, extra values will be
+            // overwritten or ignored.
+            // Note: stores can be unaligned: _mm_storeu_si128 supports this.
+            _mm_storeu_si128(reinterpret_cast<__m128i*>(nzIndices + count), vec_add16<vec128_t>(base, offsets));
+            count += BitUtils::bitCount(byteValue);
+            base = vec_add16<vec128_t>(base, increment);
         }
     }
+    nzCount = count;
 #endif
 }
 

@@ -24,8 +24,7 @@
 
 struct NodeInfo;
 
-namespace nnue 
-{
+namespace nnue {
 #include "network.h"
 }
 

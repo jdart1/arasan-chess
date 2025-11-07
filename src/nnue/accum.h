@@ -3,7 +3,6 @@
 #define _NNUE_ACCUM_H
 
 #include "chess.h"
-#include "nndefs.h"
 
 #include <cstring>
 
