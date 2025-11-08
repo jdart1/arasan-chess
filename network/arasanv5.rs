@@ -31,6 +31,7 @@ fn main() {
     const Q_FT: i16 = 255;
     const Q_H: i32 = 64;
     const Q_H2: i32 = 128;
+    const Q_L1_IN: i32 = 127; // L1 input quantization from pairwise mult ((Q_FT * Q_FT) >> 9)
     let final_lr = INITIAL_LR * 0.4f32.powi(4);
     const SUPERBATCHES: usize = 240;
 
@@ -65,9 +66,9 @@ fn main() {
                 })
                 .quantise::<i16>(Q_FT),
             SavedFormat::id("l0b").quantise::<i16>(Q_FT),
-            // 1st hidden layer 
+            // 1st hidden layer
             SavedFormat::id("l1w").round().quantise::<i8>(Q_H.try_into().unwrap()).transpose(),
-            SavedFormat::id("l1b").round().quantise::<i32>(Q_H * Q_H),
+            SavedFormat::id("l1b").round().quantise::<i32>(Q_L1_IN * Q_H),
             // 2nd hidden layer
             SavedFormat::id("l2w").round().quantise::<i32>(Q_H2).transpose(),
             SavedFormat::id("l2b").round().quantise::<i32>(Q_H2 * Q_H * Q_H),
