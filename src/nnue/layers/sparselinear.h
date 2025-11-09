@@ -83,7 +83,7 @@ public:
         }
 
         const auto getWeights = [this, bucket](unsigned i) {
-            return reinterpret_cast<const vec_t*>(&_optimizedWeights[bucket][i * outputSize * ChunkSize]);
+            return reinterpret_cast<const vec8_t*>(&_optimizedWeights[bucket][i * outputSize * ChunkSize]);
         };
 
         const auto input32 = reinterpret_cast<const int32_t*>(input);
@@ -93,7 +93,11 @@ public:
              nnzPtr < nnzContext.nzIndices + nnzContext.nzCount;
              ++nnzPtr) {
             const unsigned i = static_cast<unsigned>(*nnzPtr);
-            const vec_t in = vec_set_32<vec_t>(input32[i]);
+#ifdef NEON
+            const auto in = vreinterpretq_u8_s32(vdupq_n_s32(input32[i]));
+#else
+            const auto in = vec_set_32<vec_t>(input32[i]);
+#endif
             const auto col = getWeights(i);
             for (unsigned k = 0; k < NumAccums; ++k) {
                 dpbusd_epi32(accum[k], in, col[k]);

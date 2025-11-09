@@ -46,7 +46,8 @@ static constexpr size_t VEC_ALIGN = 32;
 static constexpr size_t simdWidth = 128;
 static constexpr size_t simdRegCount = 16;
 using MaskType_t = uint32_t;
-#elif defined(AVX512)
+#else
+#if defined(AVX512)
 using vec_t = __m512i;
 static constexpr size_t VEC_ALIGN = 64;
 static constexpr size_t simdWidth = 512;
@@ -65,6 +66,10 @@ static constexpr size_t simdWidth = 128;
 static constexpr size_t simdRegCount = 16;
 using MaskType_t = uint32_t;
 #endif
+using vec8_t = vec_t;
+using vec16_t = vec_t;
+using vec32_t = vec_t;
+#endif // x86
 
 #if defined(NEON)
 static inline vec_t vec_load(const vec_t *x) {
@@ -138,17 +143,65 @@ static inline int32_t hsum32(int32x4_t reg) {
 // must be templatized because shift must be a compile-time constant
 template<unsigned shift>
 static inline vec32_t vec_rshift32(vec32_t x) { return vshrq_n_s32(x, shift); }
-// templatize this for compatibility with x86 code
+// templatize these for compatibility with x86 code
 template <typename T> static inline MaskType_t nnzMask(T x);
 template <typename T> static inline MaskType_t nnzMask32(T x);
-static inline vec32_t dpbusd_epi32(vec32_t sum, vec8_t a, vec8_t b) {
+template <typename T> static inline T vec_set_32(int32_t);
+
+// NEON specialization for nnzMask32, following Stockfish approach
+// Efficiently creates a bitmask from a 32-bit vector comparison
+template <> inline MaskType_t nnzMask32(vec32_t x) {
+    static constexpr uint32_t Mask[4] = {1, 2, 4, 8};
+    const uint32x4_t test = vtstq_u32(vreinterpretq_u32_s32(x), vreinterpretq_u32_s32(x));
+    const uint32x4_t masked = vandq_u32(test, vld1q_u32(Mask));
 #if defined(__aarch64__)
-    return vdotq_s32(sum, a, b);
+    return vaddvq_u32(masked);
 #else
-    // emulate x86 multipy-add instruction with NEON
-    int16x8_t prod_lo = vmull_s8(vget_low_s8(vreinterpretq_s8_u8(a)), vget_low_s8(b));
-    int16x8_t prod_hi = vmull_s8(vget_high_s8(vreinterpretq_s8_u8(a)), vget_high_s8(b));
-    return vaddq_s32(sum, vaddq_s32(vpaddlq_s16(prod_lo), vpaddlq_s16(prod_hi)));
+    // 32-bit ARM fallback
+    uint32x2_t sum = vadd_u32(vget_low_u32(masked), vget_high_u32(masked));
+    sum = vpadd_u32(sum, sum);
+    return vget_lane_u32(sum, 0);
+#endif
+}
+
+template <> vec32_t vec_set_32(int32_t x) {
+    return vdupq_n_s32(x);
+}
+
+// 16-bit vector operations for calcNnzData (using uint16x8_t for indices)
+using vec_u16_t = uint16x8_t;
+static inline vec_u16_t vec_load_u16(const uint16_t *x) {
+    return vld1q_u16(x);
+}
+static inline void vec_store_u16(uint16_t *x, vec_u16_t y) {
+    vst1q_u16(x, y);
+}
+static inline vec_u16_t vec_set_u16(uint16_t x) {
+    return vdupq_n_u16(x);
+}
+static inline vec_u16_t vec_add_u16(vec_u16_t x, vec_u16_t y) {
+    return vaddq_u16(x, y);
+}
+
+static inline void dpbusd_epi32(vec32_t sum, uint8x16_t a, vec8_t b) {
+#if defined(__aarch64__)
+    return vdotq_s32(sum, vreinterpretq_s8_u8(a), b);
+#else
+    // emulate Intel's _mm_dpbusd_epi32 instruction with NEON
+    uint8x8_t a_lo = vget_low_u8(a);
+    int8x8_t b_lo = vget_low_s8(b);
+    uint8x8_t a_hi = vget_high_u8(a);
+    int8x8_t b_hi = vget_high_s8(b);
+
+    // Create 16-bit vectors and multiply
+    int16x8_t p_lo = vmull_s8(b_lo, vreinterpret_s8_u8(a_lo));
+    int16x8_t p_hi = vmull_s8(b_hi, vreinterpret_s8_u8(a_hi));
+
+    // Add pairs of 16-bit products
+    int32x4_t dp = vpaddlq_s16(p_lo);
+    dp = vpadalq_s16(dp, p_hi);
+
+    sum = vaddq_s32(sum, dp);
 #endif
 }
 #else

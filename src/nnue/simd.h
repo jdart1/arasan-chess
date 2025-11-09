@@ -856,21 +856,31 @@ private:
 template <size_t inputSize>
 void calcNnzData(const uint8_t *input, nnue::PackedIndexType *nzIndices, size_t &nzCount) {
     nzCount = 0;
+
+    // Common algorithm structure for both NEON and x86
 #if defined(NEON)
-    // TBD
+    constexpr unsigned Int32sPerVec = sizeof(vec32_t) / sizeof(int32_t);
 #else
-    // x86
     constexpr unsigned Int32sPerVec = sizeof(vec_t) / sizeof(int32_t);
+#endif
     constexpr unsigned ChunkSize = std::max<unsigned>(Int32sPerVec, 8);
     constexpr unsigned NumChunks = inputSize / (4 * ChunkSize);
     constexpr unsigned InputsPerChunk = ChunkSize / Int32sPerVec;
     constexpr unsigned OutputsPerChunk = ChunkSize / 8;
-    using vec128_t = __m128i;
+
     // input is processed in 32-bit chunks
+#if defined(NEON)
+    const auto inputVector = reinterpret_cast<const vec32_t *>(input);
+    unsigned count = 0;
+    auto base = vec_set_u16(0);
+    const auto increment = vec_set_u16(8);
+#else
+    using vec128_t = __m128i;
     const auto inputVector = reinterpret_cast<const vec_t *>(input);
     unsigned count = 0;
     auto base = zero128;
     const auto increment = vec_set_16<vec128_t>(8);
+#endif
 
     for (unsigned i = 0; i < NumChunks; ++i) {
         uint32_t nnz = 0;
@@ -883,6 +893,16 @@ void calcNnzData(const uint8_t *input, nnue::PackedIndexType *nzIndices, size_t 
             // extract a byte
             uint16_t byteValue = (nnz >> (j * 8)) & 0xFF;
             // look up an unpacked list of non-zero bits for the byte value
+#if defined(NEON)
+            const auto offsets = vec_load_u16(reinterpret_cast<const uint16_t *>(bitmaskToIndices.lookup(byteValue)));
+            // This stores a full set of 8 16-bit output values, not all of which will be indices with
+            // non-zero values.
+            // However, because the output window is then shifted by the bit count, extra values will be
+            // overwritten or ignored.
+            vec_store_u16(reinterpret_cast<uint16_t*>(nzIndices + count), vec_add_u16(base, offsets));
+            count += BitUtils::bitCount(byteValue);
+            base = vec_add_u16(base, increment);
+#else
             const auto offsets =
                 _mm_load_si128(reinterpret_cast<const vec128_t *>(bitmaskToIndices.lookup(byteValue)));
             // This stores a full set of 8 16-bit output values, not all of which will be indices with
@@ -893,10 +913,10 @@ void calcNnzData(const uint8_t *input, nnue::PackedIndexType *nzIndices, size_t 
             _mm_storeu_si128(reinterpret_cast<__m128i*>(nzIndices + count), vec_add16<vec128_t>(base, offsets));
             count += BitUtils::bitCount(byteValue);
             base = vec_add16<vec128_t>(base, increment);
+#endif
         }
     }
     nzCount = count;
-#endif
 }
 
 // Combination of piece-wise multitplication with CRelU activation and a linear layer with 1-dimensional output.
