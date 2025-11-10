@@ -31,6 +31,9 @@ search.can_resign=true
 # Resignation threshold (units of 1 pawn=100)
 search.resign_threshold=-500
 #
+# True to allow poondering (thinking on the opponent's time)
+search.ponder = true;
+#
 # Hash table size in bytes (can be overridden with -H)
 # Can use: K for kilobytes, M for megabytes, G for gigabytes.
 # Note: for Winboard can use the /defaultHashSize option or common

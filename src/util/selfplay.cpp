@@ -644,8 +644,8 @@ int CDECL main(int argc, char **argv) {
     globals::options.book.book_enabled = true;
     globals::options.book.variety = 75;
     globals::options.learning.position_learning = false;
-    globals::options.search.can_resign = true;
-    globals::options.search.resign_threshold = -Scoring::PAWN_VALUE * 30;
+    globals::options.search.can_resign = false; // adjudication options are used instead
+    globals::options.search.ponder = false;
     globals::options.search.widePlies = 2;
     globals::options.search.wideWindow = 3 * Scoring::PAWN_VALUE;
 

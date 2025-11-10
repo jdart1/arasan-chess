@@ -28,6 +28,7 @@ class Options {
 
         size_t hash_table_size;
         bool can_resign;
+        bool ponder;
         int resign_threshold;
 #ifdef SYZYGY_TBS
         bool use_tablebases;
