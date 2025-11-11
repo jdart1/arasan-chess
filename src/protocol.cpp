@@ -1694,7 +1694,8 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
 #else
             "2000" << std::endl;
 #endif
-        std::cout << "option name Ponder type check default true" << std::endl;
+        std::cout << "option name Ponder type check default " << std::boolalpha <<
+            globals::options.search.ponder << std::endl;
         std::cout << "option name Contempt type spin default 0 min -200 max 200" << std::endl;
 #ifdef SYZYGY_TBS
         std::cout << "option name Use tablebases type check default ";
@@ -1779,7 +1780,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
             }
         }
         else if (uciOptionCompare(name,"Ponder")) {
-            globals::options.setOption<bool>(value, search.ponder);
+            globals::options.setOption<bool>(value, globals::options.search.ponder);
             searcher->updateSearchOptions();
         }
         else if (uciOptionCompare(name,"Contempt")) {
@@ -2791,7 +2792,7 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
                   send_move(board,reply,stats);
                }
             }
-            while (!forceMode && !analyzeMode && !game_end && !result_pending && globals.options.search.ponder &&
+            while (!forceMode && !analyzeMode && !game_end && !result_pending && globals::options.search.ponder &&
                    time_target >= 100 /* 0.1 second */ &&
                    !IsNull(stats.best_line[1])) {
                PendingStatus result;
