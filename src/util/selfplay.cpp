@@ -659,6 +659,22 @@ int CDECL main(int argc, char **argv) {
     for (; arg < argc && *(argv[arg]) == '-'; ++arg) {
         if (strcmp(argv[arg], "-a") == 0) {
             append = true;
+        } else if (strcmp(argv[arg], "-b") == 0) {
+            std::stringstream s(argv[++arg]);
+            s >> sp_options.maxBookPly;
+            if (s.bad()) {
+                std::cerr << "error in ply count after -b" << std::endl;
+                return -1;
+            }
+        } else if (strcmp(argv[arg], "-r") == 0) {
+            std::stringstream s(argv[++arg]);
+            s >> sp_options.semiRandomizeInterval;
+            s >> sp_options.semiRandomPerGame;
+            if (s.bad()) {
+                std::cerr << "expected two numbers after -r" << std::endl;
+                return -1;
+            }
+            sp_options.semiRandomize = sp_options.semiRandomPerGame > 0;
         } else if (strcmp(argv[arg], "-c") == 0) {
             std::stringstream s(argv[++arg]);
             s >> sp_options.cores;
