@@ -474,7 +474,7 @@ Move SearchController::findBestMove(
        // it matters.
        {
            std::unique_lock<std::mutex> lock(globals::syzygy_lock);
-           tb_hit = mg->rank_root_moves();
+           tb_hit = mg->rank_and_filter_root_moves();
        }
        if (tb_hit) {
            tb_root_probes += mg->moveCount();
