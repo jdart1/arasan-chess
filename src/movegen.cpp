@@ -524,9 +524,9 @@ bool RootMoveGenerator::rank_and_filter_root_moves()
                      [](const RootMove &a, const RootMove &b) { return a.tbRank > b.tbRank; });
 
     // exclude from this class's move list any moves not in the ok set, by setting their
-    // "used" flag true
+    // "exlcuded" flag true
     for (int i = 0; i < batch_count; i++) {
-        if (okMoves.find(moveList[i].move) == okMoves.end()) SetUsed(moveList[i].move);
+        if (okMoves.find(moveList[i].move) == okMoves.end()) SetExcluded(moveList[i].move);
     }
 
     return true;
