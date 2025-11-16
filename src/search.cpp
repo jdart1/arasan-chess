@@ -467,11 +467,15 @@ Move SearchController::findBestMove(
    tb_hit = 0;
    tb_score = Constants::INVALID_SCORE;
    tb_root_probes = tb_root_hits = 0;
+#ifdef SEARCH_TRACE
+   std::cout << "use tablebases = " << std::boolalpha << srcOpts.use_tablebases << " EGTBMenCount = " <<
+       globals::EGTBMenCount << std::endl;
+#endif
    if (srcOpts.use_tablebases) {
-       // Lock because the following calls is not thread-safe. In normal use
+       // Lock because the following call is not thread-safe. In normal use
        // we don't need to worry about this, but it is possible there are
-       // two concurrent SearchController instances in a program, in which case
-       // it matters.
+       // two concurrent SearchController instances in a program (in the selfplay
+       // utility for example), in which case it matters.
        {
            std::unique_lock<std::mutex> lock(globals::syzygy_lock);
            tb_hit = mg->rank_and_filter_root_moves();
@@ -498,7 +502,7 @@ Move SearchController::findBestMove(
    std::stringstream s;
    s << "filtered root moves:";
    for (const RootMoveGenerator::RootMove &m : mg->getMoveList()) {
-       if (!(Flags(m.move) & Excluded)) {
+       if (!IsExcluded(m.move)) {
            s << ' ';
            Notation::image(board,m.move,Notation::OutputFormat::SAN,s);
        }
