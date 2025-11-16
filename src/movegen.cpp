@@ -513,7 +513,7 @@ bool RootMoveGenerator::rank_and_filter_root_moves()
     MoveSet okMoves;
     score_t score;
     // probe the TBs and return a list of moves that preserve WDL
-    bool tb_hit = SyzygyTb::probe_root(board, board.anyRep(), score, okMoves) > 0;
+    bool tb_hit = SyzygyTb::probe_root(board, board.anyRep(), score, okMoves) >= 0;
     if (!tb_hit) return false;
 
     // use Fathom to rank the moves in our move list
