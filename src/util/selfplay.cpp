@@ -667,11 +667,16 @@ int CDECL main(int argc, char **argv) {
                 return -1;
             }
         } else if (strcmp(argv[arg], "-r") == 0) {
-            std::stringstream s(argv[++arg]);
-            s >> sp_options.semiRandomizeInterval;
-            s >> sp_options.semiRandomPerGame;
-            if (s.bad()) {
-                std::cerr << "expected two numbers after -r" << std::endl;
+            std::stringstream s1(argv[++arg]);
+            s1 >> sp_options.semiRandomizeInterval;
+            if (s1.bad()) {
+                std::cerr << "error parsing parameters after -r" << std::endl;
+                return -1;
+            }
+            std::stringstream s2(argv[++arg]);
+            s2 >> sp_options.semiRandomPerGame;
+            if (s2.bad()) {
+                std::cerr << "error parsing parameters after -r" << std::endl;
                 return -1;
             }
             sp_options.semiRandomize = sp_options.semiRandomPerGame > 0;
@@ -753,13 +758,13 @@ int CDECL main(int argc, char **argv) {
         flags = flags | std::ios::app;
     }
     pos_out_file = new std::ofstream(sp_options.posFileName, flags);
-    if (pos_out_file->fail()) {
+    if (pos_out_file->bad()) {
         std::cerr << "failed to open position output file " << sp_options.posFileName << std::endl;
         exit(-1);
     }
     if (sp_options.saveGames) {
         game_out_file = new std::ofstream(sp_options.gameFileName, std::ios::out);
-        if (game_out_file->fail()) {
+        if (game_out_file->bad()) {
             std::cerr << "failed to open game output file " << sp_options.gameFileName << std::endl;
             exit(-1);
         }
