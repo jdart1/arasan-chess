@@ -51,7 +51,11 @@ fn main() {
         .output_buckets(MaterialCount::<NUM_OUTPUT_BUCKETS>)
         .save_format(&[
             // Arasan header
+<<<<<<< HEAD:network/arasanv5.rs
             SavedFormat::custom([b'A', b'R', b'A', NETWORK_VERSION]),
+=======
+            SavedFormat::custom([0x9a, 0x2d, 0x80, 0x7c]), // little endian
+>>>>>>> master:network/arasanv4.rs
             // merge in the factoriser weights
             SavedFormat::id("l0w")
                 .add_transform(|builder, _, mut weights| {

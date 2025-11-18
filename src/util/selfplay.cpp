@@ -86,14 +86,14 @@ static struct SelfPlayOptions {
     unsigned posCount = 10000000;
     unsigned depthLimit = 9;
     bool adjudicateDraw = true;
-    bool adjudicate7manDraw = false;
     bool adjudicateTB = true;
-    int adjudicateTBMen = 3; // don't adjudicate with more men so low-mat configs are included
+    int adjudicateTBMen = 3;
+    int adjudicateTBMenPawnless = 5;
     score_t adjudicateWinScore = 20*Scoring::PAWN_VALUE;
     unsigned adjudicateWinPlies = 3;
     unsigned outputPlyFrequency = 1; // output every nth move
     unsigned drawAdjudicationPlies = 10;
-    unsigned TBAdjudicationPlies = 10;
+    unsigned TBAdjudicationPlies = 4;
     unsigned drawAdjudicationMinPly = 150;
     int adjudicateMinMove50Count = 40; // mininum move 50 count
     std::string posFileName;
@@ -110,12 +110,22 @@ static struct SelfPlayOptions {
     unsigned semiRandomizeInterval = 1;
     unsigned semiRandomPerGame = 14;
     unsigned multipv_limit = 8;
-    int multiPVMargin = static_cast<int>(0.3 * Scoring::PAWN_VALUE);
+    int multiPVMargin = static_cast<int>(0.5 * Scoring::PAWN_VALUE);
     bool skipNonQuiet = true;
     BinFormats::Format format = BinFormats::Format::StockfishBin;
     bool verbose = false;
     unsigned verboseReportingInterval = 1000000;
     bool checkHash = false; // use hash table to check for possible dups
+
+    bool adjudicateTBOk(const Board &board) const noexcept {
+        if (adjudicateTB) {
+            return (board.men() <= std::min<int>(adjudicateTBMen,globals::EGTBMenCount)) ||
+                (!board.hasPawns() && board.men() <= std::min<int>(adjudicateTBMenPawnless,globals::EGTBMenCount));
+        }
+        else {
+            return false;
+        }
+    }
 } sp_options;
 
 struct ThreadData {
@@ -424,29 +434,26 @@ static void selfplay(ThreadData &td) {
             } else if (stats.state == Draw || stats.state == Stalemate) {
                 terminated = true;
                 result = Result::Draw;
-            } else if (!terminated &&
-                       board.state.moveCount >= sp_options.adjudicateMinMove50Count) {
-                if ((sp_options.adjudicateDraw ||
-                     (sp_options.adjudicate7manDraw && board.men() <= 7)) &&
+            } else if (sp_options.adjudicateTBOk(board) &&
+                       ++tb_score_count >= sp_options.TBAdjudicationPlies) {
+                if (stats.display_value >= Constants::TABLEBASE_WIN) {
+                    result =
+                        (board.sideToMove() == White) ? Result::WhiteWin : Result::BlackWin;
+                } else if (stats.display_value <= -Constants::TABLEBASE_WIN) {
+                    result =
+                        (board.sideToMove() == White) ? Result::BlackWin : Result::WhiteWin;
+                } else {
+                    // draw, blessed loss, or cursed win
+                    result = Result::Draw;
+                }
+                adjudicated = true;
+            } else if (board.state.moveCount >= sp_options.adjudicateMinMove50Count) {
+                if (sp_options.adjudicateDraw &&
                     ply >= sp_options.drawAdjudicationMinPly &&
                     low_score_count >= sp_options.drawAdjudicationPlies) {
                     // adjudicate draw
                     stats.state = Draw;
                     result = Result::Draw;
-                    adjudicated = true;
-                } else if (sp_options.adjudicateTB && board.men() <=
-                           std::min<int>(sp_options.adjudicateTBMen,globals::EGTBMenCount) &&
-                           ++tb_score_count >= sp_options.TBAdjudicationPlies) {
-                    if (stats.display_value >= Constants::TABLEBASE_WIN) {
-                        result =
-                            (board.sideToMove() == White) ? Result::WhiteWin : Result::BlackWin;
-                    } else if (stats.display_value <= -Constants::TABLEBASE_WIN) {
-                        result =
-                            (board.sideToMove() == White) ? Result::BlackWin : Result::WhiteWin;
-                    } else {
-                        // draw, blessed loss, or cursed win
-                        result = Result::Draw;
-                    }
                     adjudicated = true;
                 }
             }
@@ -637,8 +644,8 @@ int CDECL main(int argc, char **argv) {
     globals::options.book.book_enabled = true;
     globals::options.book.variety = 75;
     globals::options.learning.position_learning = false;
-    globals::options.search.can_resign = true;
-    globals::options.search.resign_threshold = -Scoring::PAWN_VALUE * 30;
+    globals::options.search.can_resign = false; // adjudication options are used instead
+    globals::options.search.ponder = false;
     globals::options.search.widePlies = 2;
     globals::options.search.wideWindow = 3 * Scoring::PAWN_VALUE;
 
@@ -652,6 +659,27 @@ int CDECL main(int argc, char **argv) {
     for (; arg < argc && *(argv[arg]) == '-'; ++arg) {
         if (strcmp(argv[arg], "-a") == 0) {
             append = true;
+        } else if (strcmp(argv[arg], "-b") == 0) {
+            std::stringstream s(argv[++arg]);
+            s >> sp_options.maxBookPly;
+            if (s.bad()) {
+                std::cerr << "error in ply count after -b" << std::endl;
+                return -1;
+            }
+        } else if (strcmp(argv[arg], "-r") == 0) {
+            std::stringstream s1(argv[++arg]);
+            s1 >> sp_options.semiRandomizeInterval;
+            if (s1.bad()) {
+                std::cerr << "error parsing parameters after -r" << std::endl;
+                return -1;
+            }
+            std::stringstream s2(argv[++arg]);
+            s2 >> sp_options.semiRandomPerGame;
+            if (s2.bad()) {
+                std::cerr << "error parsing parameters after -r" << std::endl;
+                return -1;
+            }
+            sp_options.semiRandomize = sp_options.semiRandomPerGame > 0;
         } else if (strcmp(argv[arg], "-c") == 0) {
             std::stringstream s(argv[++arg]);
             s >> sp_options.cores;
@@ -730,13 +758,13 @@ int CDECL main(int argc, char **argv) {
         flags = flags | std::ios::app;
     }
     pos_out_file = new std::ofstream(sp_options.posFileName, flags);
-    if (pos_out_file->fail()) {
+    if (pos_out_file->bad()) {
         std::cerr << "failed to open position output file " << sp_options.posFileName << std::endl;
         exit(-1);
     }
     if (sp_options.saveGames) {
         game_out_file = new std::ofstream(sp_options.gameFileName, std::ios::out);
-        if (game_out_file->fail()) {
+        if (game_out_file->bad()) {
             std::cerr << "failed to open game output file " << sp_options.gameFileName << std::endl;
             exit(-1);
         }

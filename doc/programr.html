@@ -854,10 +854,8 @@ compatible with the <a href="https://github.com/official-stockfish/Stockfish/com
   network architecture used in Stockfish 15. Version 25.0 introduces a new simpler architecture,
 consisting of a horizionally mirrored feature transformer with 9 King buckets, followed by a hidden layer with 8 buckets based on material level.</p>
 <p>Tuning was performed using the <a href="https://github.com/jdart1/bullet", target="_blank">Bullet tuner</a> using a combination of  positions from Arasan selfplay games (generated from the "selfplay" utility program) and Lc0 training data.
-<p>The output from bullet must be post-processed to be readable by Arasan (currently, a version
-number is prepended to the file, which is checked at runtime). There is a utility program,
-"post_process_nn," in the source that can perform this. It takes two arguments: the first is the
-output file from bullet (quantised.bin), and the second is the desired output filename.</p>
+<p>The network binary file must have, in the first four bytes, a version
+which is checked at runtime. This is added to the file by the training script.</p>
 <p>The actual network data is loaded at runtime from a file. Unlike Stockfish and some other programs,
 Arasan does not embed the network data in the program executable. The default file name is compiled into the executable.</p>
 

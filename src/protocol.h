@@ -203,7 +203,6 @@ private:
     // stack of pending commands, received but not yet executed:
     std::vector<std::string> pending;
     bool doTrace; // true if -t on command line
-    bool easy; // set if no pondering
     bool game_end;
     bool result_pending;
     score_t last_score;

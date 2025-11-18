@@ -158,16 +158,6 @@ void RootMoveGenerator::reorderByScore() {
       );
 }
 
-void RootMoveGenerator::exclude(const MoveSet &to_exclude)
-{
-   for (int i = 0; i < batch_count; i++) {
-      ClearUsed(moveList[i].move);
-      if (to_exclude.find(moveList[i].move) != to_exclude.end()) {
-         SetUsed(moveList[i].move);
-      }
-   }
-}
-
 void RootMoveGenerator::filter(const MoveSet &include, const MoveSet &exclude)
 {
    excluded = 0;
@@ -200,6 +190,16 @@ void RootMoveGenerator::exclude(Move exclude) {
       if (MovesEqual(moveList[i].move,exclude)) {
          SetUsed(moveList[i].move);
          break;
+      }
+   }
+}
+
+void RootMoveGenerator::exclude(const MoveSet &to_exclude)
+{
+   for (int i = 0; i < batch_count; i++) {
+      ClearUsed(moveList[i].move);
+      if (to_exclude.find(moveList[i].move) != to_exclude.end()) {
+         SetUsed(moveList[i].move);
       }
    }
 }
@@ -500,27 +500,38 @@ uint64_t RootMoveGenerator::perft(Board &b, int depth) {
    return nodes;
 }
 
-int RootMoveGenerator::rank_root_moves()
+bool RootMoveGenerator::rank_and_filter_root_moves()
 {
 #ifdef SYZYGY_TBS
     const Material &wMat = board.getMaterial(White);
     const Material &bMat = board.getMaterial(Black);
     int tb_pieces = wMat.men() + bMat.men();
-    int tb_hit = 0;
-    if (tb_pieces <= globals::EGTBMenCount && !board.castlingPossible()) {
-        tb_hit = SyzygyTb::rank_root_moves(board,
-                                           board.anyRep(),
-                                           globals::options.search.syzygy_50_move_rule,
-                                           moveList);
+    if (tb_pieces > globals::EGTBMenCount || board.castlingPossible()) {
+        return false;
     }
-    if (tb_hit) {
-        // Sort moves on descending rank returned by Fathom
-        std::stable_sort(moveList.begin(),moveList.end(),
-                         [](const RootMove &a, const RootMove &b) { return a.tbRank > b.tbRank; });
+
+    MoveSet okMoves;
+    score_t score;
+    // probe the TBs and return a list of moves that preserve WDL
+    bool tb_hit = SyzygyTb::probe_root(board, board.anyRep(), score, okMoves) >= 0;
+    if (!tb_hit) return false;
+
+    // use Fathom to rank the moves in our move list
+    (void)SyzygyTb::rank_root_moves(board, board.anyRep(),
+                                    globals::options.search.syzygy_50_move_rule, moveList);
+    // Sort moves on descending rank returned by Fathom
+    std::stable_sort(moveList.begin(),moveList.end(),
+                     [](const RootMove &a, const RootMove &b) { return a.tbRank > b.tbRank; });
+
+    // exclude from this class's move list any moves not in the ok set, by setting their
+    // "exlcuded" flag true
+    for (int i = 0; i < batch_count; i++) {
+        if (okMoves.find(moveList[i].move) == okMoves.end()) SetExcluded(moveList[i].move);
     }
-    return tb_hit;
+
+    return true;
 #else
-    return 0;
+    return false;
 #endif
 }
 

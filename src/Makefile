@@ -292,7 +292,7 @@ clean: dirs
 	rm -f $(PROFILE)/*.dyn
 	rm -f $(PROFILE)/*.nnue
 	rm -f $(PROF_DATA)/*.*
-	cd $(EXPORT) && rm -f arasanx* makeeco makebook playchess ecocoder selfplay
+	cd $(EXPORT) && rm -f arasanx* makeeco makebook playchess ecocoder selfplay unit
 
 dirs:
 	mkdir -p $(BUILD)

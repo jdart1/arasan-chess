@@ -261,9 +261,9 @@ class RootMoveGenerator : public MoveGenerator
          return Constants::INVALID_SCORE;
       }
 
-      // Rank the root moves using tablebases. Returns 1 if
-      // successful, 0 if not
-      int rank_root_moves();
+      // Rank and filter the root moves using tablebases. Returns true if
+      // tb probe succeeded.
+      bool rank_and_filter_root_moves();
 
       const RootMoveList& getMoveList() const {
           return moveList;

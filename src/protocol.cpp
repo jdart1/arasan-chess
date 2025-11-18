@@ -133,7 +133,7 @@ Protocol::Protocol(const Board &board, bool traceOn, bool icsMode, bool cpus_set
       ponder_board(new Board()), main_board(new Board(board)), ponder_status(PonderStatus::None),
       predicted_move(NullMove), ponder_move(NullMove), best_move(NullMove), time_target(0),
       last_time_target(Constants::INFINITE_TIME), computer_rating(0), opponent_rating(0),
-      doTrace(traceOn), easy(false), game_end(false), result_pending(false),
+      doTrace(traceOn), game_end(false), result_pending(false),
       last_score(Constants::MATE), ecoCoder(nullptr), xboard42(false), srctype(TimeLimit),
       time_limit(Constants::INFINITE_TIME), ply_limit(Constants::MaxPly), lastAdded(0), uci(false),
       movestogo(0), ponderhit(false), uciWaitState(false), cpusSet(cpus_set), memorySet(memory_set),
@@ -1214,7 +1214,7 @@ void Protocol::send_move(Board &board, Move &move, Statistics &s) {
 
             if (uci) {
                 std::cout << "bestmove " << movebuf.str();
-                if (!easy && !IsNull(s.best_line[1])) {
+                if (globals::options.search.ponder && !IsNull(s.best_line[1])) {
 #ifdef _DEBUG
                     BoardState bs(board.state);
                     board.doMove(move);
@@ -1694,7 +1694,8 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
 #else
             "2000" << std::endl;
 #endif
-        std::cout << "option name Ponder type check default true" << std::endl;
+        std::cout << "option name Ponder type check default " << std::boolalpha <<
+            globals::options.search.ponder << std::endl;
         std::cout << "option name Contempt type spin default 0 min -200 max 200" << std::endl;
 #ifdef SYZYGY_TBS
         std::cout << "option name Use tablebases type check default ";
@@ -1779,7 +1780,8 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
             }
         }
         else if (uciOptionCompare(name,"Ponder")) {
-            easy = !(value == "true");
+            globals::options.setOption<bool>(value, globals::options.search.ponder);
+            searcher->updateSearchOptions();
         }
         else if (uciOptionCompare(name,"Contempt")) {
             std::stringstream buf(value);
@@ -2594,10 +2596,12 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
         }
     }
     else if (cmd == "easy") {
-        easy = true;
+        globals::options.search.ponder = false;
+        searcher->updateSearchOptions();
     }
     else if (cmd == "hard") {
-        easy = false;
+        globals::options.search.ponder = true;
+        searcher->updateSearchOptions();
     }
     else if (cmd == "white" || cmd == "black") {
         computer_plays_white = (cmd == "white");
@@ -2788,7 +2792,8 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
                   send_move(board,reply,stats);
                }
             }
-            while (!forceMode && !analyzeMode && !game_end && !result_pending && !easy && time_target >= 100 /* 0.1 second */ &&
+            while (!forceMode && !analyzeMode && !game_end && !result_pending && globals::options.search.ponder &&
+                   time_target >= 100 /* 0.1 second */ &&
                    !IsNull(stats.best_line[1])) {
                PendingStatus result;
                // check pending commands again before pondering in case

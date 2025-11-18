@@ -21,7 +21,7 @@ std::string Options::tbPath() const { return search.syzygy_path; }
 #endif
 
 Options::SearchOptions::SearchOptions()
-    : hash_table_size(32 * 1024 * 1024), can_resign(true),
+    : hash_table_size(32 * 1024 * 1024), can_resign(true), ponder(true),
       resign_threshold(-500),
 #ifdef SYZYGY_TBS
       use_tablebases(false), syzygy_path("syzygy"), syzygy_50_move_rule(true),
@@ -107,6 +107,8 @@ void Options::set_option(const std::string &name, const std::string &value) {
         setOption<bool>(name, value, search.can_resign);
     } else if (name == "search.resign_threshold") {
         setOption<int>(name, value, search.resign_threshold);
+    } else if (name == "search.ponder") {
+        setOption<bool>(name, value, search.ponder);
     } else if (name == "search.hash_table_size") {
         // command line option takes precedence
         if (!memorySet) setMemoryOption(search.hash_table_size, value);

@@ -425,8 +425,12 @@ public:
    // calculate the check status
    CheckStatusType getCheckStatus() const;
 
-   int  men() const noexcept {
+   int men() const noexcept {
       return getMaterial(White).men() + getMaterial(Black).men();
+   }
+
+   bool hasPawns() const noexcept {
+       return getMaterial(White).hasPawns() && getMaterial(Black).hasPawns();
    }
 
    private:
