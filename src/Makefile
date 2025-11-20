@@ -231,8 +231,8 @@ GCCMINVERSION := 7
 ifeq (, $(shell which bc))
 $(error "No 'bc' found in PATH, please install it")
 endif
-# Get 1st two digits of full GCC version
-GCCVER := $(shell expr `$(CC) -dumpfullversion | awk -F. '{printf "%s.%s\n", $$1, $$2}'`)
+# Get GCC major version
+GCCVER := $(shell expr `$(CC) -dumpfullversion | gawk 'match($$0, "^([0-9]+)?\\\\.[0-9]+*", a) {print a[1]}'`)
 GCC11 := $(shell echo '$(GCCVER) >= 11.0' | bc)
 GCCNEW := $(shell echo '$(GCCVER) >= $(GCCMINVERSION)' | bc)
 
