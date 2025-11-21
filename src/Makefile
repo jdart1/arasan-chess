@@ -232,7 +232,7 @@ ifeq (, $(shell which bc))
 $(error "No 'bc' found in PATH, please install it")
 endif
 # Get GCC major version
-GCCVER := $(shell expr `$(CC) -dumpfullversion | gawk 'match($$0, "^([0-9]+)?\\\\.[0-9]+*", a) {print a[1]}'`)
+GCCVER := $(shell expr `$(CC) -dumpfullversion | gawk 'match($$0, "^([0-9]+)?(\\\\.[0-9]+)+", a) {print a[1]}'`)
 GCC11 := $(shell echo '$(GCCVER) >= 11.0' | bc)
 GCCNEW := $(shell echo '$(GCCVER) >= $(GCCMINVERSION)' | bc)
 
