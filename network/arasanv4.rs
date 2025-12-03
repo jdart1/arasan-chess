@@ -25,8 +25,8 @@ fn main() {
     const NUM_OUTPUT_BUCKETS: usize = 8;
     const L1: usize = 1536;
     const INITIAL_LR: f32 = 0.001;
-    let final_lr = INITIAL_LR * 0.4f32.powi(4);
-    const SUPERBATCHES: usize = 240;
+    let final_lr = INITIAL_LR * 0.01;
+    const SUPERBATCHES: usize = 800;
 
     #[rustfmt::skip]
     let mut trainer = ValueTrainerBuilder::default()
@@ -104,16 +104,7 @@ fn main() {
     let settings = LocalSettings { threads: 8, test_set: None, output_directory: "checkpoints", batch_queue_size: 512 };
 
     let data_loader = loader::DirectSequentialDataLoader::new(&[
-        "/data2/bullet/feb2025/pos-shuffled.bullet",
-        "/data2/bullet/mar2025/pos-shuffled.bullet",
-        "/data2/bullet/apr2025/pos-shuffled.bullet",
-        "/data2/bullet/jun2025/pos-shuffled.bullet",
-        "/data2/lc0/feb2025-2/pos-shuffled.bullet",
-        "/data2/lc0/jun2025/pos-shuffled.bullet",
-        "/data2/bullet/oct2024/lc0/lc0-test80-oct1-10-shuffled.bullet",
-        "/data2/bullet/oct2024/lc0/lc0-test80-oct10-20-shuffled.bullet",
-        "/data2/bullet/oct2024/lc0/lc0-test80-oct20-31-shuffled.bullet",
-        "/data2/bullet/oct2024/lc0/lc0-test80-oct31-nov3-shuffled.bullet",
+        "/data3/bullet/nov2025/nov2025-interleaved.bullet",
         ]);
 
     trainer.run(&schedule, &settings, &data_loader);

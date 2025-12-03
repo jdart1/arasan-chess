@@ -27,3 +27,4 @@ prj/* text eol=crlf
 *.ICO binary
 *.BMP binary
 *.chm binary
+*.gz binary
