@@ -106,12 +106,15 @@ class Network {
 
 inline std::istream &operator>>(std::istream &s, Network &network) {
     // Arasan network files start with a 4-byte version
-    network.version = read_little_endian<uint32_t>(s);
+    std::byte header[4];
+    s.read(reinterpret_cast<char*>(header), 4);
     if (s.fail()) return s;
-    if (network.version != NetworkParams::NN_VERSION) {
-        std::cerr << "Error: incorrect network version" << std::endl;
-        s.setstate(std::ios::badbit);
-        return s;
+    for (int i = 0; i < NetworkParams::NN_HEADER_SIZE; i++) {
+        if (header[i] != NetworkParams::NN_HEADER[i]) {
+            std::cerr << "Error: incorrect network version" << std::endl;
+            s.setstate(std::ios::badbit);
+            return s;
+        }
     }
     // read feature layer
     (void)network.transformer->read(s);

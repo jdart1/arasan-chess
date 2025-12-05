@@ -10,7 +10,7 @@ static constexpr unsigned OUTPUT_BUCKETS = 8;
 
 static constexpr unsigned BUCKET_DIVISOR = (32 + OUTPUT_BUCKETS - 1) / OUTPUT_BUCKETS;
 
-static constexpr unsigned HIDDEN_WIDTH = 1536;
+static constexpr unsigned HIDDEN_WIDTH = 1792;
 
 // quantization for feature transformer, i.e. 0..1 in float domain is
 // 0 .. NETWORK_QA in integer domain.
@@ -38,7 +38,11 @@ static inline unsigned getOutputBucket(unsigned pieceCount) {
 }
 
 // version of the network
-static constexpr uint32_t NN_VERSION = 0x7c802d9au;
+static constexpr std::byte NN_VERSION = std::byte(5);
+
+static constexpr int NN_HEADER_SIZE = 4;
+
+static constexpr std::byte NN_HEADER[NN_HEADER_SIZE] = {std::byte('A'), std::byte('R'), std::byte('A'), NN_VERSION};
 
 };
 

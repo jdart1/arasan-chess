@@ -21,9 +21,10 @@ macro_rules! net_id {
 const NET_ID: &str = net_id!();
 
 fn main() {
+    const NETWORK_VERSION: u8 = 5;
     const NUM_INPUT_BUCKETS: usize = 9;
     const NUM_OUTPUT_BUCKETS: usize = 8;
-    const L1: usize = 1536;
+    const L1: usize = 1792;
     const INITIAL_LR: f32 = 0.001;
     let final_lr = INITIAL_LR * 0.01;
     const SUPERBATCHES: usize = 800;
@@ -44,7 +45,7 @@ fn main() {
         .output_buckets(MaterialCount::<NUM_OUTPUT_BUCKETS>)
         .save_format(&[
             // Arasan header
-            SavedFormat::custom([0x9a, 0x2d, 0x80, 0x7c]), // little endian
+            SavedFormat::custom([b'A', b'R', b'A', NETWORK_VERSION]),
             // merge in the factoriser weights
             SavedFormat::id("l0w")
                 .add_transform(|builder, _, mut weights| {
