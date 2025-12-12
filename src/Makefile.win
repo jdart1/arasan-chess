@@ -214,7 +214,7 @@ default: dirs $(BUILD)\$(ARASANX).exe
 profile: dirs $(PROFILE)\$(ARASANX).exe
 
 utils: dirs $(BUILD)\playchess.exe $(BUILD)\makebook.exe \
-$(BUILD)\makeeco.exe $(BUILD)\ecocoder.exe $(BUILD)\selfplay.exe
+$(BUILD)\ecocoder.exe $(BUILD)\selfplay.exe
 
 unit: dirs $(BUILD)\unit.exe
 
@@ -277,8 +277,6 @@ $(BUILD)\hash.obj $(BUILD)\learn.obj $(TB_OBJS) $(NNUE_OBJS)
 
 MAKEBOOK_OBJS = $(BUILD)\makebook.obj $(UTIL_OBJS)
 
-MAKEECO_OBJS = $(BUILD)\makeeco.obj $(UTIL_OBJS)
-
 ECOCODER_OBJS = $(BUILD)\ecocoder.obj $(UTIL_OBJS)
 
 PLAYCHESS_OBJS = $(BUILD)\playchess.obj $(UTIL_OBJS)
@@ -298,9 +296,6 @@ UNIT_OBJS = $(TEST_OBJS) $(UTIL_OBJS)
 
 $(BUILD)\makebook.exe:  $(MAKEBOOK_OBJS)
         $(LD) $(MAKEBOOK_OBJS) $(LINKOPT) $(LDFLAGS) /out:$(BUILD)\makebook.exe
-
-$(BUILD)\makeeco.exe:  $(MAKEECO_OBJS)
-        $(LD) $(MAKEECO_OBJS) $(LINKOPT) $(LDFLAGS) /out:$(BUILD)\makeeco.exe
 
 $(BUILD)\ecocoder.exe:  $(ECOCODER_OBJS)
         $(LD) $(ECOCODER_OBJS) $(LINKOPT) $(LDFLAGS) /out:$(BUILD)\ecocoder.exe

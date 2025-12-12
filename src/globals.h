@@ -6,6 +6,7 @@
 // global variables
 
 #include "bookread.h"
+#include "eco.h"
 #include "movearr.h"
 #include "options.h"
 #include "threadc.h"
@@ -25,6 +26,8 @@ extern MoveArray *gameMoves;
 extern int EGTBMenCount;
 
 extern BookReader openingBook;
+
+extern ECO *eco;
 
 extern std::ofstream game_file;
 
@@ -52,6 +55,8 @@ extern bool tb_init_done();
 extern const char *DEFAULT_NETWORK_NAME;
 
 extern const size_t LINUX_STACK_SIZE;
+
+static constexpr const char *ECO_DIR = "chess-openings";
 
 extern std::string derivePath(const std::string &fileName);
 extern std::string derivePath(const std::string &base, const std::string &fileName);

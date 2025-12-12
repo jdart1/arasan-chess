@@ -165,36 +165,19 @@ than it did previously.</p>
 
 <h2>ECO Recognizer</h2>
 
-<p>Arasan can produce an ECO (Encylopedia of Chess Openings) code for a
-given game. As with the opening book, the mapping of chess positions to
-ECO codes is contained in a text file. The file is called "eco" and is
-in the "misc" directory. It contains a series of lines, each starting
-with an ECO code, followed by a series of chess moves, and ending with a
-quoted string that contains the English name of the opening.</p>
+<p>Arasan can produce an ECO (Encylopedia of Chess Openings) code when
+  storing PGN games. Formerly the mapping between positions and codes was
+  maintained in a text file, which was converted using a tool to a
+  C++ source file. Now, however, Arasan relies upon data from the
+  external <a href="https://github.com/lichess-org/chess-openings">
+  chess-openings</a> repository. A copy of this data is bundled with
+  the Arasan GUI. It is not included with standalone distributions of
+  the Arasan engine, so the engine will not place ECO codes into stored
+  game files, unless the chess-openings data is manually installed
+  under the Arasan executable directory.
 
-<p>The "makeeco" program reads the "eco" data file and outputs to stdout
-a C++ file that is then compiled into Arasan. The generated file is
-called "ecodata.cpp" and contains a single large C data structure.</p>
-
-<p>Because Visual C++ makefiles don't handle generated source files like
-this one, you need to run "makeeco" manually whenever you change the
-"eco" data file.</p>
-
-<p>makeeco takes a single argument: the location of the eco file. It
-writes the generated ecodata.cpp file to stdout.</p>
-
-<p>Note: the ECO recognizer is pretty crude right now, because Arasan
-does not contain all the possible ECO lines and sublines in its data file.
-Therefore transpositions that wind up in an ECO subline like
-C18/3 but skip the position that is stored for C18 may not be
-recognized correctly. Transpositions across opening systems may also
-be missed.
-There is no general solution for this problem,
-since the ECO classification scheme is ambiguous in some cases, but
-recognition could be improved by expanding the number of positions in
-the eco file. If the number becomes large enough, however, the
-current method of building a data structure and compiling it into
-Arasan might have to be changed.</p>
+<p>Note: while it is generally accurate, the ECO recognizer has incomplete
+  data and will not handle all possible transpositions across openinings.</p>
 
 <h2>Parameter tuning</h2>
 

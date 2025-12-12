@@ -414,8 +414,8 @@ FONT 9, "Arial", 0, 0, 0x0
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,182,7,50,14
     CTEXT           "Arasan Chess Windows GUI version 25.2\nby Jon Dart",IDC_STATIC,32,24,175,16
-    LTEXT           "Copyright 1994-2024 by Jon Dart. All Rights Reserved. Chess fonts copyright Eric Bentzen and Armando H. Marroquin.",IDC_STATIC,34,47,173,42
-    LTEXT           "Parts of this program were developed using MIT licensed software. See License.txt in installation folder for details.",IDC_STATIC,34,72,178,24
+    LTEXT           "Copyright 1994-2025 by Jon Dart. All Rights Reserved. Chess fonts copyright Eric Bentzen and Armando H. Marroquin.",IDC_STATIC,34,47,173,42
+    LTEXT           "See the LICENSE file in the installation folder for licensing details.",IDC_STATIC,34,72,178,24
     LTEXT           "This program may be freely copied and distributed, under the following conditions:",IDC_STATIC,34,97,178,18
     LTEXT           "1. It is distributed unmodified.",IDC_STATIC,34,117,162,16
     LTEXT           "2. No charge is made for it other than a nominal fee for copying or media.",IDC_STATIC,34,129,176,18

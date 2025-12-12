@@ -35,11 +35,14 @@ Notes regarding the GUI:
 
 The Arasan Windows user interface, the source of which is in the "gui"
 directory, is also under this license, with the exception of the
-"fonts" subdirectory. The fonts, which are loaded at runtime, are
-copyrighted, and use of those outside of official Arasan releases will
-require a suitable license from the copyright owner(s).
+"fonts" subdirectory, and the "chess-openings" subdirectory. The
+fonts, which are loaded at runtime, are copyrighted, and use of those
+outside of official Arasan releases will require a suitable license
+from the copyright owner(s). The chess-openings subdirectory is a fork
+of https://github.com/lichess-org/chess-openings/, and is under the
+Creative Commons CC0 1.0 Universal license.
 
-Official binaries of the Arasan Windows GUI installer, which includes
+Official binaries of the Arasan Windows GUI installer, which include
 the fonts, may be freely distributed, provided that:
 
 1. It is distributed in unmodified form.

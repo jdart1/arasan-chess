@@ -206,7 +206,6 @@ private:
     bool game_end;
     bool result_pending;
     score_t last_score;
-    ECO *ecoCoder;
     std::string hostname;
     bool xboard42;
     SearchType srctype;

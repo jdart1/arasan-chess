@@ -134,11 +134,10 @@ Protocol::Protocol(const Board &board, bool traceOn, bool icsMode, bool cpus_set
       predicted_move(NullMove), ponder_move(NullMove), best_move(NullMove), time_target(0),
       last_time_target(Constants::INFINITE_TIME), computer_rating(0), opponent_rating(0),
       doTrace(traceOn), game_end(false), result_pending(false),
-      last_score(Constants::MATE), ecoCoder(nullptr), xboard42(false), srctype(TimeLimit),
+      last_score(Constants::MATE), xboard42(false), srctype(TimeLimit),
       time_limit(Constants::INFINITE_TIME), ply_limit(Constants::MaxPly), lastAdded(0), uci(false),
       movestogo(0), ponderhit(false), uciWaitState(false), cpusSet(cpus_set), memorySet(memory_set),
       debugPrefix(globals::debugPrefix) {
-    ecoCoder = new ECO();
     searcher = new SearchController();
     searcher->registerPostFunction(std::bind(&Protocol::post_output,this,_1));
     searcher->registerMonitorFunction(std::bind(&Protocol::monitor,this,_1,_2));
@@ -148,7 +147,6 @@ Protocol::~Protocol()
 {
     delete main_board;
     delete ponder_board;
-    delete ecoCoder;
     delete searcher;
 }
 
@@ -410,9 +408,9 @@ void Protocol::save_game() {
    if (globals::game_file.is_open()) {
       std::vector<ChessIO::Header> headers;
       std::string opening_name, eco;
-      if (ecoCoder) {
+      if (globals::eco->initOk()) {
          if (doTrace) std::cout << debugPrefix << "calling classify" << std::endl;
-         ecoCoder->classify(*globals::gameMoves,eco,opening_name);
+         globals::eco->classify(*globals::gameMoves,eco,opening_name);
          headers.push_back(ChessIO::Header("ECO",eco));
       }
       std::stringstream crating, orating;

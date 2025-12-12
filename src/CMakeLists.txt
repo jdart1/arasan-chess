@@ -148,7 +148,7 @@ bench.cpp bhash.cpp bhash.h bitboard.cpp bitutils.h bitutils.cpp
 bitboard.h bitprobe.cpp bitprobe.h board.cpp board.h boardio.cpp
 boardio.h bookdefs.h bookread.cpp bookread.h bookwrit.cpp bookwrit.h
 calctime.cpp calctime.h chess.cpp chess.h chessio.cpp chessio.h
-constant.h eco.cpp ecodata.cpp ecodata.h eco.h epdrec.cpp epdrec.h
+constant.h eco.cpp eco.h epdrec.cpp epdrec.h
 globals.cpp globals.h hash.cpp hash.h learn.cpp learn.h legal.cpp
 legal.h material.cpp material.h movearr.cpp movearr.h movegen.cpp
 movegen.h notation.cpp notation.h options.cpp options.h protocol.cpp
@@ -162,7 +162,7 @@ bitutils.h bitutils.cpp bitboard.cpp bitboard.h bitprobe.cpp
 bitprobe.h board.cpp board.h boardio.cpp boardio.h bookdefs.h
 bookread.cpp bookread.h bookwrit.cpp bookwrit.h calctime.cpp
 calctime.h chess.cpp chess.h chessio.cpp chessio.h constant.h eco.cpp
-ecodata.cpp ecodata.h eco.h epdrec.cpp epdrec.h globals.cpp globals.h
+eco.h epdrec.cpp epdrec.h globals.cpp globals.h
 hash.cpp hash.h learn.cpp learn.h legal.cpp legal.h material.cpp
 material.h movearr.cpp movearr.h movegen.cpp movegen.h notation.cpp
 notation.h options.cpp options.h scoring.cpp scoring.h searchc.cpp
@@ -176,21 +176,18 @@ add_executable (makebook EXCLUDE_FROM_ALL util/makebook.cpp ${UTIL_SRC})
 
 add_executable (ecocoder EXCLUDE_FROM_ALL util/ecocoder.cpp ${UTIL_SRC})
 
-add_executable (makeeco EXCLUDE_FROM_ALL util/makeeco.cpp ${UTIL_SRC})
-
 add_executable (selfplay EXCLUDE_FROM_ALL util/selfplay.cpp ${UTIL_SRC} util/binformat.cpp)
 
 add_executable (unit EXCLUDE_FROM_ALL unit.cpp nnuetest.cpp util/binformat.cpp ${UTIL_SRC})
 
 target_link_libraries(${EXE_NAME} PRIVATE Threads::Threads)
 target_link_libraries(playchess PRIVATE Threads::Threads)
-target_link_libraries(makeeco PRIVATE Threads::Threads)
 target_link_libraries(ecocoder PRIVATE Threads::Threads)
 target_link_libraries(makebook PRIVATE Threads::Threads)
 target_link_libraries(selfplay PRIVATE Threads::Threads)
 target_link_libraries(unit PRIVATE Threads::Threads)
 
-set_target_properties(${EXE_NAME} playchess makebook makeeco ecocoder selfplay unit PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
+set_target_properties(${EXE_NAME} playchess makebook ecocoder selfplay unit PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
 
 add_custom_target(utils)
 

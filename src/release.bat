@@ -16,7 +16,7 @@ pushd ..
 7z u -tzip -orelease %1 gui\gui.sln gui\gui.vcxproj gui\arasan.props
 7z u -tzip -orelease %1 gui\fonts\*.zip
 7z u -tzip -orelease %1 prj\prj.sln prj\prj.vcxproj
-7z u -tzip -orelease %1 book\basic.pgn book\eco
+7z u -tzip -orelease %1 book\basic.pgn
 7z u -tzip -orelease %1 doc\programr.html doc\style_pg.css
 7z u -tzip -orelease %1 doc\TODO doc\CHANGES doc\BUILD.md
 7z u -tzip -orelease %1 tests\bt2630.epd tests\ecmgcp.epd

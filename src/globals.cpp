@@ -25,9 +25,7 @@ extern "C" {
 #endif
 #include <cstring>
 #include <cstdlib>
-#ifdef _WIN32
 #include <filesystem>
-#endif
 
 #ifdef SYZYGY_TBS
 static bool tb_init = false;
@@ -36,14 +34,11 @@ bool globals::tb_init_done() { return tb_init; }
 int globals::EGTBMenCount = 0;
 #endif
 
-#ifdef _WIN32
-static constexpr char PATH_CHAR = '\\';
-#else
-static constexpr char PATH_CHAR = '/';
-#endif
+static constexpr char PATH_CHAR = std::filesystem::path::preferred_separator;
 
 MoveArray *globals::gameMoves;
 BookReader globals::openingBook;
+ECO *globals::eco = nullptr;
 std::ofstream globals::game_file;
 Options globals::options;
 
@@ -151,6 +146,7 @@ bool globals::initGlobals() {
     }
 #endif
     globals::gameMoves = new MoveArray();
+    globals::eco = new ECO();
     globals::polling_terminated = false;
     return true;
 }
@@ -180,6 +176,7 @@ void CDECL globals::cleanupGlobals(void) {
     BitUtils::cleanup();
     Board::cleanup();
     if (game_file.is_open()) game_file.close();
+    delete eco;
 }
 
 bool globals::initOptions(bool autoLoadRC, const char *rcPath,
@@ -313,6 +310,7 @@ void globals::delayedInit(bool verbose) {
         }
     }
     initGameFile();
+    eco->init(derivePath(ECO_DIR));
 }
 
 void globals::unloadTb() {

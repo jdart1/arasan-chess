@@ -6,3 +6,7 @@
 	path = tools/stats
 	url = https://www.github.com/jdart1/stats
         ignore = dirty
+
+[submodule "book/chess-openings"]
+	path = book/chess-openings
+	url = https://github.com/lichess-org/chess-openings

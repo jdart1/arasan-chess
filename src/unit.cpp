@@ -13,6 +13,7 @@
 #include "scoring.h"
 #include "search.h"
 #include "globals.h"
+#include "eco.h"
 #include "nnuetest.h"
 #ifdef SYZYGY_TBS
 #include "syzygy.h"
@@ -1698,6 +1699,62 @@ static int testBinIO() {
     return errs;
 }
 
+static int testECO() {
+    struct ECOTestData {
+        std::string moves;
+        std::string expectedCode;
+        std::string description;
+
+        ECOTestData(const char *m, const char *code, const char *desc)
+            : moves(m), expectedCode(code), description(desc) {
+        }
+    };
+
+    const ECOTestData cases[] = {
+        ECOTestData("d4 Nf6 c4 e5", "A51", "Budapest Defense"),
+        ECOTestData("e4 d5 exd5 Nf6 d4", "B01", "Scandinavian Defense")
+    };
+
+    int errs = 0;
+
+    for (size_t i = 0; i < sizeof(cases) / sizeof(ECOTestData); i++) {
+        const ECOTestData &data = cases[i];
+        Board board;
+        MoveArray moveArray;
+
+        // Parse and play the moves
+        std::istringstream ss(data.moves);
+        std::string moveStr;
+        while (ss >> moveStr) {
+            Move move = Notation::value(board, board.sideToMove(),
+                                      Notation::InputFormat::SAN, moveStr);
+            if (IsNull(move)) {
+                std::cerr << "testECO: failed to parse move '" << moveStr
+                         << "' in case " << i << " (" << data.description << ")" << std::endl;
+                ++errs;
+                break;
+            }
+            std::string img;
+            Notation::image(board, move, Notation::OutputFormat::SAN, img);
+            moveArray.add_move(board, move, img, false, false);
+            board.doMove(move);
+        }
+
+        // Classify the position
+        std::string resultCode, resultName;
+        globals::eco->classify(moveArray, resultCode, resultName);
+
+        if (resultCode != data.expectedCode) {
+            std::cerr << "testECO: error in case " << i << " (" << data.description
+                     << "): expected code " << data.expectedCode
+                     << ", got " << resultCode << std::endl;
+            ++errs;
+        }
+    }
+
+    return errs;
+}
+
 static int doUnit() {
 
    int errs = 0;
@@ -1714,6 +1771,7 @@ static int doUnit() {
    errs += testHash();
    errs += testRep();
    errs += testMoveGen();
+   errs += testECO();
    int tmp = errs;
    errs += testNNUE();
    if (tmp == errs) {

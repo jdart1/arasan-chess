@@ -39,6 +39,7 @@ Source: "gui\fonts\merifont.ttf"; DestDir: "{commonfonts}"; Components: GUI; Fon
 Source: "gui\fonts\mayafont.ttf"; DestDir: "{commonfonts}"; Components: GUI; FontInstall: "Chess Maya"; Flags: onlyifdoesntexist uninsneveruninstall
 Source: "gui\fonts\chessmar.ttf"; DestDir: "{commonfonts}"; Components: GUI; FontInstall: "Chess Marroquin"; Flags: onlyifdoesntexist uninsneveruninstall
 Source: "gui\fonts\tt_usual.ttf"; DestDir: "{commonfonts}"; Components: GUI; FontInstall: "Chess Usual"; Flags: onlyifdoesntexist uninsneveruninstall
+Source: "book\chess-openings\*"; DestDir: "{app}\chess-openings"; Components: GUI
 Source: "win32\release\arasanx-32.exe"; DestDir: "{app}"; Components: engine
 Source: "network\arasanv5-20251204.nnue"; DestDir: "{app}"; Components: engine
 Source: "book\book.bin"; DestDir: "{app}"; Components: book
