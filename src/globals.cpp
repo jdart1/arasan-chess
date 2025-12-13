@@ -126,6 +126,13 @@ std::string globals::derivePath(const std::string &base, const std::string &file
     }
 }
 
+std::string globals::appendPath(const std::string &base, const std::string &fileName) 
+{
+    std::string dir(base + PATH_CHAR);
+    dir.append(fileName);
+    return dir;
+}
+
 bool globals::initGlobals() {
 #ifndef _WIN32
     struct rlimit rl;

@@ -95,7 +95,7 @@
       <PreprocessorDefinitions>SIMD;SSE2;WIN32;_DEBUG;_WINDOWS;NOMINMAX;_WIN32_WINNT=0x0502;_CRT_SECURE_NO_DEPRECATE;USE_INTRINSICS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalIncludeDirectories>..\src;..\src\nnue</AdditionalIncludeDirectories>
@@ -199,7 +199,6 @@
     <ClCompile Include="..\src\chess.cpp" />
     <ClCompile Include="..\src\chessio.cpp" />
     <ClCompile Include="..\src\eco.cpp" />
-    <ClCompile Include="..\src\ecodata.cpp" />
     <ClCompile Include="..\src\epdrec.cpp" />
     <ClCompile Include="..\src\evaluate.cpp" />
     <ClCompile Include="..\src\globals.cpp" />

@@ -7,6 +7,7 @@
 
 #include "guiDoc.h"
 #include "chessio.h"
+#include "globals.h"
 #include "selectga.h"
 #include "notation.h"
 #include "boardio.h"
@@ -60,6 +61,7 @@ ArasanGuiDoc::ArasanGuiDoc()
   lastPing(0), lastPong(0), computerSide(Black), startOfGame(1), drawOffer(false) {
    InitializeCriticalSection(&docCriticalSection);
    ecoCoder = new ECO();
+   ecoCoder->init(globals::derivePath(globals::ECO_DIR));
    m_bAutoDelete = FALSE;                         // solves problems crashing on exit
 }
 

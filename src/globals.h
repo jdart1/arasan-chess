@@ -60,6 +60,7 @@ static constexpr const char *ECO_DIR = "chess-openings";
 
 extern std::string derivePath(const std::string &fileName);
 extern std::string derivePath(const std::string &base, const std::string &fileName);
+extern std::string appendPath(const std::string &base, const std::string &fileName);
 
 extern bool loadNetwork(const std::string &filename, bool verbose);
 

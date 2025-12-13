@@ -244,7 +244,7 @@ $(BUILD)\bitprobe.obj $(BUILD)\epdrec.obj $(BUILD)\chessio.obj \
 $(BUILD)\movearr.obj $(BUILD)\bookread.obj $(BUILD)\bookwrit.obj \
 $(BUILD)\calctime.obj $(BUILD)\legal.obj $(BUILD)\eco.obj \
 $(BUILD)\learn.obj $(BUILD)\bench.obj \
-$(BUILD)\ecodata.obj $(BUILD)\threadp.obj $(BUILD)\threadc.obj \
+$(BUILD)\threadp.obj $(BUILD)\threadc.obj \
 $(TB_OBJS) $(NNUE_OBJS) $(NUMA_OBJS)
 
 ARASANX_PROFILE_OBJS = $(PROFILE)\arasanx.obj $(PROFILE)\tester.obj \
@@ -258,7 +258,7 @@ $(PROFILE)\notation.obj $(PROFILE)\hash.obj $(PROFILE)\stats.obj \
 $(PROFILE)\bitprobe.obj $(PROFILE)\epdrec.obj $(PROFILE)\chessio.obj \
 $(PROFILE)\movearr.obj $(PROFILE)\bookread.obj $(PROFILE)\bookwrit.obj \
 $(PROFILE)\calctime.obj $(PROFILE)\legal.obj $(PROFILE)\eco.obj \
-$(PROFILE)\ecodata.obj $(PROFILE)\learn.obj $(PROFILE)\bench.obj \
+$(PROFILE)\learn.obj $(PROFILE)\bench.obj \
 $(PROFILE)\threadp.obj $(PROFILE)\threadc.obj \
 $(NNUE_PROFILE_OBJS) $(TB_PROFILE_OBJS) $(NUMA_PROFILE_OBJS)
 
@@ -269,8 +269,7 @@ $(BUILD)\epdrec.obj $(BUILD)\bhash.obj \
 $(BUILD)\scoring.obj $(BUILD)\see.obj \
 $(BUILD)\movearr.obj $(BUILD)\notation.obj $(BUILD)\options.obj \
 $(BUILD)\bitprobe.obj $(BUILD)\bookread.obj $(BUILD)\bookwrit.obj \
-$(BUILD)\movegen.obj $(BUILD)\calctime.obj \
-$(BUILD)\eco.obj $(BUILD)\ecodata.obj \
+$(BUILD)\movegen.obj $(BUILD)\calctime.obj $(BUILD)\eco.obj \
 $(BUILD)\legal.obj $(BUILD)\stats.obj $(BUILD)\threadp.obj \
 $(BUILD)\threadc.obj $(BUILD)\search.obj $(BUILD)\searchc.obj \
 $(BUILD)\hash.obj $(BUILD)\learn.obj $(TB_OBJS) $(NNUE_OBJS)
