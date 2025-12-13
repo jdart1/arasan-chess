@@ -2,10 +2,10 @@
 
 #include "eco.h"
 #include "board.h"
+#include "globals.h"
 #include "notation.h"
 
 #include <cctype>
-#include <filesystem>
 #include <fstream>
 #include <regex>
 #include <sstream>
@@ -26,7 +26,8 @@ void ECO::init(const std::string &path) {
     static const std::vector<std::string> files{{"a.tsv", "b.tsv", "c.tsv", "d.tsv", "e.tsv"}};
 
     for (const auto &filename : files) {
-        std::ifstream file(path + std::filesystem::path::preferred_separator + filename, std::ios::in);
+        const std::string fullpath(globals::appendPath(path, filename));
+        std::ifstream file(fullpath, std::ios::in);
         if (!file.good()) {
             continue;
         }
