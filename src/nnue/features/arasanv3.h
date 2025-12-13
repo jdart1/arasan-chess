@@ -118,7 +118,11 @@ public:
 #endif
         }
 #ifdef _DEBUG
-        if (!s.good()) std::cout << strerror(errno) << std::endl;
+       if (!s.good()) {
+         char buf[128];
+         strerror_s(buf, 128, errno);
+         std::cout << buf << std::endl;
+       }
 #endif
 #ifdef NNUE_TRACE
         if (!s.fail()) {
