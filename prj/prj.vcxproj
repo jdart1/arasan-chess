@@ -258,7 +258,6 @@
     <ClCompile Include="..\src\chess.cpp" />
     <ClCompile Include="..\src\chessio.cpp" />
     <ClCompile Include="..\src\eco.cpp" />
-    <ClCompile Include="..\src\ecodata.cpp" />
     <ClCompile Include="..\src\epdrec.cpp" />
     <ClCompile Include="..\src\evaluate.cpp" />
     <ClCompile Include="..\src\globals.cpp">
