@@ -1575,7 +1575,7 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
         // calculate extensions/reductions. No pruning at ply 0.
         int extension = extend(board, node, in_check_after_move, move);
         int newDepth = depth - DEPTH_INCREMENT + extension;
-        int reduction = reduce(board, node, move_index, 1, newDepth, move);
+        int reduction = reduce(board, node, node->num_legal, 1, newDepth, move);
 #ifdef SEARCH_STATS
         if (reduction) ++stats.reduced;
 #endif
@@ -3262,7 +3262,7 @@ score_t Search::search()
                 }
                 extension = extend(board, node, in_check_after_move, move);
                 newDepth += extension;
-                reduction = reduce(board, node, move_index, improving, newDepth, move);
+                reduction = reduce(board, node, node->num_legal, improving, newDepth, move);
             }
             board.doMove(move,node);
             if (!board.wasLegal(move,in_check)) {
