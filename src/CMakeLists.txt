@@ -144,7 +144,7 @@ if(NUMA)
 endif(NUMA)
 
 add_executable (${EXE_NAME} arasanx.cpp attacks.cpp attacks.h bench.h
-bench.cpp bhash.cpp bhash.h bitboard.cpp bitutils.h bitutils.cpp
+bench.cpp bhash.cpp bhash.h bitutil.h bitutil.cpp
 bitboard.h bitprobe.cpp bitprobe.h board.cpp board.h boardio.cpp
 boardio.h bookdefs.h bookread.cpp bookread.h bookwrit.cpp bookwrit.h
 calctime.cpp calctime.h chess.cpp chess.h chessio.cpp chessio.h
@@ -158,7 +158,7 @@ syzygy.h tbconfig.h tester.cpp tester.h threadc.cpp threadc.h
 threadp.cpp threadp.h types.h bench.cpp input.cpp ${EXTRA_SRC})
 
 list(APPEND UTIL_SRC attacks.cpp attacks.h bhash.cpp bhash.h
-bitutils.h bitutils.cpp bitboard.cpp bitboard.h bitprobe.cpp
+bitutil.h bitutil.cpp bitboard.h bitprobe.cpp
 bitprobe.h board.cpp board.h boardio.cpp boardio.h bookdefs.h
 bookread.cpp bookread.h bookwrit.cpp bookwrit.h calctime.cpp
 calctime.h chess.cpp chess.h chessio.cpp chessio.h constant.h eco.cpp
@@ -191,4 +191,4 @@ set_target_properties(${EXE_NAME} playchess makebook ecocoder selfplay unit PROP
 
 add_custom_target(utils)
 
-add_dependencies(utils playchess makeeco ecocoder makebook selfplay)
+add_dependencies(utils playchess ecocoder makebook selfplay)
