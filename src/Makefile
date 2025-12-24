@@ -59,7 +59,6 @@ NNUE_FLAGS := -Innue -DNETWORK=$(NETWORK)
 
 #PROF     = -pg
 #DEBUG    = -g -D_DEBUG=1
-DEBUG = -g -O1
 #TRACE    = -D_TRACE=1 -D_THREAD_TRACE
 shell        := $(SHELL)
 UNAME        := $(shell uname -s|awk '{print tolower($$0)}')
@@ -239,7 +238,7 @@ GCCNEW := $(shell echo '$(GCCVER) >= $(GCCMINVERSION)' | bc)
 
 ifeq "$(GCCNEW)" "1"
 # options for GCC
-FLAGS := -Wall -Wextra -Wshadow -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(FLAGS) -fsanitize=address -fsanitize=bounds-strict -fsanitize=alignment
+FLAGS := -Wall -Wextra -Wshadow -fno-strict-aliasing -DUSE_INTRINSICS -DUSE_ASM $(FLAGS)
 LDFLAGS := $(LDFLAGS)
 ifneq "$(GCC11)" "1"
 # c++17 support must be enabled explicitly
@@ -264,8 +263,6 @@ endif
 
 endif
 endif
-
-LDFLAGS := $(LDFLAGS)  -fsanitize=address -fsanitize=bounds-strict -fsanitize=alignment -lasan
 
 ifeq ("darwin","$(findstring darwin,$(OSTYPE))")
 FLAGS := -D_MAC $(FLAGS)
