@@ -93,8 +93,11 @@ fn main() {
             end_superbatch: SUPERBATCHES,
         },
         wdl_scheduler: wdl::ConstantWDL { value: 0.0 },
-        lr_scheduler: lr::CosineDecayLR { initial_lr: INITIAL_LR, final_lr: final_lr, final_superbatch: SUPERBATCHES },
+        lr_scheduler: lr::Warmup{ inner: lr::CosineDecayLR { initial_lr: INITIAL_LR, final_lr: final_lr, final_superbatch: SUPERBATCHES },
+                warmup_batches: 20},
+//        lr_scheduler: lr::CosineDecayLR { initial_lr: INITIAL_LR, final_lr: final_lr, final_superbatch: SUPERBATCHES },
 //        lr_scheduler: lr::StepLR { start: 0.0015, gamma: 0.45, step: 60 },
+//        lr_scheduler: lr::LinearDecayLR { initial_lr: INITIAL_LR, final_lr:0, final_superbatch: 800},
         save_rate: 60,
     };
 
@@ -105,7 +108,7 @@ fn main() {
     let settings = LocalSettings { threads: 8, test_set: None, output_directory: "checkpoints", batch_queue_size: 512 };
 
     let data_loader = loader::DirectSequentialDataLoader::new(&[
-        "/data3/bullet/nov2025/nov2025-interleaved.bullet",
+        "/data3/bullet/dec2025/dec2025-interleaved.bullet",
         ]);
 
     trainer.run(&schedule, &settings, &data_loader);
