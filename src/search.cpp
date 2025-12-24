@@ -1252,7 +1252,10 @@ Move Search::ply0_search(RootMoveGenerator::RootMoveList *moveList)
             }
 #endif
             StateType &state = stats.state;
-            if (!terminate && (state == Checkmate || state == Stalemate)) {
+            if (terminate) {
+                break;
+            }
+            else if (!terminate && (state == Checkmate || state == Stalemate)) {
                 std::cout << globals::debugPrefix << "terminating due to checkmate or statemate, state="
                           << (int)state << std::endl;
                 controller->terminateNow();
@@ -1353,15 +1356,13 @@ Move Search::ply0_search(RootMoveGenerator::RootMoveList *moveList)
             }
             // check time after adjustments have been made. Do not
             // allow time-based exit without one completed iteration though.
-            if (!terminate) {
-                if (checkTime()) {
-                    if (debugOut()) {
-                        std::cout << globals::debugPrefix << "time up" << std::endl;
-                    }
-                    controller->terminateNow();
+            if (checkTime()) {
+                if (debugOut()) {
+                    std::cout << globals::debugPrefix << "time up" << std::endl;
                 }
+                controller->terminateNow();
             }
-         } while (!terminate && (stats.failLow || stats.failHigh));
+         } while (stats.failLow || stats.failHigh);
          // set time check interval based on NPS
          if (controller->elapsed_time > 100) {
              controller->timeCheckInterval = controller->computeTimeCheckInterval(stats.num_nodes);
