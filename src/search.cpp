@@ -672,6 +672,9 @@ Move SearchController::findBestMove(
    }
 
    is_searching = false;
+   // We have extracted all necessary search information, now
+   // reset search statistics
+   pool->forEachSearch<&Search::resetStats>();
 
    return best;
 }
@@ -887,7 +890,8 @@ Search::Search(SearchController *c, ThreadInfo *threadInfo)
     computerSide(White),
     contempt(0),
     age(0),
-    talkLevel(c->getTalkLevel())
+    talkLevel(c->getTalkLevel()),
+    initDone(false)
 {
     // Note: context was cleared in its constructor
     random_engine.seed(getRandomSeed());
@@ -954,8 +958,8 @@ int Search::checkTime() {
 }
 
 void Search::showStatus(const Board &b, Move best, bool faillow,
-bool failhigh)
-{
+                        bool failhigh) {
+    if (!initDone) return;
     int ply = stats.depth;
     // Update controller statistics from main thread stats:
     controller->updateGlobalStats(stats);
@@ -977,7 +981,8 @@ bool failhigh)
         Scoring::printScore(stats.display_value,std::cout);
         // Note: must access controller's stats to get node count
         // across all threads:
-        std::cout << '\t' << controller->getGlobalStats().num_nodes << std::endl;
+        uint64_t num_nodes = controller->getGlobalStats().num_nodes;
+        std::cout << '\t' << num_nodes << std::endl;
         std::cout.flags(original_flags);
     }
     // Post during ponder if UCI
@@ -1747,30 +1752,19 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
 }
 
 void SearchController::updateGlobalStats(const Statistics &mainStats) {
+    // update best move, PV etc from the supplied stats
     *stats = mainStats;
+    // clear all counters
+    stats->clearCounters();
     // Make sure the root probe is counted
     stats->tb_probes = tb_root_probes;
     stats->tb_hits = tb_root_hits;
-    // clear all counters
-    stats->num_nodes = 0ULL;
-#ifdef SEARCH_STATS
-    stats->num_qnodes = stats->reg_nodes = stats->moves_searched = stats->static_null_pruning =
-        stats->razored = stats->reduced = (uint64_t)0;
-    stats->hash_hits = stats->hash_searches = stats->futility_pruning =
-        stats->futility_pruning_caps = (uint64_t)0;
-    stats->history_pruning = stats->lmp = stats->see_pruning = stats->null_cuts = (uint64_t)0;
-    stats->check_extensions = stats->capture_extensions = stats->pawn_extensions =
-        stats->singular_extensions = 0L;
-#endif
-#ifdef MOVE_ORDER_STATS
-    stats->move_order_count = 0;
-    for (int i = 0; i < 4; i++) stats->move_order[i] = 0;
-#endif
     // Sum all counters across threads
     unsigned bestCompleted = 0;
     stats->completedDepth = 0;
     for (unsigned i = 0; i < pool->nThreads; i++) {
-       if (pool->data[i]->work == nullptr) continue;
+       // don't read stats before this search thread is up and running
+       if (!pool->statsReady(i)) continue;
        const Statistics &s = pool->data[i]->work->stats;
        stats->tb_probes += s.tb_probes;
        stats->tb_hits += s.tb_hits;
@@ -1809,7 +1803,7 @@ void SearchController::getBestThreadStats(BestThreadResults &res, bool trace) co
     Statistics *bestStats = &(rootSearch->stats);
     Search *bestSearch = rootSearch;
     for (int thread = 1; thread < globals::options.search.ncpus; thread++) {
-        if (pool->data[thread]->work == nullptr) continue;
+        if (!pool->statsReady(thread)) continue;
         Statistics &threadStats = pool->data[thread]->work->stats;
         if (trace) {
             std::cout << globals::debugPrefix << "thread " << thread << " depth=" <<
@@ -3542,6 +3536,8 @@ void Search::init(NodeInfo *nodeStack, ThreadInfo *slave_ti) {
     // Clear killer since the side to move may have been different
     // in the previous use of this class.
     context.clearKiller();
+
+    initDone = true;
 }
 
 void Search::clearHashTables() {

@@ -21,7 +21,7 @@ static std::mutex io_lock;
 
 void log(const std::string &s) {
     std::unique_lock<std::mutex> lock(io_lock);
-    std::cout << s.c_str() << std::endl << (flush);
+    std::cout << s.c_str() << std::endl << (std::flush);
 }
 void log(const std::string &s,int param) {
     std::ostringstream out;
@@ -48,7 +48,7 @@ void ThreadPool::idle_loop(ThreadInfo *ti) {
 #ifdef NUMA
             if (rebindMask.test(ti->index)) {
                 if (pool->bind(ti->index)) {
-                    cerr << "Warning: bind to CPU failed for thread " << ti->index << endl;
+                    cerr << "Warning: bind to CPU failed for thread " << ti->index << std::endl;
                 }
                 rebindMask.reset(ti->index);
             }
@@ -63,7 +63,7 @@ void ThreadPool::idle_loop(ThreadInfo *ti) {
         log("unblocked",ti->index);
 #endif
         // We've been woken up. There are two possible reasons:
-        // 1. This thread is terminating.
+        // 1. This thread is terminating, or
         // 2. This thread has been assigned some work.
         //
         if (ti->state == ThreadInfo::Terminating) {
@@ -95,7 +95,7 @@ void ThreadPool::idle_loop(ThreadInfo *ti) {
             {
                 std::ostringstream s;
                 s << "# thread " << ti->index << " completed, mask=" <<
-                    pool->completedMask << endl;
+                    pool->completedMask << std::endl;
                 log(s.str());
             }
 #endif
@@ -117,7 +117,7 @@ void ThreadPool::waitAll()
         {
             std::ostringstream s;
             s << "waitAll: completed mask=" <<
-                completedMask << " count=" << completedMask.count() << endl;
+                completedMask << " count=" << completedMask.count() << std::endl;
             log(s.str());
         }
 #endif
@@ -221,7 +221,7 @@ ThreadPool::ThreadPool(SearchController *ctrl, unsigned n) :
 #ifdef NUMA
          // bind main thread
          if (bind(0)) {
-             cerr << "Warning: bind to CPU failed for thread 0" << endl;
+             cerr << "Warning: bind to CPU failed for thread 0" << std::endl;
          }
 #endif
       }
@@ -351,3 +351,6 @@ uint64_t ThreadPool::totalHits() const
    return total;
 }
 
+bool ThreadPool::statsReady(unsigned index) const noexcept {
+   return index < nThreads && data[index]->work != nullptr && data[index]->work->initDone;
+}

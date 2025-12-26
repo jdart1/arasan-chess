@@ -313,6 +313,10 @@ protected:
     void updateStats(const Board &, NodeInfo *node, int iteration_depth,
 		     score_t score);
 
+    void resetStats() {
+        initDone = false; // force re-init when used again
+    }
+
     score_t evalu8(const Board &board);
 
     bool maxDepth(const NodeInfo *n) const noexcept {
@@ -347,6 +351,7 @@ protected:
     score_t contempt;
     int age;
     TalkLevel talkLevel; // copy of controller's talkLevel
+    std::atomic<bool> initDone;
     RootMoveGenerator::RootMoveList rootMoves; // root move list up until wide window limit
     std::mt19937_64 random_engine;
 };

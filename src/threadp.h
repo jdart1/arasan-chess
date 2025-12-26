@@ -1,4 +1,4 @@
-// Copyright 2005-2013, 2016-2019, 2021-2022 by Jon Dart. All Rights Reserved.
+// Copyright 2005-2013, 2016-2019, 2021-2022, 2025 by Jon Dart. All Rights Reserved.
 
 #ifndef _THREAD_POOL_H
 #define _THREAD_POOL_H
@@ -134,6 +134,8 @@ public:
            signal();
        }
    }
+
+   bool statsReady(unsigned index) const noexcept;
 
    void lock() {
        poolLock.lock();
