@@ -21,7 +21,7 @@ std::string Options::tbPath() const { return search.syzygy_path; }
 #endif
 
 Options::SearchOptions::SearchOptions()
-    : hash_table_size(32 * 1024 * 1024), can_resign(true), ponder(true),
+    : hash_table_size(32 * 1024 * 1024), can_resign(true), ponder(false),
       resign_threshold(-500),
 #ifdef SYZYGY_TBS
       use_tablebases(false), syzygy_path("syzygy"), syzygy_50_move_rule(true),
