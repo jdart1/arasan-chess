@@ -1,8 +1,22 @@
-Changs in Arasan 25.2.1 (July 2025):
+Changes in Arasan 25.3 (Dec 2025):
+ 1) Increase L1 size to 1792
+ 2) New network, trained on 6B+ lc0 + selfplay games
+ 3) Fix training script to sync with recent bullet updates
+ 4) More changes to book selection logic
+ 5) Omit positions from book with blunder eval or only losses
+ 6) Code cleanup, especially in the SIMD code
+ 7) Fix incorrect filtering of tablebase moves at root
+ 8) Update to latest Fathom
+ 9) Bug fixes involving handling of search statistics
+ 10) Ponder option fixes. Set ponder off by default.
+ 11) Fixes to CMakeLists.txt
+ 12) import lichess-org/chess-openings for ECO coding
+
+Changes in Arasan 25.2.1 (July 2025):
  1) More fixes for AVX512 build
  2) Fix CMake file
 
-Changs in Arasan 25.2 (July 2025):
+Changes in Arasan 25.2 (July 2025):
  1) Updated network, trained with 12B positions, using factorization and cosine LR scheduler
  2) Training script and training log commited to repo, along with the network
  3) Some changes to selfplay utility. Outputs W/L/D statistics now.

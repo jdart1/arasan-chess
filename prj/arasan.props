@@ -2,9 +2,9 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros">
-    <ARASAN_VERSION>25.2.1</ARASAN_VERSION>
+    <ARASAN_VERSION>25.3</ARASAN_VERSION>
     <ARASAN_FEATURES>SIMD;SSE2;SYZYGY_TBS;USE_INTRINSICS;SMP;SMP_STATS</ARASAN_FEATURES>
-    <ARASAN_LINK_VERSION>25.2</ARASAN_LINK_VERSION>
+    <ARASAN_LINK_VERSION>25.3</ARASAN_LINK_VERSION>
     <NETWORK>arasanv5-20251222.nnue</NETWORK>
   </PropertyGroup>
   <PropertyGroup />
