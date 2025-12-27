@@ -481,23 +481,23 @@ private:
      occupied[color].clear(sq);
    }
 
-   int pinCheck(Square pinner, Square okp, const Bitboard &mask) const {
+   bool pinCheck(Square pinner, Square okp, const Bitboard &mask) const noexcept {
      Bitboard btwn;
      between(pinner,okp,btwn);
      Bitboard pin(btwn & mask);
      if (pin.singleBitSet()) {
        if ((btwn & allOccupied) == pin) {
-         return 1;
+         return true;
        }
      }
-     return 0;
+     return false;
    }
 
-   int discAttackDiag(Square sq, Square ksq, ColorType c) const;
+   bool discAttackDiag(Square sq, Square ksq, ColorType c) const noexcept;
 
-   int discAttackRankFile(Square sq, Square ksq, ColorType c) const;
+   bool discAttackRankFile(Square sq, Square ksq, ColorType c) const noexcept;
 
-   int discAttack(Square sq, Square ksq, ColorType c) const;
+   bool discAttack(Square sq, Square ksq, ColorType c) const noexcept;
 
 };
 

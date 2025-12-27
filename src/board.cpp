@@ -2111,35 +2111,35 @@ std::ostream & operator << (std::ostream &o, const Board &board)
    return o;
 }
 
-int Board::discAttackDiag(Square sq, Square ksq, ColorType c) const {
+bool Board::discAttackDiag(Square sq, Square ksq, ColorType c) const noexcept {
     Bitboard mask(Attacks::diag_mask[ksq]);
     if (mask.isSet(sq)) {
         Bitboard attackers((bishop_bits[c] | queen_bits[c]) & mask);
         Square attacker;
         while (attackers.iterate(attacker)) {
             if (clear(attacker,ksq)) {
-                return 1;
+                return true;
             }
         }
     }
-    return 0;
+    return false;
 }
 
-int Board::discAttackRankFile(Square sq, Square ksq, ColorType c) const {
+bool Board::discAttackRankFile(Square sq, Square ksq, ColorType c) const noexcept {
     Bitboard mask(Attacks::rank_file_mask[ksq]);
     if (mask.isSet(sq)) {
         Bitboard attackers((rook_bits[c] | queen_bits[c]) & mask);
         Square attacker;
         while (attackers.iterate(attacker)) {
             if (clear(attacker,ksq)) {
-                return 1;
+                return true;
             }
         }
     }
-    return 0;
+    return false;
 }
 
-int Board::discAttack(Square sq, Square ksq, ColorType c) const {
+bool Board::discAttack(Square sq, Square ksq, ColorType c) const noexcept {
     return discAttackRankFile(sq, ksq, c) ||
         discAttackDiag(sq,ksq,c);
 }
