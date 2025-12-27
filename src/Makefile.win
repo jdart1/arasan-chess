@@ -173,6 +173,11 @@ CFLAGS = $(CFLAGS) /std:c++17
 !If "$(BUILD_TYPE)" == "modern"
 # needed to indicate CPU has POPCNT support
 CFLAGS = $(CFLAGS) -march=nehalem
+!Else
+!If "$(BUILD_TYPE)" == "avx512"
+# see https://github.com/llvm/llvm-project/issues/87640
+CFLAGS = $(CFLAGS) -mno-gather
+!Endif
 !Endif
 !Ifndef DEBUG
 LTO = -flto
