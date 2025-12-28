@@ -79,7 +79,7 @@ static int testSqrCReLU() {
     alignas(nnue::DEFAULT_ALIGN) OutputType output[inputSize] = {0};
     alignas(nnue::DEFAULT_ALIGN) OutputType expected[inputSize] = {0};
 
-    fill_random<InputType>(input, inputSize, -clampMax, clampMax);
+    fill_random<InputType>(input, inputSize, -static_cast<int>(clampMax), clampMax);
 
     nnue::SqrCReLU<InputType, OutputType, inputSize, clampMax, shift> layer;
 
