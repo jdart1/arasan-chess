@@ -25,7 +25,12 @@ extern "C" {
 #endif
 #include <cstring>
 #include <cstdlib>
+#if defined(__APPLE__) && !defined(NEON)
+// no <filestem> on old Intel clang
+#define MAC_INTEL
+#else
 #include <filesystem>
+#endif
 
 #ifdef SYZYGY_TBS
 static bool tb_init = false;
@@ -34,7 +39,11 @@ bool globals::tb_init_done() { return tb_init; }
 int globals::EGTBMenCount = 0;
 #endif
 
+#ifdef MAC_INTEL
+static constexpr char PATH_CHAR = '/';
+#else
 static constexpr char PATH_CHAR = std::filesystem::path::preferred_separator;
+#endif
 
 MoveArray *globals::gameMoves;
 BookReader globals::openingBook;
@@ -126,7 +135,7 @@ std::string globals::derivePath(const std::string &base, const std::string &file
     }
 }
 
-std::string globals::appendPath(const std::string &base, const std::string &fileName) 
+std::string globals::appendPath(const std::string &base, const std::string &fileName)
 {
     std::string dir(base + PATH_CHAR);
     dir.append(fileName);

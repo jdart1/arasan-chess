@@ -63,11 +63,11 @@ class LinearLayer : public TypedLayer<InputType, OutputType, inputSize, outputSi
                 auto y = static_cast<OutputType>(this->_weights[bucket][i][j]);
                 out += x*y;
             }
-            if constexpr (inputDequantifyShift) {
+            if constexpr (inputDequantifyShift > 0) {
                 out >>= inputDequantifyShift;
             }
             out += static_cast<OutputType>(this->_biases[bucket][i]);
-            if constexpr (outputDequantifyShift) {
+            if constexpr (outputDequantifyShift > 0) {
                 out >>= outputDequantifyShift;
             }
             output[i] = out;

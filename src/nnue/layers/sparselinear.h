@@ -112,7 +112,7 @@ public:
         }
         // add biases and copy to output, applying scaling if needed
         for (size_t outIdx = 0; outIdx < outputSize / outputChunkSize; ++outIdx) {
-            if constexpr (inputDequantifyShift) {
+            if constexpr (inputDequantifyShift > 0) {
 #ifdef NEON
                 accum[outIdx] = vec_shr32<inputDequantifyShift>(accum[outIdx]);
 #else
@@ -126,7 +126,7 @@ public:
             vec_t bias = vec_load<vec_t>(reinterpret_cast<const vec_t *>(this->_biases[bucket]) + outIdx);
 #endif
             accum[outIdx] = vec_add32(accum[outIdx],bias);
-            if constexpr (outputDequantifyShift) {
+            if constexpr (outputDequantifyShift > 0) {
 #ifdef NEON
                 accum[outIdx] = vec_shr32<outputDequantifyShift>(accum[outIdx]);
 #else

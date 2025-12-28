@@ -573,11 +573,11 @@ static inline void i32dotProductnxn(const int32_t *input,
             sum = vec_add32(sum,vec_mullo32<vec_type>(x,w));
         }
         int32_t out = hsum32(sum);
-        if constexpr (inputDequantifyShift) {
+        if constexpr (inputDequantifyShift > 0) {
             out >>= inputDequantifyShift;
         }
         out += biases[i];
-        if constexpr (outputDequantifyShift) {
+        if constexpr (outputDequantifyShift > 0) {
             out >>= outputDequantifyShift;
         }
         output[i] = out;
@@ -657,7 +657,7 @@ static inline void x86CReLU(const InType *in, OutType *out) {
         // load
         auto x = vec_load<vec_type>(inp + i);
         // shift and clamp
-        if constexpr (rshift) {
+        if constexpr (rshift > 0) {
             x = vec_rshift32(x, rshift);
         }
         x = vec_clamp32<vec_type>(x, maxValues);
@@ -676,7 +676,7 @@ static inline void x86SqrCReLU(const InType *in, OutType *out) {
         auto x = vec_load<vec_type>(inp + i);
         x = vec_clamp32<vec_type>(x, maxValues);
         x = vec_mullo32<vec_type>(x, x);
-        if constexpr (rshift) {
+        if constexpr (rshift > 0) {
             x = vec_rshift32(x, rshift);
         }
         // store
