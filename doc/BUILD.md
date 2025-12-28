@@ -55,13 +55,8 @@ for big-endian architectures.
 
 There is a Makefile in the src directory.
 
-The Makefile requires the "bc" utility, available on most Linux distros.
+The Makefile requires the "gawk" utility, available on most Linux distros.
 If using Cygwin, you should ensure you have installed this.
-
-In most cases, the Makefile should automatically select the correct
-target architecture and OS (note: assumes target and host are the
-same). By default it builds only the chess engine. Binaries are placed
-in the "bin" subdirectory.
 
 The following targets are defined in the makefile:
 
@@ -104,10 +99,15 @@ with c++20 support, do:
 
 make CC=gcc-10 CXXFLAGS=-std=c++20
 
-As noted earlier, clang is recommended for best perfomance. For PGO,
+As noted earlier, clang is recommended for best perfomance. To use clang,
+you must ensure a compatible gcc toolchain is available so headers/libraries
+can be accessed. Execute "clang -v" to see what toolchain clang is
+trying to access. For PGO,
 a compatible version of "llvm-profdata," from the clang bin directory,
 must be present in the PATH: this may not be the case for a default
-clang install.
+clang install. You can fix this by creating a symlink in /usr/bin to
+the llvm-profdata utility (the target should be in the same directory as the
+/usr/bin/clang symlink's target).
 
 Program execution for PGO runs in the "profile" subdirectory, and
 -a is passed to the program, allowing options such as tablebase
