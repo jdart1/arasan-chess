@@ -77,7 +77,8 @@ BASIC_SIMD_FLAGS = -DSIMD -DSSE2 -msse2
 POPCNT_FLAGS := $(POPCNT_FLAGS) -DSSSE3 -DSSE41 -mssse3 -msse4.1 -msse4.2 -mpopcnt
 BMI2_FLAGS := $(POPCNT_FLAGS) -DBMI2 -mbmi2
 AVX2_FLAGS := -DAVX2 -mavx2 -mfma
-AVX512_FLAGS := -DAVX512 -mavx512bw
+# re no-gather: see https://github.com/llvm/llvm-project/issues/87640
+AVX512_FLAGS := -DAVX512 -mavx512bw -mno-gather
 else ifeq ("$(ARCH)","arm64")
 NEON_FLAGS := -DSIMD -DNEON
 else ifeq ("$(ARCH)","aarch64")

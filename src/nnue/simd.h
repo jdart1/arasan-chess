@@ -466,7 +466,7 @@ inline void i8dotProductnxn(const uint8_t *input,
             // 64 = 512/8
             const vec_t *inp = reinterpret_cast<const vec_t *>(input);
             for (unsigned j = 0; j < inputSize/64; ++j) {
-                madd_dpbusd_epi32(prod, inp[j], w[j]);
+                dpbusd_epi32(prod, inp[j], w[j]);
             }
             output[i] = ((hsum32(prod) >> inputDequantifyShift) + biases[i]) >> outputDequantifyShift;
         }
