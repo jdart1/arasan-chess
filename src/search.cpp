@@ -71,7 +71,6 @@ TUNABLE(NULL_MOVE_LOW_MAT_EXTENSION, 1, 0, 3);
 TUNABLE(NULL_MOVE_DEPTH_DIVISOR_LOW_MAT, 3, 0, 6);
 TUNABLE(NULL_MOVE_EVAL_FACTOR, 175, 80, 300);
 TUNABLE(NULL_MOVE_MAX_EVAL_REDUCTION, 3, 2, 5);
-static constexpr int CHECKS_IN_QSEARCH = 1;
 // Depth limits for the strength reduction feature:
 static constexpr int STRENGTH_DEPTH_LIMITS[40] = {
     1,1,1,1,1,1,1,2,2,3,3,3,4,5,6,7,7,8,9,9,
@@ -2006,22 +2005,15 @@ score_t Search::quiesce(int ply,int depth)
 #endif
    node->eval = node->staticEval = Constants::INVALID_SCORE;
    const hash_t hash = board.hashCode(rep_count);
-   // Like Stockfish, only distinguish depths with checks vs depth without
-   int tt_depth;
    const int inCheck = board.checkStatus((node-1)->last_move)==InCheck;
-   if (inCheck || depth >= 1-CHECKS_IN_QSEARCH) {
-      tt_depth = HashEntry::QSEARCH_CHECK_DEPTH;
-   }
-   else {
-      tt_depth = HashEntry::QSEARCH_NO_CHECK_DEPTH;
-   }
+   static constexpr int QSEARCH_DEPTH = 0;
    Move hashMove = NullMove;
    score_t hashValue = Constants::INVALID_SCORE;
    HashEntry hashEntry;
    // Note: we copy the hash entry .. so mods by another thread do not
    // alter the copy
    HashEntry::ValueType result = controller->hashTable.searchHash(hash,
-                                                                  tt_depth,age,hashEntry);
+                                                                  QSEARCH_DEPTH,age,hashEntry);
 #ifdef SEARCH_STATS
    stats.hash_searches++;
 #endif
@@ -2033,34 +2025,27 @@ score_t Search::quiesce(int ply,int depth)
 #endif
       node->staticEval = hashEntry.staticValue();
       hashValue = HashEntry::hashValueToScore(hashEntry.getValue(),node->ply);
-      if (hashValue != Constants::INVALID_SCORE && (result == HashEntry::Valid ||
-           ((result == HashEntry::UpperBound && hashValue <= node->alpha) ||
-            (result == HashEntry::LowerBound && hashValue >= node->beta)))) {
-          // hash cutoff
+      if (!node->PV()) {
+          if (hashValue != Constants::INVALID_SCORE &&
+              (result == HashEntry::Valid ||
+               ((result == HashEntry::UpperBound && hashValue <= node->alpha) ||
+                (result == HashEntry::LowerBound && hashValue >= node->beta)))) {
+              // hash cutoff
 #ifdef SEARCH_TRACE
-          static constexpr char map[3] = {'E','U','L'};
-          if (mainThread()) {
-              traceHash(map[int(result)],node,hashValue,hashEntry);
-          }
+              static constexpr char map[3] = {'E', 'U', 'L'};
+              if (mainThread()) {
+                  traceHash(map[int(result)], node, hashValue, hashEntry);
+              }
 #endif
-          return hashValue;
+              return hashValue;
+          }
       }
       // Note: hash move may be usable even if score is not usable
       hashMove = hashEntry.bestMove(board);
-      // Ensure the hash move if any, meets the conditions for this
-      // depth in the q-search:
-      if (!IsNull(hashMove) && hashEntry.depth() != tt_depth && !inCheck) {
-          if (tt_depth == HashEntry::QSEARCH_NO_CHECK_DEPTH) {
-              if (!CaptureOrPromotion(hashMove)) {
-                  hashMove = NullMove;
-              }
-          } else {
-              if (!
-                  (CaptureOrPromotion(hashMove) ||
-                   ((node->eval >= node->alpha - 2*Scoring::PAWN_VALUE) &&
-                    board.wouldCheck(hashMove)))) {
-                 hashMove = NullMove;
-              }
+      // Ensure the hash move if any, meets the conditions for the qsearch
+      if (!IsNull(hashMove) && hashEntry.depth() != QSEARCH_DEPTH && !inCheck) {
+          if (!CaptureOrPromotion(hashMove)) {
+              hashMove = NullMove;
           }
       }
    }
@@ -2215,7 +2200,7 @@ score_t Search::quiesce(int ply,int depth)
                assert(!board.anyAttacks(board.kingSquare(board.oppositeSide()),board.sideToMove()));
                // store eval in hash table if not already fetched from there
                if (!had_eval) {
-                   controller->hashTable.storeHash(hash, tt_depth,
+                   controller->hashTable.storeHash(hash, QSEARCH_DEPTH,
                                                    age,
                                                    HashEntry::Eval,
                                                    HashEntry::scoreToHashValue(node->best_score,node->ply),
@@ -2320,91 +2305,19 @@ score_t Search::quiesce(int ply,int depth)
            }
 #endif
        }
-       // Do checks in qsearch, if enabled
-       if (depth >= 1-CHECKS_IN_QSEARCH) {
-           QSearchCheckGenerator mg(board,disc);
-           Move m;
-           while (!IsNull(m = mg.nextCheck())) {
-               if (MovesEqual(m,hashMove)) continue;
-#ifdef SEARCH_TRACE
-               if (mainThread()) {
-                   indent(ply);
-                   std::cout << "trying " << ply << ". ";
-                   MoveImage(m,std::cout);
-                   std::cout << '+' << std::endl;
-               }
-#endif
-               // prune checks that cause loss of the checking piece (but not
-               // discovered checks)
-               if (!disc.isSet(StartSquare(m)) && !seeSign(board,m,0)) {
-#ifdef SEARCH_TRACE
-                   if (mainThread()) {
-                       indent(ply); std::cout << "pruned" << std::endl;
-                   }
-#endif
-                   continue;
-               }
-               else if (board.isPinned(board.sideToMove(),m)) {
-                   // Move generator only produces pseudo-legal checking
-                   // moves, and in the next ply we will only consider
-                   // evasions. So need to ensure here that in making a
-                   // check we do not expose our own King to check.
-                   continue;
-               }
-               node->last_move = m;
-               board.doMove(m,node);
-               // verify opposite side in check:
-               assert(board.anyAttacks(board.kingSquare(board.sideToMove()),board.oppositeSide()));
-               // and verify quick check confirms it
-               assert(board.checkStatus(m)==InCheck);
-               // We know the check status so set it, so it does not
-               // have to be computed
-               board.setCheckStatus(InCheck);
-               try_score = -quiesce(-node->beta,-node->best_score,
-                                    ply+1,depth-1);
-               board.undoMove(m,state);
-               if (try_score != Illegal) {
-#ifdef SEARCH_TRACE
-                   if (mainThread()) {
-                       indent(ply);
-                       std::cout << ply << ". ";
-                       MoveImage(m,std::cout);
-                       std::cout << ' ' << try_score << std::endl;
-                   }
-#endif
-                   if (try_score > node->best_score) {
-                       node->best_score = try_score;
-                       node->best = m;
-                       if (try_score >= node->beta) {
-#ifdef SEARCH_TRACE
-                           if (mainThread()) {
-                               indent(ply); std::cout << "**CUTOFF**" << std::endl;
-                           }
-
-#endif
-                           goto search_end;
-                       }
-                       if (node->best_score >= Constants::MATE-1-ply)
-                           goto search_end;      // mating move found
-                   }
-               }
-#ifdef SEARCH_TRACE
-               else if (mainThread()) {
-                   indent(ply);
-                   std::cout << ply << ". ";
-                   MoveImage(m,std::cout);
-                   std::cout << " (illegal)" << std::endl;
-               }
-#endif
-           }
-       }
    }
    search_end:
    assert(node->best_score >= -Constants::MATE && node->best_score <= Constants::MATE);
-   // do not store upper bound mate scores
-   //   if (!(node->best_score >= Constants::MATE_RANGE) && node->best_score <= node->alpha) {
-   //       storeHash(hash,node->best,tt_depth);
-   //   }
+   HashEntry::ValueType val_type;
+   if (node->best_score <= node->alpha)
+       val_type = HashEntry::UpperBound;
+   else if (node->best_score >= node->beta)
+       val_type = HashEntry::LowerBound;
+   else
+       val_type = HashEntry::Valid;
+   controller->hashTable.storeHash(hash, QSEARCH_DEPTH, age, val_type,
+                                   HashEntry::scoreToHashValue(node->best_score, node->ply),
+                                   node->staticEval, val_type, hashMove);
    if (node->inBounds(node->best_score)) {
        if (!IsNull(node->best)) {
            updatePV(board,node->best,ply);

@@ -723,7 +723,7 @@ when the p.v. changes, so the UI and test suite code can monitor it).</p>
 
 <p>As noted above, each recursive call to move_search decrements the
 "depth" parameter by a constant (DEPTH_INCREMENT). When "depth" drops
-below zero, Arasan enters the quiescence search by calling function
+to zero or below, Arasan enters the quiescence search by calling function
 quiesce(). Like search(), this is also a recursive search routine.</p>
 
 <p>As the name implies, the goal of the quiescence search is to reach a
@@ -752,12 +752,6 @@ enough to cause cutoff. The theory here is that the side to move can
 choose to not capture any further. If the current evaluation is good
 enough to cause cutoff, there is no need to try captures and
 promotions to get a better score.</p>
-
-<p>In version 10.0 and later, for nodes where it is not in check, if no
-cutoff has occurred so far, the quiescence search will generate and
-search moves that give check, at least in the first couple of
-quiescence search plies. But checks that appear to lose material are
-pruned.</p>
 
 <h3>The hash table</h3>
 

@@ -18,9 +18,6 @@ class HashEntry {
     // Contents of the flag field
     enum { TYPE_MASK = 0x7, TB_MASK = 0x08, LEARNED_MASK = 0x10 };
 
-    static constexpr int QSEARCH_CHECK_DEPTH = -1;
-    static constexpr int QSEARCH_NO_CHECK_DEPTH = -2;
-
     // Only the first 4 values are actually stored - Invalid indicates
     // a hash hit with inadequate depth; NoHit indicates failure to find
     // a hash match.
