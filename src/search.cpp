@@ -35,7 +35,7 @@ static constexpr int ASPIRATION_WINDOW_STEPS = 6;
 //#define RAZORING
 #define SINGULAR_EXTENSION
 #define MULTICUT
-#define NON_SINGULAR_PRUNING
+#define NON_SINGULAR_REDUCTIONS
 
 TUNABLE(IID_DEPTH_NON_PV, 6*DEPTH_INCREMENT, 4*DEPTH_INCREMENT, 10*DEPTH_INCREMENT);
 TUNABLE(IID_DEPTH_PV, 8*DEPTH_INCREMENT, 4*DEPTH_INCREMENT, 10*DEPTH_INCREMENT);
@@ -55,7 +55,10 @@ static constexpr int CHECK_EXTENSION = DEPTH_INCREMENT;
 static constexpr int PAWN_PUSH_EXTENSION = DEPTH_INCREMENT;
 static constexpr int CAPTURE_EXTENSION = DEPTH_INCREMENT/2;
 #ifdef SINGULAR_EXTENSION
-TUNABLE(SINGULAR_EXTENSION_DEPTH, 8*DEPTH_INCREMENT, 6*DEPTH_INCREMENT, 10*DEPTH_INCREMENT);
+TUNABLE(SINGULAR_EXTENSION_DEPTH, 8*DEPTH_INCREMENT, 5*DEPTH_INCREMENT, 10*DEPTH_INCREMENT);
+TUNABLE(SINGULAR_EXTENSION_DOUBLE, 0, 0, Scoring::PAWN_VALUE);
+// amount in addition to double threshold
+TUNABLE(SINGULAR_EXTENSION_TRIPLE, static_cast<int>(0.33*Scoring::PAWN_VALUE), 0, Scoring::PAWN_VALUE);
 #endif
 TUNABLE(PROBCUT_DEPTH, 5*DEPTH_INCREMENT, 3*DEPTH_INCREMENT, 8*DEPTH_INCREMENT);
 TUNABLE(PROBCUT_MARGIN, static_cast<int>(1.25*Scoring::PAWN_VALUE), static_cast<int>(0.75*Scoring::PAWN_VALUE),
@@ -646,7 +649,7 @@ Move SearchController::findBestMove(
       std::cout << ' ' << stats->static_null_pruning << " (" << std::setprecision(2) << 100.0*stats->static_null_pruning/stats->reg_nodes << "%) static null pruning" << std::endl;
       std::cout << ' ' << stats->null_cuts << " (" << std::setprecision(2) << 100.0*stats->null_cuts/stats->reg_nodes << "%) null cuts" << std::endl;
       std::cout << ' ' << stats->multicut << " (" << std::setprecision(2) << 100.0*stats->multicut/stats->reg_nodes << "%) multicut" << std::endl;
-      std::cout << ' ' << stats->non_singular_pruning << " (" << std::setprecision(2) << 100.0*stats->non_singular_pruning/stats->reg_nodes << "%) non-singular pruning" << std::endl;
+      std::cout << ' ' << stats->non_singular_reductions << " (" << std::setprecision(2) << 100.0*stats->non_singular_reductions/stats->reg_nodes << "%) non-singular pruning" << std::endl;
       std::cout << "search pruning: " << std::endl;
       std::cout << ' ' << stats->futility_pruning << " (" << std::setprecision(2) << 100.0*stats->futility_pruning/stats->moves_searched << "%) futility" << std::endl;
       std::cout << ' ' << stats->futility_pruning_caps << " (" << std::setprecision(2) << 100.0*stats->futility_pruning_caps/stats->moves_searched << "%) futility (captures)" << std::endl;
@@ -3033,7 +3036,7 @@ score_t Search::search()
         }
     }
     {
-        bool singularExtend = false;
+        int singularExtension = 0;
         BoardState state(board.state);
 #ifdef SINGULAR_EXTENSION
         if (depth >= SINGULAR_EXTENSION_DEPTH &&
@@ -3072,7 +3075,15 @@ score_t Search::search()
                         indent(ply); std::cout << "singular extension" << std::endl;
                     }
 #endif
-                    singularExtend = true;
+                    // extend an amount that depends on how singular the move is, as in Halogen &
+                    // Alexandria (Stockfish has more complex criteria for when these additional
+                    // extensions are done).
+                    if (!node->PV() && singularResult < nu_beta - SINGULAR_EXTENSION_DOUBLE - SINGULAR_EXTENSION_TRIPLE)
+                        singularExtension = 3*DEPTH_INCREMENT;
+                    else if (!node->PV() && singularResult < nu_beta - SINGULAR_EXTENSION_DOUBLE)
+                        singularExtension = 2*DEPTH_INCREMENT;
+                    else
+                        singularExtension = DEPTH_INCREMENT;
 #ifdef SEARCH_STATS
                     ++stats.singular_extensions;
 #endif
@@ -3088,25 +3099,10 @@ score_t Search::search()
 #endif
                     return nu_beta;
 #endif
-#ifdef NON_SINGULAR_PRUNING
-                }
-                else if (hashValue >= node->beta) {
-                    score_t score = search(node->beta-1,node->beta,node->ply+1,(depth+3*DEPTH_INCREMENT)/2,0,hashMove);
-                    if (score >= node->beta) {
-                        // Another pruning idea from Stockfish: prune if the search is >= beta
-                        // (note however current Stockfish reduces rather than prunes)
-#ifdef SEARCH_TRACE
-                        if (mainThread()) {
-                            indent(ply); std::cout << "non-hash move failed high: cutoff" << std::endl;
-                        }
-
-#endif
-#ifdef SEARCH_STATS
-                        ++stats.non_singular_pruning;
-#endif
-                        return node->beta;
-                    }
-
+#ifdef NON_SINGULAR_REDUCTIONS
+                } else if (hashValue >= node->beta) {
+                    // Another idea from Stockfish: reduce the depth of the hash move's earch if this condition holds
+                    singularExtension = -2 * DEPTH_INCREMENT;
 #endif
                 }
             }
@@ -3157,15 +3153,18 @@ score_t Search::search()
             }
             CheckStatusType in_check_after_move = board.wouldCheck(move);
             int extension = 0, reduction = 0, newDepth = depth - DEPTH_INCREMENT;
-            if (singularExtend && GetPhase(move) == MoveGenerator::HASH_MOVE_PHASE) {
-                extension = DEPTH_INCREMENT;
-                newDepth += extension;
+            if (singularExtension && GetPhase(move) == MoveGenerator::HASH_MOVE_PHASE) {
+                // TBD: add regular extensions?
+                newDepth += singularExtension;
 #ifdef SEARCH_STATS
-                ++stats.singular_extensions;
+                if (singularExtension > 0)
+                    ++stats.singular_extensions;
+                else
+                    ++stats.non_singular_reductions;
 #endif
             }
             else {
-                if (prune(board, node, in_check_after_move, move_index, improving, move)) {
+                if (pruneOk && prune(board, node, in_check_after_move, move_index, improving, move)) {
                     continue;
                 }
                 extension = extend(board, node, in_check_after_move, move);
