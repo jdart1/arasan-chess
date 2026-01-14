@@ -1,4 +1,4 @@
-// Copyright 1994-2025 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2026 by Jon Dart.  All Rights Reserved.
 
 #ifndef _SEARCH_H
 #define _SEARCH_H

@@ -24,6 +24,6 @@ struct Constants {
 #define MAKE_STR(x) STRINGIFY(x)
 constexpr int DEPTH_INCREMENT = 2;
 #define Arasan_Version MAKE_STR(ARASAN_VERSION)
-#define Arasan_Copyright "Copyright 1994-2025 by Jon Dart. All Rights Reserved."
+#define Arasan_Copyright "Copyright 1994-2026 by Jon Dart. All Rights Reserved."
 
 #endif

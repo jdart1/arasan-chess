@@ -1,4 +1,4 @@
-// Copyright 1994-2009, 2012-2018, 2020-2021, 2024 by Jon Dart. All Rights Reserved.
+// Copyright 1994-2009, 2012-2018, 2020-2021, 2024, 2026 by Jon Dart. All Rights Reserved.
 
 #ifndef _STATS_H
 #define _STATS_H
