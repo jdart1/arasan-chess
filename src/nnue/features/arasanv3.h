@@ -1,4 +1,4 @@
-// Copyright 2020-2024 by Jon Dart. All Rights Reserved.
+// Copyright 2020-2026 by Jon Dart. All Rights Reserved.
 #ifndef _ARASANV3_H
 #define _ARASANV3_H
 
@@ -117,13 +117,6 @@ public:
             if (_biases[i] > max_bias) max_bias = _biases[i];
 #endif
         }
-#ifdef _DEBUG
-       if (!s.good()) {
-         char buf[128];
-         strerror_s(buf, 128, errno);
-         std::cout << buf << std::endl;
-       }
-#endif
 #ifdef NNUE_TRACE
         if (!s.fail()) {
             std::cout << "min feature weight = " << min_weight << " max feature weight = " << max_weight << std::endl;
