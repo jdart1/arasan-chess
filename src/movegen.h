@@ -1,4 +1,4 @@
-// Copyright 1992-2008, 2011, 2012, 2015-2021, 2023 by Jon Dart. All Rights Reserved.
+// Copyright 1992-2008, 2011, 2012, 2015-2021, 2023, 2026 by Jon Dart. All Rights Reserved.
 //
 #ifndef _MOVE_GENERATOR_H
 #define _MOVE_GENERATOR_H
@@ -363,7 +363,8 @@ class ProbCutMoveGenerator
 public:
     // Move generation is restricted to captures onto "tgts".
     ProbCutMoveGenerator(const Board &b, Move hash, const Bitboard &tgts) :
-        board(b), index(0), moveCount(0), hashMove(hash), targets(tgts), phase(0)
+        board(b), index(0), moveCount(0), hashMove(hash), targets(tgts), phase(0),
+        inCheck(board.checkStatus() == InCheck)
     {
     }
     
@@ -373,14 +374,14 @@ public:
     Move nextMove() {
         if (phase == 0) {
             ++phase;
-            if (!IsNull(hashMove) &&
-                (IsPromotion(hashMove) || targets.isSet(DestSquare(hashMove)))) {
+            if (!IsNull(hashMove) && (inCheck ||
+                                      (IsPromotion(hashMove) || targets.isSet(DestSquare(hashMove))))) {
                 return hashMove;
             }
         }
         if (phase == 1) {
             ++phase;
-            if (board.checkStatus() == InCheck) {
+            if (inCheck) {
                 mg::EvasionInfo info(board);
                 moveCount = mg::generateEvasionsCaptures(board, info, moves);
             } else {
@@ -405,6 +406,7 @@ private:
     Move hashMove;
     Bitboard targets;
     int phase;
+    bool inCheck;
 };
 
 inline MoveGenerator::Phase operator++(MoveGenerator::Phase &phase)
