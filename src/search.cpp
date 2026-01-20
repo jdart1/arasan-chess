@@ -2907,6 +2907,11 @@ score_t Search::search()
         const bool validHashValue = hashHit && hashEntry.depth() >= nu_depth + DEPTH_INCREMENT &&
             hashValue != Constants::INVALID_SCORE;
         if (!(validHashValue && result == HashEntry::UpperBound && hashValue < probcut_beta)) {
+#ifdef SEARCH_TRACE
+            if (mainThread()) {
+                indent(ply); std::cout << "Probcut" << std::endl;
+            }
+#endif
             const score_t needed_gain = probcut_beta - node->staticEval;
             BoardState state(board.state);
             NodeState nstate(node);
@@ -2914,6 +2919,7 @@ score_t Search::search()
             // skip pawn captures because they will be below threshold
             ProbCutMoveGenerator mg(board, hashMove, board.occupied[board.oppositeSide()] & ~board.pawn_bits[board.oppositeSide()]);
             while (!IsNull(move = mg.nextMove())) {
+                assert(inCheck || CaptureOrPromotion(move));
                 if (Capture(move)==King) {
 #ifdef SEARCH_TRACE
                     if (mainThread()) {
@@ -2973,6 +2979,11 @@ score_t Search::search()
                     }
                 }
             }
+#ifdef SEARCH_TRACE
+            if (mainThread()) {
+                indent(ply); std::cout << "out of Probcut" << std::endl;
+            }
+#endif
         }
     }
 
@@ -3065,10 +3076,20 @@ score_t Search::search()
 #ifdef SEARCH_STATS
                 ++stats.singular_searches;
 #endif
+#ifdef SEARCH_TRACE
+                if (mainThread()) {
+                    indent(ply); std::cout << "begin singular search" << std::endl;
+                }
+#endif
                 NodeState ns(node);
                 score_t nu_beta = std::max<score_t>(hashValue - singularExtensionMargin(depth),-Constants::MATE);
                 clearNNUEState(node);
                 score_t singularResult = search(nu_beta-1,nu_beta,node->ply+1,singularSearchDepth(depth),0,hashMove);
+#ifdef SEARCH_TRACE
+                if (mainThread()) {
+                    indent(ply); std::cout << "end singular search" << std::endl;
+                }
+#endif
                 if (singularResult < nu_beta) {
 #ifdef SEARCH_TRACE
                     if (mainThread()) {
