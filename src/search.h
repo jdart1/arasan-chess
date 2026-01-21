@@ -23,6 +23,11 @@ extern "C" {
 
 class MoveGenerator;
 
+using NodeType = int;
+static constexpr NodeType CutNode = -1;
+static constexpr NodeType PvNode = 0;
+static constexpr NodeType AllNode = 1;
+
 // Per-node info, part of search history stack
 struct NodeInfo {
     NodeInfo() : best_score(Constants::INVALID_SCORE),
@@ -36,6 +41,7 @@ struct NodeInfo {
                  best(NullMove),
                  last_move(NullMove),
                  excluded(NullMove),
+                 nodeType(PvNode),
                  eval(Constants::INVALID_SCORE),
                  staticEval(Constants::INVALID_SCORE),
                  pv_length(0),
@@ -57,6 +63,7 @@ struct NodeInfo {
     Move best;
     Move last_move;
     Move excluded;
+    NodeType nodeType;
     score_t eval, staticEval;
     Move pv[Constants::MaxPly];
     int pv_length;
@@ -73,15 +80,15 @@ struct NodeInfo {
     ColorType stm;
     Square kingPos[2];
 
-    int PV() const {
-        return (beta > alpha+1);
+    bool PV() const noexcept {
+        return nodeType == PvNode || beta > alpha + 1;
     }
 
-    int inBounds(score_t score) const {
+    bool inBounds(score_t score) const noexcept {
         return score > alpha && score < beta;
     }
 
-    int newBest(score_t score) const {
+    bool newBest(score_t score) const noexcept {
         return score > best_score && score < beta;
     }
 
@@ -100,7 +107,8 @@ public:
           beta(node->beta),
           ply(node->ply),
           depth(node->depth),
-          flags(node->flags)
+          flags(node->flags),
+          nodeType(node->nodeType)
         {
         }
 
@@ -110,6 +118,7 @@ public:
         n->beta = beta;
         n->depth = depth;
         n->flags = flags;
+        n->nodeType = nodeType;
         // reset other parameters to pre-search state
         n->best_score = alpha;
         n->cutoff = 0;
@@ -128,6 +137,7 @@ private:
     NodeInfo *n;
     score_t alpha, beta;
     int ply, depth, flags;
+    NodeType nodeType;
 };
 
 
@@ -161,8 +171,8 @@ public:
     void init(NodeInfo *nodeStack, ThreadInfo *child_ti);
 
     score_t search(score_t alpha, score_t beta,
-                   int ply, int depth, int flags = 0, Move exclude = NullMove) {
-        PUSH(alpha,beta,ply,depth,flags,exclude);
+                   int ply, int depth, NodeType nodeType, int flags = 0, Move exclude = NullMove) {
+        PUSH(alpha,beta,ply,depth,nodeType,flags,exclude);
         return POP(search());
     }
 
@@ -270,14 +280,15 @@ protected:
     score_t tbScoreAdjust(const Board &board,
                           score_t score, int tb_hit, score_t tb_score) const;
 
-    FORCEINLINE void PUSH(score_t alpha, score_t beta,
-                          int ply, int depth, int flags, Move exclude) {
-        assert(ply<Constants::MaxPly);
+    FORCEINLINE void PUSH(score_t alpha, score_t beta, int ply, int depth, NodeType nodeType,
+                          int flags, Move exclude) {
+        assert(ply < Constants::MaxPly);
         ++node;
         node->alpha = node->best_score = alpha;
         node->beta = beta;
         node->flags = flags;
         node->excluded = exclude;
+        node->nodeType = nodeType,
         node->best = NullMove;
         node->num_quiets = node->num_captures = node->num_legal = 0;
         node->ply = ply;

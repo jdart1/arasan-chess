@@ -34,8 +34,6 @@ static constexpr int ASPIRATION_WINDOW_STEPS = 6;
 #define STATIC_NULL_PRUNING
 //#define RAZORING
 #define SINGULAR_EXTENSION
-#define MULTICUT
-#define NON_SINGULAR_REDUCTIONS
 
 TUNABLE(IID_DEPTH_NON_PV, 6*DEPTH_INCREMENT, 4*DEPTH_INCREMENT, 10*DEPTH_INCREMENT);
 TUNABLE(IID_DEPTH_PV, 8*DEPTH_INCREMENT, 4*DEPTH_INCREMENT, 10*DEPTH_INCREMENT);
@@ -1541,6 +1539,7 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
     node->ply = 0;
     node->depth = depth;
     node->excluded = NullMove;
+    node->nodeType = PvNode;
     node->eval = Constants::INVALID_SCORE;
     node->stm = board.sideToMove();
     node->dirty_num = 0;
@@ -1568,6 +1567,7 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
             node->quiets[node->num_quiets++] = move;
         }
         node->num_legal++; // all generated moves are legal at ply 0
+        const NodeType nextType = node->num_legal == 1 ? PvNode : CutNode;
         if (mainThread() && controller->uci && controller->elapsed_time > 300) {
             controller->uciSendInfos(board, move, move_index, iteration_depth);
         }
@@ -1597,11 +1597,10 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
         }
 #endif
         if (newDepth - reduction > 0) {
-           try_score = -search(-hibound, -lobound,
-                               1, newDepth - reduction);
+            try_score = -search(-hibound, -lobound, 1, newDepth - reduction, nextType);
         }
         else {
-           try_score = -quiesce(-hibound, -lobound, 1, 0);
+            try_score = -quiesce(-hibound, -lobound, 1, 0);
         }
         if (terminate) {
             board.undoMove(move,save_state);
@@ -1618,9 +1617,9 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
            // We failed to get a cutoff, so re-search with no reduction.
            controller->fail_high_root = true;
            if (newDepth > 0)
-              try_score=-search(-hibound,-lobound,1,newDepth);
+               try_score=-search(-hibound,-lobound,1,newDepth,nextType);
            else
-              try_score=-quiesce(-hibound,-lobound,1,0);
+               try_score=-quiesce(-hibound,-lobound,1,0);
         }
         if (try_score > node->best_score && hibound < node->beta && !terminate) {
            if (mainThread() && controller->time_target != Constants::INFINITE_TIME) {
@@ -1638,9 +1637,9 @@ score_t Search::ply0_search(RootMoveGenerator &mg, score_t alpha, score_t beta,
 #endif
            hibound = node->beta;
            if (newDepth > 0)
-              try_score=-search(-hibound,-lobound,1,newDepth);
+               try_score=-search(-hibound,-lobound,1,newDepth,PvNode);
            else
-              try_score=-quiesce(-hibound,-lobound,1,0);
+               try_score=-quiesce(-hibound,-lobound,1,0);
         }
 #ifdef SEARCH_TRACE
         if (mainThread()) {
@@ -2013,6 +2012,8 @@ score_t Search::quiesce(int ply,int depth)
    Move hashMove = NullMove;
    score_t hashValue = Constants::INVALID_SCORE;
    HashEntry hashEntry;
+   // nodeType is not maintained for qsearch nodes.
+   bool pvSearch = node->beta > node->alpha + 1;
    // Note: we copy the hash entry .. so mods by another thread do not
    // alter the copy
    HashEntry::ValueType result = controller->hashTable.searchHash(hash,
@@ -2028,7 +2029,7 @@ score_t Search::quiesce(int ply,int depth)
 #endif
       node->staticEval = hashEntry.staticValue();
       hashValue = HashEntry::hashValueToScore(hashEntry.getValue(),node->ply);
-      if (!node->PV()) {
+      if (!pvSearch) {
           if (hashValue != Constants::INVALID_SCORE &&
               (result == HashEntry::Valid ||
                ((result == HashEntry::UpperBound && hashValue <= node->alpha) ||
@@ -2085,7 +2086,7 @@ score_t Search::quiesce(int ply,int depth)
                std::cout << std::endl;
            }
 #endif
-           if (!node->PV() &&
+           if (!pvSearch &&
                noncaps > std::max<int>(1+depth,0) &&
                !Scoring::mateScore(node->beta) &&
                !CaptureOrPromotion(move) &&
@@ -2646,12 +2647,13 @@ score_t Search::search()
           return hashValue;
         }
         else {
-          if ((result == HashEntry::UpperBound && hashValue <= node->alpha) ||
-              (result == HashEntry::LowerBound && hashValue >= node->beta)) {
+            if ((result == HashEntry::UpperBound && hashValue <= node->alpha) ||
+                (result == HashEntry::LowerBound && hashValue >= node->beta)) {
 #ifdef SEARCH_TRACE
-              if (mainThread()) {
-                traceHash(result == HashEntry::LowerBound ? 'L' : 'U',node,hashValue,hashEntry);
-              }
+                if (mainThread()) {
+                    traceHash(result == HashEntry::LowerBound ? 'L' : 'U', node, hashValue,
+                              hashEntry);
+                }
 #endif
               if (!IsNull(hashMove)) {
                   if (CaptureOrPromotion(hashMove)) {
@@ -2670,7 +2672,7 @@ score_t Search::search()
                   context.updateQuietMove(board, node-1, (node-1)->last_move, false, true);
               }
               return hashValue;
-          }
+            }
         }
     }
 #ifdef SYZYGY_TBS
@@ -2831,7 +2833,7 @@ score_t Search::search()
             score_t nscore;
             if (nu_depth > 0)
                 nscore = -search(-node->beta, 1-node->beta,
-                                 ply+1, nu_depth);
+                                 ply+1, nu_depth, -node->nodeType);
             else
                 nscore = -quiesce(-node->beta, 1-node->beta,
                                   ply+1, 0);
@@ -2859,7 +2861,7 @@ score_t Search::search()
 #endif
                     // entering a new node w/o a move, so reset next node state
                     clearNNUEState(node);
-                    nscore = search(node->beta-1, node->beta, ply+1, nu_depth, VERIFY);
+                    nscore = search(node->beta-1, node->beta, ply+1, nu_depth, AllNode, VERIFY);
                     if (nscore == -Illegal) {
 #ifdef SEARCH_TRACE
                        if (mainThread()) {
@@ -2945,7 +2947,8 @@ score_t Search::search()
                     }
                     node->last_move = move;
                     node->num_legal++;
-                    score_t value = -search(-probcut_beta, -probcut_beta+1, ply+1, nu_depth, PROBCUT);
+                    score_t value = -search(-probcut_beta, -probcut_beta + 1, ply + 1, nu_depth,
+                                            -node->nodeType, PROBCUT);
 #ifdef SEARCH_TRACE
                     if (mainThread()) {
                         indent(ply);
@@ -3084,7 +3087,7 @@ score_t Search::search()
                 NodeState ns(node);
                 score_t nu_beta = std::max<score_t>(hashValue - singularExtensionMargin(depth),-Constants::MATE);
                 clearNNUEState(node);
-                score_t singularResult = search(nu_beta-1,nu_beta,node->ply+1,singularSearchDepth(depth),0,hashMove);
+                score_t singularResult = search(nu_beta-1,nu_beta,node->ply+1,singularSearchDepth(depth),CutNode,0,hashMove);
 #ifdef SEARCH_TRACE
                 if (mainThread()) {
                     indent(ply); std::cout << "end singular search" << std::endl;
@@ -3108,7 +3111,6 @@ score_t Search::search()
 #ifdef SEARCH_STATS
                     ++stats.singular_extensions;
 #endif
-#ifdef MULTICUT
                 }
                 else if (nu_beta >= node->beta) {
                     // We have completed the singular search but the hash
@@ -3119,12 +3121,14 @@ score_t Search::search()
                     ++stats.multicut;
 #endif
                     return nu_beta;
-#endif
-#ifdef NON_SINGULAR_REDUCTIONS
                 } else if (hashValue >= node->beta) {
-                    // Another idea from Stockfish: reduce the depth of the hash move's earch if this condition holds
+                    // Another idea from Stockfish: reduce the depth of the hash move's search if
+                    // this condition holds
                     singularExtension = -2 * DEPTH_INCREMENT;
-#endif
+                }
+                else if (node->nodeType == CutNode) {
+                    // Yet another type of reduction, as in Stockfish
+                    singularExtension = -2 * DEPTH_INCREMENT;
                 }
             }
         }
@@ -3207,11 +3211,17 @@ score_t Search::search()
 #ifdef SEARCH_STATS
             if (reduction) ++stats.reduced;
 #endif
+            // The first child of a Pv node is a Pv node. Further children are Cut nodes.
+            // The first child of a Cut node is an All node. Further children are Cut nodes.
+            // Children of All nodes are Cut nodes.
+            static constexpr NodeType stateMap[2][4] = {
+                {CutNode, CutNode, CutNode, CutNode},{AllNode, PvNode, CutNode, CutNode}};
+            const NodeType nextType = stateMap[node->num_legal == 0][node->nodeType + 1];
             if (newDepth - reduction > 0) {
                 try_score = -search(-hibound, -node->best_score,
-                    ply+1, newDepth - reduction);
-            }
-            else {
+                                    ply+1, newDepth - reduction,
+                                    nextType);
+            } else {
                 try_score = -quiesce(-hibound, -node->best_score,
                     ply+1, 0);
             }
@@ -3237,9 +3247,9 @@ score_t Search::search()
 #endif
                // re-search with no reduction
                if (newDepth > 0)
-                  try_score=-search(-hibound, -node->best_score, ply+1, newDepth);
+                   try_score=-search(-hibound, -node->best_score, ply+1, newDepth, nextType);
                else
-                  try_score=-quiesce(-hibound,-node->best_score, ply+1, 0);
+                   try_score=-quiesce(-hibound,-node->best_score, ply+1, 0);
             }
             if (try_score > node->best_score && hibound < node->beta && !terminate) {
                // widen window
@@ -3252,10 +3262,11 @@ score_t Search::search()
                     indent(ply); std::cout << "window = [" << node->best_score << "," << hibound << "]" << std::endl;
                }
 #endif
+               // Research sets a wider window, so is treated as a Pv node.
                if (newDepth > 0)
-                  try_score=-search(-hibound, -node->best_score, ply+1, newDepth);
+                   try_score=-search(-hibound, -node->best_score, ply+1, newDepth, PvNode);
                else
-                  try_score=-quiesce(-hibound,-node->best_score, ply+1, 0);
+                   try_score=-quiesce(-hibound,-node->best_score, ply+1, 0);
             }
             board.undoMove(move,state);
 #ifdef SEARCH_TRACE
