@@ -10,11 +10,15 @@
 #endif
 #include "bitbase.cpp"
 
-#ifdef _MAC
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#endif
+#if defined(_MAC) && defined(__APPLE__) && TARGET_OS_OSX
 extern "C" {
-#include <libproc.h>
+#include <libproc.h> // Not available on iOS
 };
-#elif !defined(_MSC_VER)
+#endif
+#if !defined(_MAC) && !defined(_MSC_VER)
 // assume POSIX system
 extern "C" {
 #include <errno.h>
@@ -102,13 +106,15 @@ static void getExecutablePath(std::string &path) {
     if (GetModuleFileName(NULL, szPath, MAX_PATH)) {
         path = std::string(szPath);
     }
-#elif defined(_MAC)
+#elif defined(_MAC) && defined(__APPLE__) && TARGET_OS_OSX
     char pathbuf[PROC_PIDPATHINFO_MAXSIZE];
     pathbuf[0] = '\0';
     int ret = proc_pidpath(getpid(), pathbuf, sizeof(pathbuf));
     if (ret > 0) {
         path = std::string(pathbuf);
     }
+#elif defined(_MAC)
+    // Assumes iOS
 #else
     // Assumes Linux. TBD: support for other platforms.
     char result[PATH_MAX];
