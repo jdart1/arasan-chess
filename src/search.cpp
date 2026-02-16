@@ -2921,7 +2921,7 @@ score_t Search::search()
             // skip pawn captures because they will be below threshold
             ProbCutMoveGenerator mg(board, hashMove, board.occupied[board.oppositeSide()] & ~board.pawn_bits[board.oppositeSide()]);
             while (!IsNull(move = mg.nextMove())) {
-                assert(inCheck || CaptureOrPromotion(move));
+                assert(in_check || CaptureOrPromotion(move));
                 if (Capture(move)==King) {
 #ifdef SEARCH_TRACE
                     if (mainThread()) {
