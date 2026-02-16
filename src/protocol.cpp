@@ -1,4 +1,4 @@
-// Copyright 1997-2025 by Jon Dart. All Rights Reserved.
+// Copyright 1997-2026 by Jon Dart. All Rights Reserved.
 //
 #include "protocol.h"
 
@@ -2511,10 +2511,10 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
         opp_time = t*10; // convert from centiseconds to ms
     }
     else if (cmd == "post") {
-        post = 1;
+        post = true;
     }
     else if (cmd == "nopost") {
-        post = 0;
+        post = false;
     }
     else if (cmd_word == "result") {
         // Game has ended
