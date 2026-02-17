@@ -1437,39 +1437,37 @@ void Protocol::analyze(Board &board)
             if (!input.readInput(pending, inputMtx)) {
                 break;
             }
-            std::string cmd;
-            while (popPending(cmd)) {
-                std::string cmd_word, cmd_arg;
-                split_cmd(cmd,cmd_word,cmd_arg);
-                if (doTrace) {
-                    std::cout << debugPrefix << "processing cmd in analysis mode: " << cmd << std::endl;
+        }
+        // process any commands, then continue analysis
+        std::string cmd;
+        while (analyzeMode && popPending(cmd)) {
+            std::string cmd_word, cmd_arg;
+            split_cmd(cmd, cmd_word, cmd_arg);
+            if (doTrace) {
+                std::cout << debugPrefix << "processing cmd in analysis mode: " << cmd << std::endl;
+            }
+            if (cmd == "undo" || cmd_word == "setboard") {
+                do_command(cmd, board);
+            }
+            // Technically "quit" is not supposed to be the way
+            // to exit analysis mode but we allow it.
+            else if (cmd == "exit" || cmd == "quit") {
+                analyzeMode = false;
+            } else if (cmd == "bk") {
+                do_command(cmd, board);
+            } else if (cmd == "hint") {
+                do_command(cmd, board);
+            } else if (cmd_word == "usermove" || text_to_move(board, cmd) != NullMove) {
+                Move m = get_move(cmd_word, cmd_arg);
+                if (!IsNull(m) && legalMove(board, m)) {
+                    execute_move(board, m);
+                } else if (doTrace) {
+                    std::cout << globals::debugPrefix
+                              << "illegal or unparseable move received in analysis mode"
+                              << std::endl;
                 }
-                if (cmd == "undo" || cmd == "setboard") {
-                    do_command(cmd,board);
-                }
-                // Technically "quit" is not supposed to be the way
-                // to exit analysis mode but we allow it.
-                else if (cmd == "exit" || cmd == "quit") {
-                    analyzeMode = false;
-                }
-                else if (cmd == "bk") {
-                    do_command(cmd,board);
-                }
-                else if (cmd == "hint") {
-                    do_command(cmd,board);
-                }
-                else if (cmd_word == "usermove" || text_to_move(board,cmd) != NullMove) {
-                    Move m = get_move(cmd_word, cmd_arg);
-                    if (!IsNull(m) && legalMove(board, m)) {
-                        execute_move(board, m);
-                    } else if (doTrace) {
-                        std::cout << globals::debugPrefix <<
-                            "illegal or unparseable move received in analysis mode" << std::endl;
-                    }
-                }
-                else if (cmd == ".") {
-                    analyze_output(stats);
-                }
+            } else if (cmd == ".") {
+                analyze_output(stats);
             }
         }
     }
