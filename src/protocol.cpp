@@ -2557,7 +2557,9 @@ bool Protocol::do_command(const std::string &cmd, Board &board) {
     else if (cmd_word == "setboard") {
         start_fen = cmd_args;
         std::stringstream s(start_fen,std::ios::in);
-        ChessIO::load_fen(s,board);
+        if (!ChessIO::load_fen(s, board) && doTrace) {
+            std::cout << debugPrefix << "error loading FEN" << std::endl;
+        }
     }
     else if (cmd_word == "loadgame") {
         std::string filename = cmd_args;

@@ -2083,14 +2083,15 @@ std::istream & operator >> (std::istream &i, Board &board)
    int fields = 0;
    // read only the required 4 fields that are part of FEN:
    // leave any remaining text such as EPD operators unread.
-   while (i.good() && !i.eof() && fields < 4) {
-      if (!i.get(c) || c == '\n') break;
-      buf << c;
-      if (isspace(c))
-         fields++;
+   while (fields < 4 && i.peek() != std::char_traits<char>::eof()) {
+       if (!i.get(c) || c == '\n')
+           break;
+       buf << c;
+       if (isspace(c))
+           fields++;
    }
 
-   if (i.fail())
+   if (i.bad())
       return i;
 
    if (!BoardIO::readFEN(board, buf.str())) {

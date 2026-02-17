@@ -116,7 +116,7 @@ void ChessIO::add_header(std::vector<Header> &hdrs, const std::string &key,
 bool ChessIO::load_fen(std::istream &ifs, Board &board) {
     ifs >> board;
     board.state.moveCount = 0;
-    return ifs.good();
+    return !ifs.fail();
 }
 
 bool ChessIO::store_fen(std::ostream &ofile, const Board &board) {
