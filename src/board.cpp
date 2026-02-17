@@ -1,4 +1,4 @@
-// Copyright 1994-2012, 2015, 2017-2021, 2023, 2025 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2012, 2015, 2017-2021, 2023, 2025-2026 by Jon Dart.  All Rights Reserved.
 
 #include "constant.h"
 #include "chess.h"

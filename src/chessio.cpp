@@ -1,4 +1,4 @@
-// Copyright 1994, 1995, 2008, 2012-2014, 2017-2018, 2021-2024 by Jon Dart.
+// Copyright 1994, 1995, 2008, 2012-2014, 2017-2018, 2021-2024, 2026 by Jon Dart.
 // All Rights Reserved.
 
 #include "chessio.h"
