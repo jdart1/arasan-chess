@@ -2097,11 +2097,6 @@ std::istream & operator >> (std::istream &i, Board &board)
    if (!BoardIO::readFEN(board, buf.str())) {
        set_bad(i);
    }
-   // Simple sanity check
-   else if (board.kingSquare(White) == InvalidSquare ||
-       board.kingSquare(Black) == InvalidSquare) {
-      set_bad(i);
-   }
 
    return i;
 }
