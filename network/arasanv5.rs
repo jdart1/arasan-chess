@@ -1,4 +1,5 @@
  use bullet_lib::{
+    game::inputs::ChessBucketsMirrored,
     game::outputs::MaterialCount,
     nn::{optimiser, InitSettings, Shape},
     trainer::{
@@ -6,10 +7,8 @@
         schedule::{lr, wdl, TrainingSchedule, TrainingSteps},
         settings::LocalSettings,
     },
-    default::{
-        inputs, loader,
-    },
-    value::ValueTrainerBuilder,
+    value::{ValueTrainerBuilder, loader::DirectSequentialDataLoader},
+
 };
 
 macro_rules! net_id {
@@ -33,7 +32,7 @@ fn main() {
     let mut trainer = ValueTrainerBuilder::default()
         .dual_perspective()
         .optimiser(optimiser::AdamW)
-        .inputs(inputs::ChessBucketsMirrored::new([
+        .inputs(ChessBucketsMirrored::new([
             0, 1, 2, 3,
             4, 4, 5, 5,
             6, 6, 7, 7,
@@ -48,16 +47,11 @@ fn main() {
             SavedFormat::custom([b'A', b'R', b'A', NETWORK_VERSION]),
             // merge in the factoriser weights
             SavedFormat::id("l0w")
-                .add_transform(|builder, _, mut weights| {
-                    let factoriser = builder.get_weights("l0f").get_dense_vals().unwrap();
-                    let expanded = factoriser.repeat(NUM_INPUT_BUCKETS);
-
-                    for (i, &j) in weights.iter_mut().zip(expanded.iter()) {
-                        *i += j;
-                    }
-
-                    weights
+                .transform(|store, weights| {
+                    let factoriser = store.get("l0f").values.repeat(NUM_INPUT_BUCKETS);
+                    weights.into_iter().zip(factoriser).map(|(a, b)| a + b).collect()
                 })
+                .round()
                 .quantise::<i16>(255),
             SavedFormat::id("l0b").quantise::<i16>(255),
             SavedFormat::id("l1w").quantise::<i16>(64),
@@ -94,11 +88,11 @@ fn main() {
         },
         wdl_scheduler: wdl::ConstantWDL { value: 0.0 },
         lr_scheduler: lr::Warmup{ inner: lr::CosineDecayLR { initial_lr: INITIAL_LR, final_lr: final_lr, final_superbatch: SUPERBATCHES },
-                warmup_batches: 20},
+                warmup_batches: 10},
 //        lr_scheduler: lr::CosineDecayLR { initial_lr: INITIAL_LR, final_lr: final_lr, final_superbatch: SUPERBATCHES },
 //        lr_scheduler: lr::StepLR { start: 0.0015, gamma: 0.45, step: 60 },
 //        lr_scheduler: lr::LinearDecayLR { initial_lr: INITIAL_LR, final_lr:0, final_superbatch: 800},
-        save_rate: 60,
+        save_rate: 100,
     };
 
     let stricter_clipping = optimiser::AdamWParams { max_weight: 0.99, min_weight: -0.99, ..Default::default() };
@@ -107,9 +101,9 @@ fn main() {
 
     let settings = LocalSettings { threads: 8, test_set: None, output_directory: "checkpoints", batch_queue_size: 512 };
 
-    let data_loader = loader::DirectSequentialDataLoader::new(&[
+    let data_loader = DirectSequentialDataLoader::new(&[
         "/data3/bullet/dec2025/dec2025-interleaved.bullet",
-        ]);
+    ]);
 
     trainer.run(&schedule, &settings, &data_loader);
 
