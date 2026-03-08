@@ -2398,9 +2398,7 @@ bool Search::prune(const Board &b,
             }
         } else {
             if (pruneDepth <= CAPTURE_FUTILITY_DEPTH) {
-                if (n->eval == Constants::INVALID_SCORE) {
-                    n->eval = n->staticEval = evalu8(b);
-                }
+                assert(n->eval != Constants::INVALID_SCORE);
                 score_t margin = futilityMargin<false>(pruneDepth) +
                     Scoring::maxValue(m) +
                     context.captureHistoryScore(b, m) / CAPTURE_FUTILITY_HISTORY_DIVISOR;
