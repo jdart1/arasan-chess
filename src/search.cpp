@@ -72,6 +72,7 @@ TUNABLE(NULL_MOVE_LOW_MAT_EXTENSION, 1, 0, 3);
 TUNABLE(NULL_MOVE_DEPTH_DIVISOR_LOW_MAT, 3, 0, 6);
 TUNABLE(NULL_MOVE_EVAL_FACTOR, 175, 80, 300);
 TUNABLE(NULL_MOVE_MAX_EVAL_REDUCTION, 3, 2, 5);
+
 // Depth limits for the strength reduction feature:
 static constexpr int STRENGTH_DEPTH_LIMITS[40] = {
     1,1,1,1,1,1,1,2,2,3,3,3,4,5,6,7,7,8,9,9,
@@ -716,6 +717,7 @@ void SearchController::clearHashTables()
     age = 0;
     pool->forEachSearch<&Search::clearHashTables>();
     hashTable.clearHash();
+    correctionHistory.clear();
 }
 
 void SearchController::stopAllThreads() {
@@ -2174,6 +2176,11 @@ score_t Search::quiesce(int ply,int depth)
        if (node->eval == Constants::INVALID_SCORE) {
            node->eval = node->staticEval = evalu8(board);
        }
+       // Apply correction to eval (node->staticEval stays raw)
+       if (!Scoring::mateScore(node->eval)) {
+           node->eval = std::clamp(node->eval + controller->correctionHistory.getEvalCorrection(board, node),
+                               -Constants::MATE_RANGE, Constants::MATE_RANGE);
+       }
        if (hashHit) {
            // Use the transposition table entry to provide a better score
            // for pruning decisions, if possible
@@ -2184,6 +2191,7 @@ score_t Search::quiesce(int ply,int depth)
                assert(node->eval >= -Constants::MATE && node->eval <= Constants::MATE);
            }
        }
+
        assert(node->eval != Constants::INVALID_SCORE);
 #ifdef SEARCH_TRACE
        if (mainThread()) {
@@ -2244,7 +2252,7 @@ score_t Search::quiesce(int ply,int depth)
                node->beta > -Constants::TABLEBASE_WIN) {
                // Futility pruning
                if ((Capture(move) == Pawn || board.getMaterial(oside).pieceCount() > 1) &&
-                   (Scoring::Gain(move) + QSEARCH_FUTILITY_PRUNE_MARGIN + node->staticEval < node->best_score) &&
+                   (Scoring::Gain(move) + QSEARCH_FUTILITY_PRUNE_MARGIN + node->eval < node->best_score) &&
                    !board.wouldCheck(move)) {
 #ifdef SEARCH_TRACE
                    if (mainThread()) {
@@ -2254,7 +2262,7 @@ score_t Search::quiesce(int ply,int depth)
                    continue;
                }
                // See pruning
-               score_t neededGain = node->best_score - node->staticEval - QSEARCH_SEE_PRUNE_MARGIN;
+               score_t neededGain = node->best_score - node->eval - QSEARCH_SEE_PRUNE_MARGIN;
                if (!disc.isSet(StartSquare(move)) &&
                    !seeSign(board,move,std::max<score_t>(0,neededGain))){
 #ifdef SEARCH_TRACE
@@ -2728,6 +2736,13 @@ score_t Search::search()
     if (node->eval == Constants::INVALID_SCORE) {
         node->eval = node->staticEval = evalu8(board);
     }
+    // Apply correction to eval (staticEval stays raw)
+    if (!in_check && !Scoring::mateScore(node->eval)) {
+        node->eval = std::clamp(node->eval + controller->correctionHistory.getEvalCorrection(board, node),
+                                -Constants::MATE_RANGE, Constants::MATE_RANGE);
+    }
+    // Save corrected eval before hash refinement (for correction update)
+    const score_t nonTTeval = node->eval; // before hash table correction
     if (hashHit) {
         // Use the transposition table entry to provide a better score
         // for pruning decisions, if possible
@@ -3339,6 +3354,16 @@ score_t Search::search()
             }
         }
         context.updateStats(board, node);
+    }
+
+    // Update eval correction histories
+    if (!in_check && !terminate && IsNull(node->excluded) &&
+        !Scoring::mateScore(node->best_score) &&
+        (IsNull(node->best) || !CaptureOrPromotion(node->best) || !seeSign(board,node->best,0)) &&
+        ((node->best_score < nonTTeval && node->best_score < node->beta) ||
+         (node->best_score > nonTTeval && !IsNull(node->best)))) {
+        controller->correctionHistory.updateCorrectionHistory(board, node, node->best_score,
+                                                              nonTTeval);
     }
 
     // don't insert into the hash table if we are terminating - we may

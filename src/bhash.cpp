@@ -375,4 +375,27 @@ hash_t BoardHash::pawnHash( const Board &board, ColorType side)
     }
     return h;
 }
+
+hash_t BoardHash::nonPawnHash( const Board &board, ColorType side)
+{
+    hash_t h = 0;
+    Bitboard pieces(board.occupied[side] & ~board.pawn_bits[side]);
+    Square sq;
+    while (pieces.iterate(sq)) {
+       h ^= hash_codes[ sq ][ (int)board[sq] ];
+    }
+    return h;
+}
+
+hash_t BoardHash::minorPieceHash( const Board &board, ColorType side)
+{
+    hash_t h = 0;
+    Bitboard pieces(board.knight_bits[side] | board.bishop_bits[side]);
+    Square sq;
+    while (pieces.iterate(sq)) {
+       h ^= hash_codes[ sq ][ (int)board[sq] ];
+    }
+    return h;
+}
+
         

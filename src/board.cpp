@@ -98,8 +98,12 @@ void Board::setSecondaryVars()
    king_bits[White].set(kingPos[White]);
    king_bits[Black].set(kingPos[Black]);
    state.hashCode = BoardHash::hashCode(*this);
-   pawnHashCodeW = BoardHash::pawnHash(*this,White);
-   pawnHashCodeB = BoardHash::pawnHash(*this,Black);
+   state.pawnHashCodeW = BoardHash::pawnHash(*this,White);
+   state.pawnHashCodeB = BoardHash::pawnHash(*this,Black);
+   state.nonPawnHashCodeW = BoardHash::nonPawnHash(*this,White);
+   state.nonPawnHashCodeB = BoardHash::nonPawnHash(*this,Black);
+   state.minorPieceHashCodeW = BoardHash::minorPieceHash(*this,White);
+   state.minorPieceHashCodeB = BoardHash::minorPieceHash(*this,Black);
 }
 
 void Board::setCastleStatus( CastleType t, ColorType c )
@@ -310,6 +314,11 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
          Xor(state.hashCode, kp, WhiteKing);
          Xor(state.hashCode, kp+1, WhiteRook);
          Xor(state.hashCode, kp+2, WhiteKing);
+         Xor(state.nonPawnHashCodeW, kp+3, WhiteRook);
+         Xor(state.nonPawnHashCodeW, kp, WhiteKing);
+         Xor(state.nonPawnHashCodeW, kp+1, WhiteRook);
+         Xor(state.nonPawnHashCodeW, kp+2, WhiteKing);
+
          state.hashCode ^= w_castle_status[(int)state.castleStatus[White]];
          state.hashCode ^= w_castle_status[(int)CantCastleEitherSide];
 
@@ -346,6 +355,11 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
          Xor(state.hashCode, kp, WhiteKing);
          Xor(state.hashCode, kp-1, WhiteRook);
          Xor(state.hashCode, kp-2, WhiteKing);
+         Xor(state.nonPawnHashCodeW, kp-4, WhiteRook);
+         Xor(state.nonPawnHashCodeW, kp, WhiteKing);
+         Xor(state.nonPawnHashCodeW, kp-1, WhiteRook);
+         Xor(state.nonPawnHashCodeW, kp-2, WhiteKing);
+
          state.hashCode ^= w_castle_status[(int)state.castleStatus[White]];
          state.hashCode ^= w_castle_status[(int)CantCastleEitherSide];
 
@@ -393,8 +407,8 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
                // update hash code
                Xor(state.hashCode, start, WhitePawn);
                Xor(state.hashCode, dest, WhitePawn);
-               Xor(pawnHashCodeW, start, WhitePawn);
-               Xor(pawnHashCodeW, dest, WhitePawn);
+               Xor(state.pawnHashCodeW, start, WhitePawn);
+               Xor(state.pawnHashCodeW, dest, WhitePawn);
                assert(dest - 8 == old_epsq);
                target = old_epsq;
                capture = BlackPawn;
@@ -405,7 +419,10 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
                // update hash code
                Xor(state.hashCode, start, WhitePawn);
                Xor(state.hashCode, dest, MakeWhitePiece(PromoteTo(move)));
-               Xor(pawnHashCodeW, start, WhitePawn);
+               Xor(state.pawnHashCodeW, start, WhitePawn);
+               Xor(state.nonPawnHashCodeW, dest, MakeWhitePiece(PromoteTo(move)));
+               if (PromoteTo(move) == Knight || PromoteTo(move) == Bishop)
+                  Xor(state.minorPieceHashCodeW, dest, MakeWhitePiece(PromoteTo(move)));
                contents[dest] = MakeWhitePiece(PromoteTo(move));
                material[White].removePawn();
                material[White].addPiece(PromoteTo(move));
@@ -436,8 +453,8 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
             default:
                Xor(state.hashCode, start, WhitePawn );
                Xor(state.hashCode, dest, WhitePawn );
-               Xor(pawnHashCodeW, start, WhitePawn);
-               Xor(pawnHashCodeW, dest, WhitePawn);
+               Xor(state.pawnHashCodeW, start, WhitePawn);
+               Xor(state.pawnHashCodeW, dest, WhitePawn);
                contents[dest] = WhitePawn;
                if (dest - start == 16) // 2-square pawn advance
                {
@@ -455,18 +472,28 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
          case Knight:
             Xor(state.hashCode, start, WhiteKnight);
             Xor(state.hashCode, dest, WhiteKnight);
+            Xor(state.nonPawnHashCodeW, start, WhiteKnight);
+            Xor(state.nonPawnHashCodeW, dest, WhiteKnight);
+            Xor(state.minorPieceHashCodeW, start, WhiteKnight);
+            Xor(state.minorPieceHashCodeW, dest, WhiteKnight);
             contents[dest] = WhiteKnight;
             knight_bits[White].setClear(bits);
             break;
          case Bishop:
             Xor(state.hashCode, start, WhiteBishop);
             Xor(state.hashCode, dest, WhiteBishop);
+            Xor(state.nonPawnHashCodeW, start, WhiteBishop);
+            Xor(state.nonPawnHashCodeW, dest, WhiteBishop);
+            Xor(state.minorPieceHashCodeW, start, WhiteBishop);
+            Xor(state.minorPieceHashCodeW, dest, WhiteBishop);
             contents[dest] = WhiteBishop;
             bishop_bits[White].setClear(bits);
             break;
          case Rook:
             Xor(state.hashCode, start, WhiteRook );
             Xor(state.hashCode, dest, WhiteRook );
+            Xor(state.nonPawnHashCodeW, start, WhiteRook);
+            Xor(state.nonPawnHashCodeW, dest, WhiteRook);
             contents[dest] = WhiteRook;
             rook_bits[White].setClear(bits);
             if ((int)state.castleStatus[White]<3) {
@@ -478,12 +505,16 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
          case Queen:
             Xor(state.hashCode, start, WhiteQueen);
             Xor(state.hashCode, dest, WhiteQueen);
+            Xor(state.nonPawnHashCodeW, start, WhiteQueen);
+            Xor(state.nonPawnHashCodeW, dest, WhiteQueen);
             contents[dest] = WhiteQueen;
             queen_bits[White].setClear(bits);
             break;
          case King:
             Xor(state.hashCode, start, WhiteKing );
             Xor(state.hashCode, dest, WhiteKing );
+            Xor(state.nonPawnHashCodeW, start, WhiteKing);
+            Xor(state.nonPawnHashCodeW, dest, WhiteKing);
             contents[dest] = WhiteKing;
             kingPos[White] = dest;
             king_bits[White].clear(start);
@@ -509,7 +540,7 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
             case Pawn:
                assert(pawn_bits[Black].isSet(target));
                pawn_bits[Black].clear(target);
-               Xor(pawnHashCodeB, target, capture);
+               Xor(state.pawnHashCodeB, target, capture);
                if (moveType == EnPassant)
                {
                   contents[target] = EmptyPiece;
@@ -519,6 +550,7 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
                break;
             case Rook:
                rook_bits[Black].clear(target);
+               Xor(state.nonPawnHashCodeB, target, capture);
                material[Black].removePiece(Rook);
                if ((int)state.castleStatus[Black]<3) {
                   state.hashCode ^= b_castle_status[(int)state.castleStatus[Black]];
@@ -528,19 +560,25 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
                break;
             case Knight:
                knight_bits[Black].clear(target);
+               Xor(state.nonPawnHashCodeB, target, capture);
+               Xor(state.minorPieceHashCodeB, target, capture);
                material[Black].removePiece(Knight);
                break;
             case Bishop:
                bishop_bits[Black].clear(target);
+               Xor(state.nonPawnHashCodeB, target, capture);
+               Xor(state.minorPieceHashCodeB, target, capture);
                material[Black].removePiece(Bishop);
                break;
             case Queen:
                queen_bits[Black].clear(target);
+               Xor(state.nonPawnHashCodeB, target, capture);
                material[Black].removePiece(Queen);
                break;
             case King:
                assert(0);
                kingPos[Black] = InvalidSquare;
+               Xor(state.nonPawnHashCodeB, target, capture);
                state.castleStatus[Black] = CantCastleEitherSide;
                material[Black].removePiece(King);
                break;
@@ -565,6 +603,11 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
          Xor(state.hashCode, kp, BlackKing);
          Xor(state.hashCode, kp+1, BlackRook);
          Xor(state.hashCode, kp+2, BlackKing);
+         Xor(state.nonPawnHashCodeB, kp+3, BlackRook);
+         Xor(state.nonPawnHashCodeB, kp, BlackKing);
+         Xor(state.nonPawnHashCodeB, kp+1, BlackRook);
+         Xor(state.nonPawnHashCodeB, kp+2, BlackKing);
+
          state.hashCode ^= b_castle_status[(int)state.castleStatus[Black]];
          state.hashCode ^= b_castle_status[(int)CantCastleEitherSide];
 
@@ -601,6 +644,11 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
          Xor(state.hashCode, kp, BlackKing);
          Xor(state.hashCode, kp-1, BlackRook);
          Xor(state.hashCode, kp-2, BlackKing);
+         Xor(state.nonPawnHashCodeB, kp-4, BlackRook);
+         Xor(state.nonPawnHashCodeB, kp, BlackKing);
+         Xor(state.nonPawnHashCodeB, kp-1, BlackRook);
+         Xor(state.nonPawnHashCodeB, kp-2, BlackKing);
+
          state.hashCode ^= b_castle_status[(int)state.castleStatus[Black]];
          state.hashCode ^= b_castle_status[(int)CantCastleEitherSide];
 
@@ -650,8 +698,8 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
                // update hash code
                Xor(state.hashCode, start, BlackPawn);
                Xor(state.hashCode, dest, BlackPawn);
-               Xor(pawnHashCodeB, start, BlackPawn);
-               Xor(pawnHashCodeB, dest, BlackPawn);
+               Xor(state.pawnHashCodeB, start, BlackPawn);
+               Xor(state.pawnHashCodeB, dest, BlackPawn);
                assert(dest + 8 == old_epsq);
                target = old_epsq;
                capture = WhitePawn;
@@ -662,7 +710,10 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
                // update hash code
                Xor(state.hashCode, start, BlackPawn);
                Xor(state.hashCode, dest, MakeBlackPiece(PromoteTo(move)));
-               Xor(pawnHashCodeB, start, BlackPawn);
+               Xor(state.pawnHashCodeB, start, BlackPawn);
+               Xor(state.nonPawnHashCodeB, dest, MakeBlackPiece(PromoteTo(move)));
+               if (PromoteTo(move) == Knight || PromoteTo(move) == Bishop)
+                  Xor(state.minorPieceHashCodeB, dest, MakeBlackPiece(PromoteTo(move)));
                contents[dest] = MakeBlackPiece(PromoteTo(move));
                material[Black].removePawn();
                material[Black].addPiece(PromoteTo(move));
@@ -691,8 +742,8 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
             default:
                Xor(state.hashCode, start, BlackPawn );
                Xor(state.hashCode, dest, BlackPawn );
-               Xor(pawnHashCodeB, start, BlackPawn);
-               Xor(pawnHashCodeB, dest, BlackPawn);
+               Xor(state.pawnHashCodeB, start, BlackPawn);
+               Xor(state.pawnHashCodeB, dest, BlackPawn);
                contents[dest] = BlackPawn;
                if (start - dest == 16) // 2-square pawn advance
                {
@@ -710,18 +761,28 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
          case Knight:
             Xor(state.hashCode, start, BlackKnight);
             Xor(state.hashCode, dest, BlackKnight);
+            Xor(state.nonPawnHashCodeB, start, BlackKnight);
+            Xor(state.nonPawnHashCodeB, dest, BlackKnight);
+            Xor(state.minorPieceHashCodeB, start, BlackKnight);
+            Xor(state.minorPieceHashCodeB, dest, BlackKnight);
             contents[dest] = BlackKnight;
             knight_bits[Black].setClear(bits);
             break;
          case Bishop:
             Xor(state.hashCode, start, BlackBishop);
             Xor(state.hashCode, dest, BlackBishop);
+            Xor(state.nonPawnHashCodeB, start, BlackBishop);
+            Xor(state.nonPawnHashCodeB, dest, BlackBishop);
+            Xor(state.minorPieceHashCodeB, start, BlackBishop);
+            Xor(state.minorPieceHashCodeB, dest, BlackBishop);
             contents[dest] = BlackBishop;
             bishop_bits[Black].setClear(bits);
             break;
          case Rook:
             Xor(state.hashCode, start, BlackRook );
             Xor(state.hashCode, dest, BlackRook );
+            Xor(state.nonPawnHashCodeB, start, BlackRook);
+            Xor(state.nonPawnHashCodeB, dest, BlackRook);
             contents[dest] = BlackRook;
             rook_bits[Black].setClear(bits);
             if ((int)state.castleStatus[Black]<3) {
@@ -733,12 +794,16 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
          case Queen:
             Xor(state.hashCode, start, BlackQueen);
             Xor(state.hashCode, dest, BlackQueen);
+            Xor(state.nonPawnHashCodeB, start, BlackQueen);
+            Xor(state.nonPawnHashCodeB, dest, BlackQueen);
             contents[dest] = BlackQueen;
             queen_bits[Black].setClear(bits);
             break;
          case King:
             Xor(state.hashCode, start, BlackKing );
             Xor(state.hashCode, dest, BlackKing );
+            Xor(state.nonPawnHashCodeB, start, BlackKing);
+            Xor(state.nonPawnHashCodeB, dest, BlackKing);
             contents[dest] = BlackKing;
             kingPos[Black] = dest;
             king_bits[Black].clear(start);
@@ -763,7 +828,7 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
             case Pawn:
                assert(pawn_bits[White].isSet(target));
                pawn_bits[White].clear(target);
-               Xor(pawnHashCodeW, target, capture);
+               Xor(state.pawnHashCodeW, target, capture);
                if (moveType == EnPassant)
                {
                   contents[target] = EmptyPiece;
@@ -773,6 +838,7 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
                break;
             case Rook:
                rook_bits[White].clear(target);
+               Xor(state.nonPawnHashCodeW, target, capture);
                material[White].removePiece(Rook);
                if ((int)state.castleStatus[White]<3) {
                   state.hashCode ^= w_castle_status[(int)state.castleStatus[White]];
@@ -782,19 +848,25 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
                break;
             case Knight:
                knight_bits[White].clear(target);
+               Xor(state.nonPawnHashCodeW, target, capture);
+               Xor(state.minorPieceHashCodeW, target, capture);
                material[White].removePiece(Knight);
                break;
             case Bishop:
                bishop_bits[White].clear(target);
+               Xor(state.nonPawnHashCodeW, target, capture);
+               Xor(state.minorPieceHashCodeW, target, capture);
                material[White].removePiece(Bishop);
                break;
             case Queen:
                queen_bits[White].clear(target);
+               Xor(state.nonPawnHashCodeW, target, capture);
                material[White].removePiece(Queen);
                break;
             case King:
                assert(0);
                kingPos[White] = InvalidSquare;
+               Xor(state.nonPawnHashCodeW, target, capture);
                state.castleStatus[White] = CantCastleEitherSide;
                material[White].removePiece(King);
                break;
@@ -819,6 +891,10 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
        (node+1)->kingPos[Black] = kingPos[Black];
    }
    assert(state.hashCode == BoardHash::hashCode(*this));
+   assert(state.nonPawnHashCodeW == BoardHash::nonPawnHash(*this, White));
+   assert(state.nonPawnHashCodeB == BoardHash::nonPawnHash(*this, Black));
+   assert(state.minorPieceHashCodeW == BoardHash::minorPieceHash(*this, White));
+   assert(state.minorPieceHashCodeB == BoardHash::minorPieceHash(*this, Black));
 #if defined(_DEBUG) && defined(FULL_DEBUG)
    // verify correct updating of bitmaps:
    Board copy(*this);
@@ -1117,7 +1193,7 @@ void Board::undoMove( Move move, const BoardState &old_state )
          switch (TypeOfPiece(contents[start])) {
          case Empty: break;
          case Pawn:
-            Xor(pawnHashCodeW,start,WhitePawn);
+            Xor(state.pawnHashCodeW,start,WhitePawn);
             switch (moveType) {
             case Promotion:
                material[White].addPawn();
@@ -1151,7 +1227,7 @@ void Board::undoMove( Move move, const BoardState &old_state )
                // note: falls through to normal case
             case Normal:
                pawn_bits[White].clear(dest);
-               Xor(pawnHashCodeW,dest,WhitePawn);
+               Xor(state.pawnHashCodeW,dest,WhitePawn);
 #ifdef __GNUC__
 #pragma GCC diagnostic pop
 #endif
@@ -1191,7 +1267,7 @@ void Board::undoMove( Move move, const BoardState &old_state )
             case Pawn:
                            assert(!pawn_bits[Black].isSet(target));
                pawn_bits[Black].set(target);
-               Xor(pawnHashCodeB,target,BlackPawn);
+               Xor(state.pawnHashCodeB,target,BlackPawn);
                material[Black].addPawn();
                break;
             case Knight:
@@ -1240,7 +1316,7 @@ void Board::undoMove( Move move, const BoardState &old_state )
          switch (TypeOfPiece(contents[start])) {
          case Empty: break;
          case Pawn:
-            Xor(pawnHashCodeB,start,BlackPawn);
+            Xor(state.pawnHashCodeB,start,BlackPawn);
             switch (moveType) {
             case Promotion:
             {
@@ -1276,7 +1352,7 @@ void Board::undoMove( Move move, const BoardState &old_state )
                // note: falls through to normal case
             case Normal:
                pawn_bits[Black].clear(dest);
-               Xor(pawnHashCodeB,dest,BlackPawn);
+               Xor(state.pawnHashCodeB,dest,BlackPawn);
                break;
 #ifdef __GNUC__
 #pragma GCC diagnostic pop
@@ -1317,7 +1393,7 @@ void Board::undoMove( Move move, const BoardState &old_state )
             case Pawn:
                assert(!pawn_bits[White].isSet(target));
                pawn_bits[White].set(target);
-               Xor(pawnHashCodeW,target,WhitePawn);
+               Xor(state.pawnHashCodeW,target,WhitePawn);
                material[White].addPawn();
                break;
             case Knight:

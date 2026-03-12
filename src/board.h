@@ -36,6 +36,9 @@ using Occupancies = Bitboard[6][2];
 
 struct BoardState {
    hash_t hashCode;
+   hash_t pawnHashCodeW, pawnHashCodeB;
+   hash_t nonPawnHashCodeW, nonPawnHashCodeB;
+   hash_t minorPieceHashCodeW, minorPieceHashCodeB;
    Square enPassantSq;
    int moveCount;
    int movesFromNull;
@@ -141,8 +144,16 @@ public:
        return material[c];
    }
 
-   hash_t pawnHash() const {
-      return pawnHashCodeW ^ pawnHashCodeB;
+   hash_t pawnHash() const noexcept {
+      return state.pawnHashCodeW ^ state.pawnHashCodeB;
+   }
+
+   hash_t nonPawnHash(ColorType c) const noexcept {
+      return c == White ? state.nonPawnHashCodeW : state.nonPawnHashCodeB;
+   }
+
+   hash_t minorPieceHash(ColorType c) const noexcept {
+      return c == White ? state.minorPieceHashCodeW : state.minorPieceHashCodeB;
    }
 
    Square enPassantSq() const {
@@ -444,7 +455,6 @@ public:
 public:
    ColorType side; // side to move
    BoardState state;
-   hash_t pawnHashCodeW, pawnHashCodeB;
 
    // We assume these arrays are contiguous
    alignas(nnue::DEFAULT_ALIGN) Bitboard pawn_bits[2];

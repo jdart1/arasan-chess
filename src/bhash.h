@@ -37,19 +37,9 @@ class BoardHash
             return (input & 0x8000000000000000ULL) ? White : Black;
         }
 
-        static hash_t kingPawnHash(const Board &b) {
-           hash_t h = b.pawnHashCodeB;
-           h ^= b.pawnHashCodeW;
-           h = Xor(Xor(h,b.kingSquare(White), WhiteKing), b.kingSquare(Black), BlackKing);
-           return setSideToMove(h,b.sideToMove());
-        }
+        static hash_t nonPawnHash(const Board &board, ColorType side);
 
-        static hash_t kingPawnHash(const Board &board, ColorType side) {
-          if (side == White) 
-            return board.pawnHashCodeW ^ board.pawnHashCodeB ^ hash_codes[board.kingSquare(White)][WhiteKing] ^ w_castle_status[board.castleStatus(White)];
-          else
-            return board.pawnHashCodeW ^ board.pawnHashCodeB ^ hash_codes[board.kingSquare(Black)][BlackKing] ^ b_castle_status[board.castleStatus(Black)];
-	}
+        static hash_t minorPieceHash(const Board &board, ColorType side);
 };
 
 #endif

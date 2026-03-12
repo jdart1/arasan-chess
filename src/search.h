@@ -499,6 +499,8 @@ public:
 
     Hash hashTable;
 
+    CorrectionHistory correctionHistory;
+
     score_t drawScore(const Board &board, const Statistics *s = nullptr) {
       // if we know the opponent's rating (which will be the case if playing
       // on ICC in xboard mode), or if the user has set a contempt value

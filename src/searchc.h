@@ -1,4 +1,4 @@
-// Copyright 2006-2008, 2016-2019, 2021, 2023-2024 by Jon Dart. All Rights Reserved.
+// Copyright 2006-2008, 2016-2019, 2021, 2023-2024, 2026 by Jon Dart. All Rights Reserved.
 
 #ifndef _SEARCHC_H
 #define _SEARCHC_H
@@ -7,12 +7,54 @@
 #include "constant.h"
 #include "chess.h"
 
+#include <cassert>
+#include <cstdlib>
 #include <array>
 #include <limits>
 
 struct NodeInfo;
 class Board;
 
+// Correction history tables, shared across threads
+struct CorrectionHistory {
+    static constexpr int CORR_HIST_SIZE = 16384;
+    static constexpr int CORR_HIST_MAX = 1024;
+    static constexpr int CORR_HIST_SCALE = 512;
+    static constexpr int PIECE_TO_COUNT = 6 * 64; // 6 piece types (Pawn..Queen) x 64 squares
+
+    // indexed by [side to move][hash % CORR_HIST_SIZE]
+    using CorrHistArray = std::array<std::array<int, CORR_HIST_SIZE>, 2>;
+
+    // indexed by [side to move][pieceToIndex1][pieceToIndex2]
+    using ContCorrHistArray = std::array<std::array<std::array<int, PIECE_TO_COUNT>, PIECE_TO_COUNT>, 2>;
+
+    CorrectionHistory();
+    ~CorrectionHistory();
+
+    void clear();
+
+    // Get eval correction based on correction histories
+    score_t getEvalCorrection(const Board &board, const NodeInfo *node) const;
+
+    // Update correction histories based on search result vs static eval
+    void updateCorrectionHistory(const Board &board, const NodeInfo *node,
+                                 score_t bestScore, score_t rawEval);
+
+private:
+    CorrHistArray *pawnCorrHistory;
+    CorrHistArray *nonPawnCorrHistoryW;
+    CorrHistArray *nonPawnCorrHistoryB;
+    CorrHistArray *minorPieceCorrHistoryW;
+    CorrHistArray *minorPieceCorrHistoryB;
+    ContCorrHistArray *contCorrHistory;
+
+    static int pieceToIndex(Move m) {
+        return (PieceMoved(m) - 1) * 64 + DestSquare(m);
+    }
+};
+
+// Context for a search (per-thread data). Includes killer and history information.
+//
 class SearchContext {
 public:
     static constexpr int HISTORY_MAX = std::numeric_limits<int>::max();
@@ -103,8 +145,6 @@ private:
     PieceTypeToMatrix<int> *counterMoveHistory, *fuMoveHistory;
 
     CaptureHistoryArray *captureHistory;
-
-    void update(int &val, int bonus, int divisor, bool is_best);
 };
 
 #endif
