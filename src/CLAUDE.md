@@ -18,6 +18,9 @@ This is a chess playing program
   - /syzygy - Sygygy format tablebase reading code
   - /utils - source for utility programs
 
+# Architecture
+ - see doc/programr.hmtl for a description of the program's data structures and algorithms
+
 ## Building and testing
 - Do not submit code for review that does not compile or triggers compiler warnings
 - To build the program executable, "make clean && make -j BUILD_TYPE=avx2" in the src directory
@@ -29,13 +32,13 @@ This is a chess playing program
 
 If adding a significant new feature, first write a unit test for it in unit.cpp or (for NNUE related code) nnuetest.cpp.
 
-# Performance testing
+## Performance testing
 - Runtime performance is very important. Do not introduce changes that cause regression in performance.
 - To test performance, build the executable with "make clean && make BUILD_TYPE=avx2 CC=clang -j profiled", then run the executable with "bench" as an argument. The relevant output metric is NPS: higher is better.
 - However, NPS is not the definitive measure of performance: SPRT testing is.
 
 w## Instructions for Claude
-- Include only the src directory and its subdirectories in scope, unless told otherwise. Syzygy code is a separate project, and should not be modified.
+- Include only the src directory and the nnue ubdirectory in scope, unless told otherwise. Code in the syzygy subdirectory belongs to a separate project, and should not be modified.
 - Do not make or suggest changes outside the scope of the assigned task.
 - Do not make or suggest non-functional changes to the code.
 - Be systematic. Focus on one specific aspect of a problem at a time.
@@ -51,7 +54,7 @@ w## Instructions for Claude
 - Avoid duplicating code.
 - Follow the principle of encapsulation: class state is private, access and update methods are used to access and update state (however, existing code makes some use of the "friend" declaration, and also may use structures whose state is public).
 - Methods that do not alter class state should be declared "const" ("const noexcept" if the function cannot throw an exception).
-- Do not use C headers unless necessary. Prefer the equivalent C++ headers: for exampe <cassert>.
+- Do not use C headers unless necessary. Prefer the equivalent C++ headers: for example <cassert>.
 - Prefer inline functions over preprocessor macros.
 - Use constexpr where possible when declaring variables.
 - Pass small-sized values to functions by value, larger values as references (const references if only read-only access is needed)
