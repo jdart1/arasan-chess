@@ -349,6 +349,15 @@ contains a start square, destination square, promotion value, the type
 of piece being moved, the type of piece being captured (if any), and the
 type of move (normal, castling, en passant, etc).</p>
 
+<p>The doMove and undoMove functiosn in the Board class use a
+  combination of incremental update and copy/restore to manage the
+  board state. doMove incrementally updates relevant data structures
+  in the board. Prior to calling doMove, a BoardState structure should
+  be saved that has the contents of board.state. undoMove is passed
+  this structure, enabling it to restore certain variables by copying
+  the previous state into the current state. This is partly done for
+  performance: it avoids recomputation of the hash values.</p>
+
 <h3>Attack Generation</h3>
 
 <p>Earlier versions of Arasan used rotated bitboards for computation of
