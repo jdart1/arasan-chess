@@ -32,8 +32,6 @@ using namespace std::placeholders;
 
 // Utility to generate training positions from Arasan self-play games
 
-static ECO ecoCoder;
-
 class SelfPlayHashTable {
 
   public:
@@ -163,7 +161,7 @@ static void saveGame(ThreadData &td, const std::string &result, std::ofstream &f
     headers.push_back(ChessIO::Header("White", s.str()));
     headers.push_back(ChessIO::Header("Black", s.str()));
     std::string opening_name, eco;
-    ecoCoder.classify(td.gameMoves, eco, opening_name);
+    globals::eco->classify(td.gameMoves, eco, opening_name);
     headers.push_back(ChessIO::Header("Result", result));
     headers.push_back(ChessIO::Header("ECO", eco));
     {
