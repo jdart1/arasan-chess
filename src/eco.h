@@ -1,4 +1,4 @@
-// Copyright 1994, 2008, 2021, 2025 by Jon Dart
+// Copyright 1994, 2008, 2021, 2025-2026 by Jon Dart
 #ifndef __ECO_H__
 #define __ECO_H__
 
@@ -24,9 +24,10 @@ class ECO
 public:
     ECO();
 
-    void init(const std::string &path);
+    // Initialize the book, return true on success
+    bool init(const std::string &path);
 
-    bool initOk() const noexcept {
+    bool initalized() const noexcept {
         return initDone;
     }
 

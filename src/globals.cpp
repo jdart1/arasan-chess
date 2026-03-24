@@ -1,4 +1,4 @@
-// Copyright 1996-2012, 2014, 2016-2019, 2021-2025 by Jon Dart.  All Rights Reserved.
+// Copyright 1996-2012, 2014, 2016-2019, 2021-2026 by Jon Dart.  All Rights Reserved.
 
 #include "globals.h"
 #include "hash.h"
@@ -326,7 +326,16 @@ void globals::delayedInit(bool verbose) {
         }
     }
     initGameFile();
-    eco->init(derivePath(ECO_DIR));
+    if (!eco->initalized()) {
+        std::string path(derivePath(ECO_DIR));
+        bool ok = eco->init(path);
+        if (verbose) {
+            if (ok)
+                std::cout << debugPrefix << "loaded ECO database from " << path << std::endl;
+            else
+                std::cout << debugPrefix << "warning: failed to load ECO database from " << path << std::endl;
+        }
+    }
 }
 
 void globals::unloadTb() {

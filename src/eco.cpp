@@ -1,4 +1,4 @@
-// Copyright 1994, 2008, 2021, 2024-2025 by Jon Dart
+// Copyright 1994, 2008, 2021, 2024-2026 by Jon Dart
 
 #include "eco.h"
 #include "board.h"
@@ -18,9 +18,9 @@ ECO::ECO() {
     initDone = false;
 }
 
-void ECO::init(const std::string &path) {
+bool ECO::init(const std::string &path) {
     if (initDone) {
-        return;
+        return true;
     }
 
     static const std::vector<std::string> files{{"a.tsv", "b.tsv", "c.tsv", "d.tsv", "e.tsv"}};
@@ -36,7 +36,7 @@ void ECO::init(const std::string &path) {
         // Skip header line
         std::getline(file, line);
 
-        if (file.bad()) return;
+        if (file.bad()) return false;
 
         while (std::getline(file, line)) {
             if (line.empty()) {
@@ -94,7 +94,12 @@ void ECO::init(const std::string &path) {
             }
         }
     }
-    if (ht->size()) initDone = true;
+    if (ht->size()) {
+        initDone = true;
+        return true;
+    } else {
+        return false;
+    }
 }
 
 void ECO::classify(const MoveArray &moves, std::string &result, std::string &name) {

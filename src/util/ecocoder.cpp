@@ -43,8 +43,13 @@ int CDECL main(int argc, char **argv) {
     }
     atexit(globals::cleanupGlobals);
 
+    std::string ecoPath(globals::derivePath(globals::ECO_DIR));
+    if (!globals::eco->init(ecoPath)) {
+        std::cerr << "failed to load ECO database from " << ecoPath << std::endl;
+        exit(-1);
+    }
+
     Board board;
-    ECO eco;
     int arg = 1;
 
     for (; arg < argc && *(argv[arg]) == '-'; ++arg) {
@@ -134,7 +139,7 @@ int CDECL main(int argc, char **argv) {
             }
             // output headers
             std::string ecoC, name;
-            eco.classify(moves, ecoC, name);
+            globals::eco->classify(moves, ecoC, name);
             std::string currentECO;
             bool found = ChessIO::get_header(hdrs, "ECO", currentECO);
             if (!found || (opts.force && ecoC != "")) {

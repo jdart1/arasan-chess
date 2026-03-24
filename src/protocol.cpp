@@ -408,10 +408,12 @@ void Protocol::save_game() {
    if (globals::game_file.is_open()) {
       std::vector<ChessIO::Header> headers;
       std::string opening_name, eco;
-      if (globals::eco->initOk()) {
+      if (globals::eco->initalized()) {
          if (doTrace) std::cout << debugPrefix << "calling classify" << std::endl;
          globals::eco->classify(*globals::gameMoves,eco,opening_name);
-         headers.push_back(ChessIO::Header("ECO",eco));
+         if (!eco.empty()) {
+            headers.push_back(ChessIO::Header("ECO",eco));
+         }
       }
       std::stringstream crating, orating;
       crating << computer_rating;
