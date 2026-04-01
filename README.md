@@ -236,7 +236,7 @@ Arasan relies on the following other projects:
 
 - [Fathom](https://github.com/jdart1/Fathom), Syzygy tablebase probing code (fork of [basil00/Fathom](https://github.com/basil00/Fathom))
 - [stats](https://www.github.com/jdart1/stats), Python module for SPRT computation (derived from [glinscott/fishtest](https://github.com/glinscott/fishtest))
-- [chess-openings](https://github.com/lichess-org/chess-openings), chess openings classification database
+- [chess-openings](https://github.com/jdart1/chess-openings), chess openings classification database (fork of [lichess-org/chess-openings](https://github.com/lichess-org/chess-openings))
 - [bullet](https://github.com/jdart1/bullet), NNUE network trainer
 
 ## Additional information
