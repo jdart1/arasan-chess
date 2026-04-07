@@ -8,5 +8,5 @@
         ignore = dirty
 [submodule "book/chess-openings"]
 	path = book/chess-openings
-	url = https://github.com/jdart1/chess-openings
-        branch = arasan
+	url = https://github.com/lichess-org/chess-openings
+        branch = master
