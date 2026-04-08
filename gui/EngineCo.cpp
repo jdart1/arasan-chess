@@ -34,7 +34,11 @@ static char *cmdQueue[QUEUE_MAX];
 static BOOL ready = FALSE;
 int force = 0;
 
+#ifdef _WIN64
+static const char* ENGINE_NAME = "arasanx-64.exe";
+#else
 static const char *ENGINE_NAME = "arasanx-32.exe";
+#endif
 
 BOOL engineReady()
 {
