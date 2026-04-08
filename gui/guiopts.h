@@ -1,4 +1,4 @@
-// Copyright 2001, 2002, 2012, 2023-2024 by Jon Dart. All Rights Reserved
+// Copyright 2001, 2002, 2012, 2023-2024, 2026 by Jon Dart. All Rights Reserved
 #ifndef _GUIOPTS_H
 #define _GUIOPTS_H
 
@@ -203,5 +203,5 @@ class GuiOptions
       UINT flags, showCmd;
 };
 
-extern int calc_hash_size();
+extern unsigned max_hash_size();
 #endif

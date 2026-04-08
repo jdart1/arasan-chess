@@ -1,8 +1,9 @@
-// Copyright 2001, 2002, 2012, 2018, 2023-2024 by Jon Dart. All Rights Reserved
+// Copyright 2001, 2002, 2012, 2018, 2023-2024, 2026 by Jon Dart. All Rights Reserved
 
 #include "stdafx.h"
 #include "guiopts.h"
 #include <afxwin.h>
+#include <algorithm>
 
 static const char *src_names[] =
 { "Time", "Incremental", "Tournament", "Depth", 0};
@@ -123,23 +124,18 @@ void GuiOptions::save()
    app->WriteProfileString("Preferences","Save Games",boolString(gprefs.saveGames));
 }
 
-
-int calc_hash_size()
-{
-    // Size the hash table according to how much memory we have.
-    static int sizes[12] = {
-       997, 1997, 3001, 4003, 4999, 6007, 6997, 8003,
-       10007, 12007, 15013, 18103
-    };
-
-    DWORD memSize = GlobalCompact(0);
-    int i;
-    for (i = 0; i < 11; i++)
-        if (16 * ((long)sizes[i]) > memSize / 16)
-            break;
-    return 32L * sizes[i] / 1000;
+static DWORDLONG getAvailMemory() {
+    MEMORYSTATUSEX status;
+    status.dwLength = sizeof(status);
+    GlobalMemoryStatusEx(&status);
+    return status.ullAvailPhys;
 }
 
+unsigned max_hash_size()
+{
+    // convert to MB
+    return static_cast<unsigned>(std::max<int>(1,getAvailMemory() >> 20));
+}
 
 GuiOptions::GuiOptions(CWinApp *guiApp) :
 app(guiApp)
@@ -162,7 +158,7 @@ app(guiApp)
    opt_str = app->GetProfileString("Preferences","Auto Size Hash Table","True");
    gprefs.auto_size_hash_table = opt_str == "True";
    if (gprefs.auto_size_hash_table) {
-      gprefs.hash_table_size = calc_hash_size();
+      gprefs.hash_table_size = max_hash_size() / 2;
    }
    gprefs.cores = app->GetProfileInt("Preferences","Cores",1);
    gprefs.strength = app->GetProfileInt("Preferences","Strength",100);

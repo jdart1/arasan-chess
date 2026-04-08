@@ -371,20 +371,21 @@ BEGIN
     LTEXT           "Hash Table Size (MB):",IDC_SIZE_LABEL,14,68,76,13
     CONTROL         "Auto Size",IDC_AUTO_SIZE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,148,66,43,13
     EDITTEXT        IDC_HASH_SIZE_EDIT,94,66,35,13,ES_NUMBER
+    CONTROL         "",IDC_HASH_SIZE_SPIN,"msctls_updown32",UDS_SETBUDDYINT | UDS_AUTOBUDDY | UDS_ARROWKEYS,130,66,10,12
     CONTROL         "Computer can Resign",IDC_CAN_RESIGN_CHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,105,29,85,16
     PUSHBUTTON      "Help",ID_HELP,132,192,50,14
     LTEXT           "Processor Cores Used:",IDC_CORES_LABEL,14,86,76,12
     EDITTEXT        IDC_CORES_EDIT,94,84,35,13,ES_NUMBER
-    CONTROL         "",IDC_CORES_SPIN,"msctls_updown32",UDS_SETBUDDYINT | UDS_AUTOBUDDY | UDS_ARROWKEYS,131,83,10,14
+    CONTROL         "",IDC_CORES_SPIN,"msctls_updown32",UDS_SETBUDDYINT | UDS_AUTOBUDDY | UDS_ARROWKEYS,130,83,10,14
     LTEXT           "Playing Strength:",IDD_STRENGTH_LABEL,15,104,55,8
     EDITTEXT        IDC_STRENGTH_EDIT,94,103,35,13,ES_NUMBER
-    CONTROL         "",IDC_STRENGTH_SPIN,"msctls_updown32",UDS_SETBUDDYINT | UDS_AUTOBUDDY | UDS_ARROWKEYS,131,102,10,14
+    CONTROL         "",IDC_STRENGTH_SPIN,"msctls_updown32",UDS_SETBUDDYINT | UDS_AUTOBUDDY | UDS_ARROWKEYS,130,102,10,14
     CONTROL         "Position learning",IDC_POSITION_LEARNING_CHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,25,46,70,14
     LTEXT           "Tablebase path:",IDC_TB_PATH_LABEL,15,141,55,8
     EDITTEXT        IDC_TB_PATH_EDIT,69,139,117,13
     LTEXT           "Book Variety:",IDD_BOOK_VARIETY_LABEL,16,122,55,8
     EDITTEXT        IDC_BOOK_VARIETY_EDIT,94,121,34,13,ES_NUMBER
-    CONTROL         "",IDC_BOOK_VARIETY_SPIN,"msctls_updown32",UDS_SETBUDDYINT | UDS_AUTOBUDDY | UDS_ARROWKEYS,131,120,10,14
+    CONTROL         "",IDC_BOOK_VARIETY_SPIN,"msctls_updown32",UDS_SETBUDDYINT | UDS_AUTOBUDDY | UDS_ARROWKEYS,130,120,10,14
     CONTROL         "Store games",IDC_SAVE_GAMES_CHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,27,154,70,14
     LTEXT           "Game pathname:",IDC_GAME_PATHNAME_LABEL,16,174,55,8
     EDITTEXT        IDC_GAME_PATHNAME_EDIT,72,173,115,12
@@ -613,13 +614,22 @@ BEGIN
     IDS_UNKNOWN_FILE_TYPE   "Unknown file type: %1"
     IDS_INVALID_BOARD       "File %1 does not contain a valid %2 position description."
     IDS_INVALID_FEN         "Invalid FEN position specified in PGN file"
-    IDS_INVALID_PGN         "Invalid PGN file"
     IDS_ILLEGAL_MOVE        "Illegal or ambiguous move: %1"
     IDS_UNREC_TEXT          "Unrecognized text %1 in PGN file"
     IDS_LETTER_COORDS       "ABCDEFGH"
     IDS_NUMBER_COORDS       "12345678"
     IDS_SEARCHING           "Searching"
     ID_INDICATOR_ECO        "ECO:  ???"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ENGINE_STARTUP      "Failure starting chess engine: %1 %2"
+    IDS_ENGINE_NOT_FOUND    "%1 not found"
+    IDS_ENGINE_ACCESS_DENIED "access to arasanx.exe denied"
+    IDS_WHITE               "WHITE:"
+    IDS_BLACK               "BLACK:"
+    IDS_INVALID_PGN         "Invalid PGN file"
 END
 
 STRINGTABLE
@@ -654,15 +664,6 @@ BEGIN
     ID_HELP_SEARCH          "Shows help index"
     ID_OPTIONS_APPEARANCE   "Change appearance of the chessboard."
     ID_BOARD_COLORS         "Set the colors of the chessboard"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_ENGINE_STARTUP      "Failure starting chess engine: %1 %2"
-    IDS_ENGINE_NOT_FOUND    "%1 not found"
-    IDS_ENGINE_ACCESS_DENIED "access to arasanx.exe denied"
-    IDS_WHITE               "WHITE:"
-    IDS_BLACK               "BLACK:"
 END
 
 #endif    // English (United States) resources

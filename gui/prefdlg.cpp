@@ -1,5 +1,5 @@
 // prefdlg.cpp : implementation file
-// Copyright 2002, 2012, 2013, 2024 by Jon Dart. All Rights Reserved.
+// Copyright 2002, 2012, 2013, 2024, 2026 by Jon Dart. All Rights Reserved.
 
 #include "stdafx.h"
 #include "prefdlg.h"
@@ -8,6 +8,9 @@
 #include "constant.h"
 
 #include <stdio.h>
+#include <sstream>
+
+extern unsigned max_hash_size();
 
 /////////////////////////////////////////////////////////////////////////////
 // PreferenceDialog dialog
@@ -19,6 +22,7 @@ PreferenceDialog::PreferenceDialog(CWnd* pParent /*=NULL*/)
 {
    m_AutoSizeHashTable = guiOptions->auto_size_hash_table();
    m_HashSize = guiOptions->hash_table_size();
+   m_HashSizeSpin.SetRange(1, max_hash_size());
    m_Ponder = guiOptions->think_when_idle();
    m_BeepOnError = guiOptions->beep_on_error();
    m_BeepAfterMove = guiOptions->beep_after_move();
@@ -39,9 +43,9 @@ void PreferenceDialog::DoDataExchange(CDataExchange* pDX)
     //{{AFX_DATA_MAP(PreferenceDialog)
     DDX_Control(pDX, IDC_AUTO_SIZE, m_AutoSizeCheck);
     DDX_Control(pDX, IDC_HASH_SIZE_EDIT, m_HashSizeEdit);
+    DDX_Control(pDX, IDC_HASH_SIZE_SPIN, m_HashSizeSpin);
     DDX_Check(pDX, IDC_AUTO_SIZE, m_AutoSizeHashTable);
     DDX_Text(pDX, IDC_HASH_SIZE_EDIT, m_HashSize);
-    DDV_MinMaxUInt(pDX, m_HashSize, 0, 1500);
     DDX_Check(pDX, IDC_PONDER_CHECK, m_Ponder);
     DDX_Check(pDX, IDC_BEEP_ON_ERROR_CHECK, m_BeepOnError);
     DDX_Check(pDX, IDC_BEEP_AFTER_MOVE_CHECK, m_BeepAfterMove);
@@ -101,14 +105,15 @@ void PreferenceDialog::OnAutoSize()
 {
    UpdateData();
    if (m_AutoSizeHashTable) {
-      int val = calc_hash_size();
-      char valStr[20];
-      sprintf(valStr,"%d",val);
+      unsigned val = max_hash_size() / 2;
+      std::stringstream valStr;
+      valStr << val;
       m_HashSizeEdit.EnableWindow(FALSE);
-      m_HashSizeEdit.SetWindowText(valStr);
+      m_HashSizeEdit.SetWindowText(valStr.str().c_str());
    }
    else
       m_HashSizeEdit.EnableWindow(TRUE);
+      m_HashSizeSpin.SetRange(1,max_hash_size());
 }
 
 

@@ -22,6 +22,7 @@ class PreferenceDialog : public CDialog
       enum { IDD = IDD_PREFERENCES };
       CButton  m_AutoSizeCheck;
       CEdit m_HashSizeEdit;
+      CSpinButtonCtrl m_HashSizeSpin;
       BOOL  m_AutoSizeHashTable;
       UINT  m_HashSize;
       BOOL  m_Ponder;
