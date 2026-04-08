@@ -183,10 +183,10 @@ Makefile to select TARGET=win32 and run the same build commands.
 ## Windows XP compatibility
 
 To make a Windows XP-compatible build, edit the Makefile to set PLATFORM=XP.
-This requires installation of the build tools version 141_xp, including the
+This requires installation and use of the build tools version 141_xp, including the
 Windows SDK version 7.1A. This is available as part of a Visual Studio 2017
 install, or by selecting the approprate build tools as part of a later
-Visual Studio install (but apparently Visual Studio 2026 no longer offers this).
+Visual Studio install (but not Visual Studio 2026, which has dropped support).
 Note I no longer have a functioning XP machine, and so compatibility of current
 builds of Arasan is not tested.
 
