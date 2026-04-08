@@ -1,5 +1,5 @@
 // Main module for Arasan chess engine.
-// Copyright 1997-2018, 2020-2021, 2024 by Jon Dart. All Rights Reserved.
+// Copyright 1997-2018, 2020-2021, 2024, 2026 by Jon Dart. All Rights Reserved.
 //
 
 #include "types.h"
@@ -111,7 +111,6 @@ int CDECL main(int argc, char **argv) {
     if (arg < argc) {
         if (strcmp(argv[arg],"bench") == 0) {
             Bench b;
-            globals::delayedInit();
             Bench::Results res = b.bench();
             std::cout << res;
             return 0;
