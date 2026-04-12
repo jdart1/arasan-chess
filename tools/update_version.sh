@@ -11,6 +11,7 @@
 #   src/CMakeLists.txt
 #   prj/arasan.props, gui/arasan.props
 #   gui/install/arasan.iss   (Inno Setup installer script)
+#   gui/install/arasan64.iss (Inno Setup installer script, 64-bit)
 #   gui/gui.rc               (Windows VERSIONINFO resource)
 #
 # The Win32 VERSIONINFO block in gui.rc requires FILEVERSION and PRODUCTVERSION
@@ -118,6 +119,19 @@ if [ -f "$ISS" ]; then
     fi
 else
     echo "  WARNING: $ISS not found, skipping" >&2
+fi
+
+ISS64="$ROOT/gui/install/arasan64.iss"
+if [ -f "$ISS64" ]; then
+    OLD_ISS64_VERSION=$(sed -n 's|^AppVerName=Arasan \([0-9][0-9.]*\).*|\1|p' "$ISS64" | head -n1)
+    if [ -z "$OLD_ISS64_VERSION" ]; then
+        echo "  WARNING: could not find current version in $ISS64" >&2
+    else
+        OLD_ISS64_RE=$(printf '%s' "$OLD_ISS64_VERSION" | sed 's/\./\\./g')
+        in_place_sed "$ISS64" "s|${OLD_ISS64_RE}|${NEW_VERSION}|g"
+    fi
+else
+    echo "  WARNING: $ISS64 not found, skipping" >&2
 fi
 
 # --- GUI Win32 resource script (VERSIONINFO block + product strings) -------
