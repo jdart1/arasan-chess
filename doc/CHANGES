@@ -1,3 +1,14 @@
+Changes in Arasan 25.4 (April 2026):
+ 1) Changes to hash table usage in qsearch
+ 2) Singular extension changes
+ 3) Small Probcut fix
+ 4) Add error reporting for setboard command
+ 5) Fixes to command handling in CECP analysis mode
+ 6) Fixes to ECO classification in utility programs
+ 7) GUI fixes - make Hash table setting a spin box
+ 8) Support a 64-bit GUI using a 64-bit engine - make separate installer for this
+ 9) Minor code cleanups, book update, ECO classification update
+
 Changes in Arasan 25.3 (Dec 2025):
  1) Increase L1 size to 1792
  2) New network, trained on 6B+ lc0 + selfplay games

@@ -1,13 +1,13 @@
 [Setup]
 AppName=Arasan (64-bit)
-AppVerName=Arasan 25.3
+AppVerName=Arasan 25.4
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
-DefaultDirName={commonpf}\Arasan\25.3
-DefaultGroupName=Arasan 25.3
-AppCopyright=Copyright 1994-2025 by Jon Dart. All Rights Reserved.
+DefaultDirName={commonpf}\Arasan\25.4
+DefaultGroupName=Arasan 25.4
+AppCopyright=Copyright 1994-2026 by Jon Dart. All Rights Reserved.
 Compression=bzip
-OutputBaseFilename=arasan64-v25.3
+OutputBaseFilename=arasan64-v25.4
 OutputDir=gui\install
 SourceDir=..\..
 UsePreviousAppDir=no

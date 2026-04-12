@@ -1,11 +1,11 @@
 [Setup]
 AppName=Arasan
-AppVerName=Arasan 25.3
-DefaultDirName={commonpf}\Arasan\25.3
-DefaultGroupName=Arasan 25.3
-AppCopyright=Copyright 1994-2025 by Jon Dart. All Rights Reserved.
+AppVerName=Arasan 25.4
+DefaultDirName={commonpf}\Arasan\25.4
+DefaultGroupName=Arasan 25.4
+AppCopyright=Copyright 1994-2026 by Jon Dart. All Rights Reserved.
 Compression=bzip
-OutputBaseFilename=arasan32-v25.3
+OutputBaseFilename=arasan32-v25.4
 OutputDir=gui\install
 SourceDir=..\..
 UsePreviousAppDir=no
