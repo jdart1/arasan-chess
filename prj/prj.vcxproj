@@ -75,8 +75,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ArasanX_Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\win64\release\</OutDir>
-    <IntDir>..\win64\release\</IntDir>
+    <OutDir>$(SolutionDir)\..\win64\release\</OutDir>
+    <IntDir>$(SolutionDir)\..\win64\release\</IntDir>
     <TargetName>arasanx-64</TargetName>
     <IncludePath>$(ProjectDir);$(VC_IncludePath);$(WindowsSdk_71A_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
   </PropertyGroup>
