@@ -5,6 +5,7 @@ pushd ..
 7z u -tzip -orelease %1 src\*.h src\*.cpp src\*.c src\Makefile
 7z u -tzip -orelease %1 src\CMakeLists.txt
 7z u -tzip -orelease %1 src\release.bat
+7z u -tzip -orelease %1 src\CLAUDE.md
 7z u -tzip -orelease %1 src\syzygy\*.*
 7z u -tzip -orelease %1 src\syzygy\src\*.*
 7z u -tzip -r -orelease %1 src\nnue
