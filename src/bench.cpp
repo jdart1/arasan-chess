@@ -1,4 +1,4 @@
-// Copyright 2020-2021, 2023 by Jon Dart. All Rights Reserved
+// Copyright 2020-2021, 2023, 2026 by Jon Dart. All Rights Reserved
 #include "bench.h"
 #include "globals.h"
 #include "notation.h"
@@ -41,9 +41,10 @@ Bench::Results Bench::bench(int hashSize, int depth, int cores, bool verbose)
     auto tmp_hash = globals::options.search.hash_table_size;
     int tmp_cores = globals::options.search.ncpus;
     int tmp_book = globals::options.book.book_enabled;
+    int tmp_eco = globals::options.book.eco_enabled;
     globals::options.search.hash_table_size = hashSize;
     globals::options.search.ncpus = std::min<int>(cores,Constants::MaxCPUs);
-    globals::options.book.book_enabled = 0;
+    globals::options.book.book_enabled = globals::options.book.eco_enabled = false;
 
     // ensure TBs and NNUE are initialized
     globals::delayedInit();
@@ -60,6 +61,7 @@ Bench::Results Bench::bench(int hashSize, int depth, int cores, bool verbose)
     globals::options.search.hash_table_size = tmp_hash;
     globals::options.search.ncpus = tmp_cores;
     globals::options.book.book_enabled = tmp_book;
+    globals::options.book.eco_enabled = tmp_eco;
     return results;
 }
 
