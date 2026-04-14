@@ -1,4 +1,4 @@
-// Copyright 2000-2014, 2016-2019, 2021-2025 by Jon Dart. All Rights Reserved.
+// Copyright 2000-2014, 2016-2019, 2021-2026 by Jon Dart. All Rights Reserved.
 #ifndef _OPTIONS_H
 #define _OPTIONS_H
 
@@ -19,7 +19,7 @@ class Options {
         BookOptions();
 
         unsigned variety;
-        bool book_enabled;
+        bool book_enabled, eco_enabled;
         std::string book_path;
     } book;
 

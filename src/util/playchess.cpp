@@ -40,6 +40,7 @@ int CDECL main(int argc, char **argv) {
     }
     atexit(globals::cleanupGlobals);
     globals::options.book.book_enabled = false;
+    globals::options.book.eco_enabled = false;
     globals::delayedInit(false);
     if (globals::EGTBMenCount) {
         std::cerr << "Initialized tablebases" << std::endl;
