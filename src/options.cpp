@@ -1,4 +1,4 @@
-// Copyright 2002-2014, 2016-2019, 2021, 2023-2025 by Jon Dart. All Rights Reserved.
+// Copyright 2002-2014, 2016-2019, 2021, 2023-2026 by Jon Dart. All Rights Reserved.
 #include "options.h"
 
 #include <ctype.h>
@@ -36,7 +36,8 @@ Options::SearchOptions::SearchOptions()
       wideWindow(10 * Scoring::PAWN_VALUE) {
 }
 
-Options::BookOptions::BookOptions() : variety(50), book_enabled(true), book_path("") {
+Options::BookOptions::BookOptions() : variety(50), book_enabled(true),
+                                      eco_enabled(true), book_path("") {
     globals::openingBook.setVariety(50);
 }
 

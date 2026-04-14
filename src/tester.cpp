@@ -1,4 +1,4 @@
-// Copyright 1997-2018, 2021-2023 by Jon Dart. All Rights Reserved.
+// Copyright 1997-2018, 2021-2023, 2026 by Jon Dart. All Rights Reserved.
 //
 #include "tester.h"
 #include "chessio.h"
@@ -24,8 +24,9 @@ void Tester::do_test(SearchController *searcher, const std::string &test_file, c
     }
     
     Options tmp(globals::options);
-    globals::options.book.book_enabled = 0;
-    globals::options.learning.position_learning = 0;
+    globals::options.book.book_enabled = false;
+    globals::options.book.eco_enabled = false;
+    globals::options.learning.position_learning = false;
 
     globals::delayedInit();
 
