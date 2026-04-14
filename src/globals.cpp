@@ -326,7 +326,7 @@ void globals::delayedInit(bool verbose) {
         }
     }
     initGameFile();
-    if (options.book.use_eco && !eco->initalized()) {
+    if (options.book.eco_enabled && !eco->initalized()) {
         std::string path(derivePath(ECO_DIR));
         bool ok = eco->init(path);
         if (verbose) {
