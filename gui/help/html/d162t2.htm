@@ -13,22 +13,18 @@
 </OBJECT>
 
 <A NAME="d162t2"></A><H1>What's New?</H1>
-<p>This is Arasan 25.2, released in July, 2025.</p>
-Changes in Arasan 25.2:
+<p>This is Arasan 25.4, released in April, 2026</p>
+Changes in Arasan 25.4:
 <ol>
-<li>Updated network, trained with 12B positions, using factorization and cosine LR scheduler</li>
-<li>Training script and training log commited to repo, along with the network</li>
-<li>Some changes to selfplay utility. Outputs W/L/D statistics now.</li>
-<li>Fixes to non-SIMD build</li>
-<li>Fixes for AVX512 build</li>
-<li>Use -DSIMD, -DSSE2 for GUI build</li>
-<li>Fixes for position learning. Rename "Learning file name" option to "Learning file."</li>
-<li>use -path for xboard BookPath option</li>
-<li>Fixes for loading/storing PGN files from the GUI</li>
-<li>Fixes for setting ARASAN_VERSION macro in the build</li>
-<li>Fix "bench" command so if given on the command line, it does complete initialization</li>
-<li>Implement finny tables to speed up eval</li>
-<li>Changes to book selection logic. Book will play a wider variety of moves by default.</li>
+<li>Changes to hash table usage in qsearch</li>
+<li>Singular extension changes</li>
+<li>Small Probcut fix</li>
+<li>Add error reporting for setboard command</li>
+<li>Fixes to command handling in CECP analysis mode</li>
+<li>Fixes to ECO classification in utility programs</li>
+<li>GUI fixes - make Hash table setting a spin box</li>
+<li>Support a 64-bit GUI using a 64-bit engine - make separate installer for this</li>
+<li>Minor code cleanups, book update, ECO classification updateuse -path for xboard BookPath option</li>
 </ol>
 </BODY>
 </HTML>
