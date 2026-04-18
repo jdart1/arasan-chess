@@ -83,6 +83,7 @@ static struct SelfPlayOptions {
     unsigned cores = 1;
     unsigned posCount = 10000000;
     unsigned depthLimit = 9;
+    unsigned semiRandomDepthLimit = 0; // 0 = use depthLimit
     bool adjudicateDraw = true;
     bool adjudicateTB = true;
     int adjudicateTBMen = 3;
@@ -302,9 +303,12 @@ static void semiRandomMove(const Board &board, SelfPlayOptions::RandomizeType ty
         mr.score = stats.display_value;
     } else { // multiPV
         numCandidates = 0;
+        unsigned depth = sp_options.semiRandomDepthLimit
+                             ? sp_options.semiRandomDepthLimit
+                             : sp_options.depthLimit;
         td.searcher->setMultiPV(sp_options.multipv_limit);
         (void) td.searcher->findBestMove(
-            board, FixedDepth, Constants::INFINITE_TIME, 0, sp_options.depthLimit,
+            board, FixedDepth, Constants::INFINITE_TIME, 0, depth,
             false, false, stats, TalkLevel::Silent);
         td.searcher->setMultiPV(1);
         if (stats.multipv_count == 0) {
@@ -574,10 +578,9 @@ static void threadp(ThreadData *td) {
 
 static void usage() {
     std::cerr << "Usage:" << std::endl;
-    std::cerr << "selfplay [-a (append)] [-d depth] [-v (verbose)] [-c cores] [-n positions]" << std::endl;
-    std::cerr << "         [-m output every m positions] [-f output format] [-g "
-                 "filename (save games)]"
-              << std::endl;
+    std::cerr << "selfplay [-a (append)] [-d depth] [-s semi-random depth] [-v (verbose)]" << std::endl;
+    std::cerr << "         [-c cores] [-n positions] [-m output every m positions]" << std::endl;
+    std::cerr << "         [-f output format] [-g filename (save games)]" << std::endl;
 }
 
 static void init_threads() {
@@ -699,6 +702,13 @@ int CDECL main(int argc, char **argv) {
             s >> sp_options.depthLimit;
             if (s.bad()) {
                 std::cerr << "error in depth limit after -d" << std::endl;
+                return -1;
+            }
+        } else if (strcmp(argv[arg], "-s") == 0) {
+            std::stringstream s(argv[++arg]);
+            s >> sp_options.semiRandomDepthLimit;
+            if (s.bad()) {
+                std::cerr << "error in depth limit after -s" << std::endl;
                 return -1;
             }
         } else if (strcmp(argv[arg], "-f") == 0) {
