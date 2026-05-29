@@ -68,6 +68,12 @@ Move BookReader::pick(const Board &b, bool trace) {
     RootMoveGenerator mg(b);
     (void)mg.generateAllMoves(move_list, 1 /* repeatable */);
 
+    // compute the total game count across all options
+    int totalGames = 0;
+    for (const book::DataEntry &info : rawMoves) {
+        totalGames += info.loss + info.win + info.draw;
+    }
+
     // Remove infrequent moves and zero-weight moves.
     filterByFreq(rawMoves);
     //
@@ -110,18 +116,16 @@ Move BookReader::pick(const Board &b, bool trace) {
         }
         // penalize infrequent moves
         const double f = bookSelectionOptions.frequency / 100.0;
-        double freqAdjust = log10(static_cast<double>(info.win + info.loss + info.draw)) * 0.2 * f;
+        double freqAdjust =
+            log10(static_cast<double>(info.win + info.loss + info.draw) / totalGames) * 0.25 * f;
         if (trace) {
             std::cout << " frequency: " << freqAdjust;
         }
         reward += freqAdjust;
         // add a random amount based on randomness parameter
-        auto sd = 0.02 + 0.005 * std::pow(bookSelectionOptions.random,0.7);
+        auto sd = 0.02 + 0.005 * std::pow(bookSelectionOptions.random, 0.7);
         std::normal_distribution<double> dist(0, 0.02 + sd);
         double rand = dist(engine);
-        // truncate the range somewhat
-        double limit = sd * (0.75 + bookSelectionOptions.random/50);
-        rand = std::clamp(rand, -limit, limit);
         if (trace)
             std::cout << " random: " << rand;
         reward += rand;
@@ -250,7 +254,7 @@ void BookReader::filterByFreq(std::vector<book::DataEntry> &results) {
     double x = 100 - bookSelectionOptions.frequency;
     double y = std::max<double>(0.0, x - 50.0);
     double z = (x + y) / 10;
-    const double freqThreshold = 0.5 / (1.0 + (2*z*z));
+    const double freqThreshold = 0.5 / (1.0 + (2 * z * z));
     unsigned minCount = 0, maxCount = 0;
     if (globals::options.search.strength < 100) {
         minCount = (uint32_t)1 << ((100 - globals::options.search.strength) / 10);
