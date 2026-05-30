@@ -1,4 +1,4 @@
-// Copyright 1996-2004, 2012-2025 by Jon Dart.  All Rights Reserved.
+// Copyright 1996-2004, 2012-2026 by Jon Dart.  All Rights Reserved.
 
 // Stand-alone executable to build the binary opening book from
 // one or more PGN input files.
@@ -38,7 +38,7 @@ enum ResultType {White_Win, Black_Win, DrawResult, UnknownResult};
 ResultType tmp_result;
 
 // number of pages in the book.
-static unsigned indexPages = 1;                    // default
+static unsigned indexPages = 128;                    // default
 // max ply depth processed for PGN games
 static bool verbose = false;
 static OutputType output_type = OutputType::Binary;
@@ -49,6 +49,9 @@ static constexpr unsigned POSITION_EVAL_MIN_PLY = 10;
 // also do not use indirectly computed position evaluations
 // on positions that have >= this number of occurances.
 static constexpr unsigned POSITION_EVAL_MAX_POSITIONS = 100;
+
+static const auto commentRegex = std::regex("^\\{[\\n\\r\\s]*([\\S]*)[\\n\\r\\s]*\\}$");
+static const auto weightRegex = std::regex("^weight:([\\d]+).*$");
 
 enum MoveEval {NO_MOVE_EVAL,
                BLUNDER_MOVE,POOR_MOVE,QUESTIONABLE_MOVE,NEUTRAL_EVAL,
@@ -393,9 +396,6 @@ static int do_pgn(std::ifstream &infile, const std::string &book_name, bool firs
       Variation varStack[MAX_VAR];
       varStack[var++] = Variation(board,0);
       Variation &topVar = varStack[0];
-
-      const auto commentRegex = std::regex("^\\{[\\n\\r\\s]*([\\S]*)[\\n\\r\\s]*\\}$");
-      const auto weightRegex = std::regex("^weight:([\\d]+).*$");
 
       Board p1,p2;
       ChessIO::TokenReader tokenReader(pgnReader);
