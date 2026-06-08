@@ -368,7 +368,14 @@ void ArasanGuiView::OnLButtonUp(UINT nFlags, CPoint point)
    Square dest = disp->mouseLocation(point);
    TRACE("dest square = %d, users move=%d\n",dest,usersMove());
    const Board& board = GetDocument()->getCurrentBoard();
-   Move move = CreateMove(board, start_square, dest, Empty);
+   PieceType promoteTo = Empty;
+   if (TypeOfPiece(board[start_square]) == Pawn && Rank(dest, board.sideToMove()) == 8) {
+       // We do not actually know the type of piece to promote to yet, but fill in Queen
+       // as a choice so that the following call to legalMove will not fail. The actual
+       // PromoteTo type will be chosen by the user later.
+       promoteTo = Queen;
+   }
+   Move move = CreateMove(board, start_square, dest, promoteTo);
    if (!legalMove(board, move)) {
       if (guiOptions->beep_on_error())
          ::MessageBeep(MB_ICONEXCLAMATION);
