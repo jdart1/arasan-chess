@@ -1,4 +1,4 @@
-// Copyright 1994-2021, 2023-2025 by Jon Dart.  All Rights Reserved.
+// Copyright 1994-2021, 2023-2026 by Jon Dart.  All Rights Reserved.
 
 #include "scoring.h"
 #include "bhash.h"
@@ -15,6 +15,19 @@
 #include <cstddef>
 #include <iomanip>
 
+// TBD PAWN_VALUE not tunable
+TUNABLE(KNIGHT_VALUE,static_cast<score_t>(3.25*Scoring::PAWN_VALUE),static_cast<score_t>(2.5*Scoring::PAWN_VALUE),static_cast<score_t>(4.5*Scoring::PAWN_VALUE));
+TUNABLE(BISHOP_VALUE,static_cast<score_t>(3.25*Scoring::PAWN_VALUE),static_cast<score_t>(2.5*Scoring::PAWN_VALUE),static_cast<score_t>(4.5*Scoring::PAWN_VALUE));
+TUNABLE(ROOK_VALUE,static_cast<score_t>(5.25*Scoring::PAWN_VALUE),static_cast<score_t>(4.5*Scoring::PAWN_VALUE),static_cast<score_t>(7.0*Scoring::PAWN_VALUE));
+TUNABLE(QUEEN_VALUE,static_cast<score_t>(10.14*Scoring::PAWN_VALUE),static_cast<score_t>(9.0*Scoring::PAWN_VALUE),static_cast<score_t>(13.0*Scoring::PAWN_VALUE));
+
+CONST score_t Scoring::SEE_PIECE_VALUES[7] = {0,
+                                              Scoring::PAWN_VALUE,
+                                              KNIGHT_VALUE,
+                                              BISHOP_VALUE,
+                                              ROOK_VALUE,
+                                              QUEEN_VALUE,
+                                              score_t(32 * PAWN_VALUE)};
 template <ColorType side> int Scoring::KBPDraw(const Board &board) {
     Square qsq = InvalidSquare;
     int pfile;

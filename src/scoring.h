@@ -1,4 +1,4 @@
-// Copyright 1992-2021, 2023-2025 by Jon Dart. All Rights Reserved.
+// Copyright 1992-2021, 2023-2026 by Jon Dart. All Rights Reserved.
 
 #ifndef _SCORING_H
 #define _SCORING_H
@@ -7,6 +7,7 @@
 #include "board.h"
 #include "hash.h"
 #include "evaluate.h"
+#include "tunable.h"
 
 struct NodeInfo;
 
@@ -57,15 +58,9 @@ class Scoring {
 
     template <ColorType side> static int KBPDraw(const Board &board);
 
-    static constexpr score_t PAWN_VALUE = (score_t)128; // midgame pawn value
+    static constexpr score_t PAWN_VALUE = 128; // midgame pawn value
 
-    static constexpr score_t SEE_PIECE_VALUES[7] = {0,
-                                                    PAWN_VALUE,
-                                                    score_t(4.3 * PAWN_VALUE),
-                                                    score_t(4.3 * PAWN_VALUE),
-                                                    score_t(6.0 * PAWN_VALUE),
-                                                    score_t(12.0 * PAWN_VALUE),
-                                                    score_t(32 * PAWN_VALUE)};
+    static CONST score_t SEE_PIECE_VALUES[7];
 
     static FORCEINLINE score_t Gain(Move move) {
         return (TypeOfMove(move) == Promotion) ?

@@ -49,6 +49,10 @@ TUNABLE(HISTORY_REDUCTION_DIVISOR, 2200, 500, 4000);
 TUNABLE(RAZOR_DEPTH, DEPTH_INCREMENT, 0, 2*DEPTH_INCREMENT);
 #endif
 TUNABLE(SEE_PRUNING_DEPTH, 7*DEPTH_INCREMENT, 3*DEPTH_INCREMENT, 10*DEPTH_INCREMENT);
+TUNABLE(SEE_PRUNING_QUIET_SLOPE, static_cast<score_t>(0.44*Scoring::PAWN_VALUE),
+        static_cast<score_t>(0.3*Scoring::PAWN_VALUE),static_cast<score_t>(1.25*Scoring::PAWN_VALUE));
+TUNABLE(SEE_PRUNING_NONQUIET_SLOPE, static_cast<score_t>(0.28*Scoring::PAWN_VALUE),
+        static_cast<score_t>(0.1*Scoring::PAWN_VALUE),static_cast<score_t>(0.3*Scoring::PAWN_VALUE));
 static constexpr int CHECK_EXTENSION = DEPTH_INCREMENT;
 static constexpr int PAWN_PUSH_EXTENSION = DEPTH_INCREMENT;
 static constexpr int CAPTURE_EXTENSION = DEPTH_INCREMENT/2;
@@ -109,14 +113,15 @@ TUNABLE(RAZOR_MARGIN_SLOPE, static_cast<score_t>(1.25*Scoring::PAWN_VALUE),
         static_cast<int>(0.75*Scoring::PAWN_VALUE),
         static_cast<int>(2.0*Scoring::PAWN_VALUE));
 #endif
-TUNABLE(FUTILITY_MARGIN_BASE, static_cast<int>(0.25*Scoring::PAWN_VALUE), 0,
-        static_cast<int>(0.75*Scoring::PAWN_VALUE));
-TUNABLE(FUTILITY_MARGIN_SLOPE, static_cast<int>(0.95*Scoring::PAWN_VALUE),
+TUNABLE(FUTILITY_MARGIN_BASE, static_cast<int>(0.04*Scoring::PAWN_VALUE), 0,
+        static_cast<int>(1.0*Scoring::PAWN_VALUE));
+TUNABLE(FUTILITY_MARGIN_SLOPE, static_cast<int>(0.90*Scoring::PAWN_VALUE),
         static_cast<int>(0.5*Scoring::PAWN_VALUE),
         static_cast<int>(1.5*Scoring::PAWN_VALUE));
-TUNABLE(CAPTURE_FUTILITY_MARGIN_BASE, static_cast<int>(2.0*Scoring::PAWN_VALUE), 0,
-        static_cast<int>(3.5*Scoring::PAWN_VALUE));
-TUNABLE(CAPTURE_FUTILITY_MARGIN_SLOPE, static_cast<int>(2.5*Scoring::PAWN_VALUE),
+TUNABLE(CAPTURE_FUTILITY_MARGIN_BASE, static_cast<int>(1.66*Scoring::PAWN_VALUE),
+        static_cast<int>(0.75*Scoring::PAWN_VALUE),
+        static_cast<int>(3.0*Scoring::PAWN_VALUE));
+TUNABLE(CAPTURE_FUTILITY_MARGIN_SLOPE, static_cast<int>(2.03*Scoring::PAWN_VALUE),
         static_cast<int>(1.0*Scoring::PAWN_VALUE),
         static_cast<int>(3.5*Scoring::PAWN_VALUE));
 TUNABLE(STATIC_NULL_PRUNING_DEPTH, 6*DEPTH_INCREMENT, 4*DEPTH_INCREMENT, 10*DEPTH_INCREMENT);
@@ -124,12 +129,12 @@ TUNABLE(STATIC_NULL_MARGIN_MIN,static_cast<int>(0.25*Scoring::PAWN_VALUE), 0,
         static_cast<int>(1.0*Scoring::PAWN_VALUE));
 TUNABLE(STATIC_NULL_MARGIN_SLOPE,static_cast<int>(0.75*Scoring::PAWN_VALUE),
         static_cast<int>(0.25*Scoring::PAWN_VALUE),
-        static_cast<int>(1.225*Scoring::PAWN_VALUE));
-TUNABLE(QSEARCH_FUTILITY_PRUNE_MARGIN, static_cast<int>(1.4*Scoring::PAWN_VALUE),
+        static_cast<int>(1.25*Scoring::PAWN_VALUE));
+TUNABLE(QSEARCH_FUTILITY_PRUNE_MARGIN, static_cast<int>(1.28*Scoring::PAWN_VALUE),
         static_cast<int>(0.9*Scoring::PAWN_VALUE),
         static_cast<int>(2.0*Scoring::PAWN_VALUE));
-TUNABLE(QSEARCH_SEE_PRUNE_MARGIN, static_cast<int>(1.25*Scoring::PAWN_VALUE),
-        static_cast<int>(0.5*Scoring::PAWN_VALUE),
+TUNABLE(QSEARCH_SEE_PRUNE_MARGIN, static_cast<int>(1.39*Scoring::PAWN_VALUE),
+        static_cast<int>(0.75*Scoring::PAWN_VALUE),
         static_cast<int>(2.0*Scoring::PAWN_VALUE));
 
 static inline int IIDDepth(bool pv) {
@@ -1068,8 +1073,8 @@ static score_t razorMargin(int depth)
 static score_t seePruningMargin(int depth, bool quiet)
 {
     int p = depth/DEPTH_INCREMENT;
-    return quiet ? -p*static_cast<int>(0.75*Scoring::PAWN_VALUE) :
-        -p*p*static_cast<int>(0.2*Scoring::PAWN_VALUE);
+    return quiet ? -p*SEE_PRUNING_QUIET_SLOPE :
+        -p*p*SEE_PRUNING_NONQUIET_SLOPE;
 }
 
 void Search::setVariablesFromController() {
@@ -2486,7 +2491,7 @@ int Search::reduce(const Board &b,
 
     // See if we do late move reduction.
     if (depth >= LMR_DEPTH && moveIndex >= 1+2*n->PV() && (quiet|| moveIndex > lmpCount(depth,improving))) {
-       reduction += lmr(n,depth,moveIndex);
+        reduction += lmr(n,depth,moveIndex);
         if (!quiet) {
             reduction -= DEPTH_INCREMENT;
         }

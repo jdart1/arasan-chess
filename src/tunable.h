@@ -1,4 +1,4 @@
-// Copyright 2024 by Jon Dart. All Rights Reserved.
+// Copyright 2024, 2026 by Jon Dart. All Rights Reserved.
 #ifndef TUNABLE_H
 #define TUNABLE_H
 
@@ -32,8 +32,10 @@ struct Tunable {
 };
 
 #define TUNABLE(name, value, minval, maxval) static inline Tunable name { MAKE_STR(name), value, minval, maxval }
+#define CONST
 #else
 #define TUNABLE(name, value, minval, maxval) static constexpr int name = value
+#define CONST const
 #endif
 
 #endif
