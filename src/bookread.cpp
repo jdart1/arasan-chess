@@ -117,7 +117,7 @@ Move BookReader::pick(const Board &b, bool trace) {
         // penalize infrequent moves
         const double f = bookSelectionOptions.frequency / 100.0;
         double freqAdjust =
-            log10(static_cast<double>(info.win + info.loss + info.draw) / totalGames) * 0.25 * f;
+            log10(static_cast<double>(info.win + info.loss + info.draw) / totalGames) * 0.3 * f;
         if (trace) {
             std::cout << " frequency: " << freqAdjust;
         }
