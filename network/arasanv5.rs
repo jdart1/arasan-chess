@@ -103,7 +103,8 @@ fn main() {
 
     let data_loader = DirectSequentialDataLoader::new(&[
         "/data3/bullet/dec2025/dec2025-interleaved.bullet",
-    ]);
+        "/data3/bullet/apr-may2026/apr-may-shuffled.bullet"
+        ]);
 
     trainer.run(&schedule, &settings, &data_loader);
 
