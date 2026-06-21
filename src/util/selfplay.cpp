@@ -111,6 +111,8 @@ static struct SelfPlayOptions {
     unsigned multipv_limit = 8;
     int multiPVMargin = static_cast<int>(0.3 * Scoring::PAWN_VALUE);
     bool skipNonQuiet = true;
+    bool nonQuietSearchTest = false;
+    score_t nonQuietSearchMargin = static_cast<score_t>(Scoring::PAWN_VALUE);
     BinFormats::Format format = BinFormats::Format::StockfishBin;
     bool verbose = false;
     unsigned verboseReportingInterval = 1000000;
@@ -131,8 +133,10 @@ struct ThreadData {
     unsigned index = 0;
     std::thread thread;
     SearchController *searcher = nullptr;
+    Scoring s;
     MoveArray gameMoves;
     std::mt19937_64 engine;
+    uint64_t skipped = 0;
 } threadDatas[Constants::MaxCPUs];
 
 static void saveGame(ThreadData &td, const std::string &result, std::ofstream &file) {
@@ -472,13 +476,24 @@ static void selfplay(ThreadData &td) {
                 if (sp_options.saveGames) {
                     Notation::image(board, m, Notation::OutputFormat::SAN, image);
                 }
-                if (!(sp_options.skipNonQuiet && (CaptureOrPromotion(m) || board.checkStatus() == InCheck)) &&
-                    ply >= sp_options.minOutPly &&
+                if (ply >= sp_options.minOutPly &&
                     (ply > sp_options.maxBookPly + sp_options.randomizeRange) &&
                     !board.repCount(1) &&
                     (!sp_options.checkHash ||
                      !sp_hash_table.check_and_replace_hash(board.hashCode()))) {
-                    if ((dist(td.engine) % sp_options.outputPlyFrequency) == 0) {
+                    bool skip = false;
+                    if (sp_options.skipNonQuiet) {
+                        skip = CaptureOrPromotion(m) || (board.checkStatus() == InCheck);
+                        if (!skip && sp_options.nonQuietSearchTest) {
+                            score_t staticVal = td.s.evalu8NNUE(board);
+                            if (std::abs(score - staticVal) >=
+                                sp_options.nonQuietSearchMargin) {
+                                skip = true;
+                            }
+                        }
+                    }
+                    if (skip) ++td.skipped;
+                    if (!skip && ((dist(td.engine) % sp_options.outputPlyFrequency) == 0)) {
                         std::stringstream s;
                         BoardIO::writeFEN(board, s, 0);
                         BinFormats::PositionData data;
@@ -786,7 +801,11 @@ int CDECL main(int argc, char **argv) {
 
     std::cout << "White wins: " << wins << " Black wins: " << losses << " Draws: " << draws <<
         " draw percentage: " << std::setprecision(4) << draws*100.0/(draws + losses + wins) << "%" << std::endl;
-
+    uint64_t skipped = 0;
+    for (unsigned i = 0; i < sp_options.cores; i++) {
+        skipped += threadDatas[i].skipped;
+    }
+    std::cout << skipped << " non-quiet positions skipped" << std::endl;
     delete pos_out_file;
     delete game_out_file;
 
