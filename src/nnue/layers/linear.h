@@ -39,8 +39,15 @@ class LinearLayer : public TypedLayer<InputType, OutputType, inputSize, outputSi
     virtual inline void forward(size_t bucket, const InputType *input,
                                 OutputType *output) const noexcept {
 #if defined(SIMD)
-        if constexpr (inputSize >= 32 && sizeof(BiasType) == 4 &&
-                      (sizeof(WeightType) == 1 || sizeof(WeightType) == 4)) {
+        if constexpr (inputSize >= 32 && outputSize == 1 && sizeof(WeightType) == 4 &&
+                      sizeof(OutputType) == 8) {
+            // Output layer: int32 lane accumulation with int64 horizontal
+            // reduction (the QC^2-scaled product sum exceeds the int32 range).
+            simd::dotProductnx1_i64<InputType, WeightType, BiasType, inputSize, roundedInputSize,
+                                    inputDequantifyShift, outputDequantifyShift>(
+                input, _weights[bucket], _biases[bucket], output);
+        } else if constexpr (inputSize >= 32 && sizeof(BiasType) == 4 &&
+                             (sizeof(WeightType) == 1 || sizeof(WeightType) == 4)) {
             simd::dotProductnxn<InputType, WeightType, BiasType, OutputType, inputSize,
                                 roundedInputSize, outputSize, inputDequantifyShift,
                                 outputDequantifyShift>(input, _weights[bucket], _biases[bucket],

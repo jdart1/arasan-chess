@@ -1,4 +1,4 @@
-// Copyright 2021, 2022, 2025 by Jon Dart. All Rights Reserved
+// Copyright 2021, 2022, 2025-2026 by Jon Dart. All Rights Reserved
 
 #ifndef _UTIL_H
 #define _UTIL_H
@@ -46,6 +46,13 @@ template <typename T> T read_little_endian(std::istream &s) {
     default:
         throw std::invalid_argument("unsupported size");
     }
+}
+
+template <> inline float read_little_endian<float>(std::istream &s) {
+    int32_t bits = read_little_endian<int32_t>(s);
+    float result;
+    std::memcpy(&result, &bits, sizeof(float));
+    return result;
 }
 
 #endif

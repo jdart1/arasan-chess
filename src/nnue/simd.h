@@ -1,4 +1,4 @@
-// Copyright 2021-2025 by Jon Dart. All Rights Reserved.
+// Copyright 2021-2026 by Jon Dart. All Rights Reserved.
 #ifndef NNUE_SIMD_H
 #define NNUE_SIMD_H
 
@@ -583,6 +583,47 @@ static inline void i32dotProductnxn(const int32_t *input,
         output[i] = out;
     }
 }
+
+// nx1 (single-output) int32xint32 dot product with int64 accumulation. Products
+// are summed in int32 SIMD lanes (each lane accumulates only
+// inputSize/(simdWidth/32) terms, which stays within int32 range), then the
+// lanes are reduced into an int64 result and an int64-widened bias is added.
+// Used by the NNUE output layer, whose QC^2-scaled product sum exceeds the
+// 32-bit range. The lane reduction runs once per evaluation, so it is done in
+// scalar (avoiding any need for widening-multiply or int64 horizontal-sum
+// intrinsics).
+template <typename vec_type, unsigned simdWidth, typename BiasType, size_t inputSize,
+          size_t roundedInputSize, unsigned inputDequantifyShift, unsigned outputDequantifyShift>
+static inline void i32dotProductnx1_i64(const int32_t *input,
+                                        const int32_t weights[1][roundedInputSize],
+                                        const BiasType *biases, int64_t *output) {
+    constexpr unsigned inputChunks = chunks<uint32_t, simdWidth>(inputSize);
+    static_assert(inputChunks > 0);
+    constexpr unsigned lanes = simdWidth / 32;
+    const vec_type *inp = reinterpret_cast<const vec_type *>(input);
+    const vec_type *col = reinterpret_cast<const vec_type *>(weights[0]);
+    vec_type sum;
+    vec_set_zero(sum);
+    for (size_t j = 0; j < inputChunks; ++j) {
+        auto x = vec_load<vec_type>(inp + j);
+        auto w = vec_load<vec_type>(col + j);
+        sum = vec_add32(sum, vec_mullo32<vec_type>(x, w));
+    }
+    alignas(simdWidth / 8) int32_t lane[lanes];
+    vec_store<vec_type>(reinterpret_cast<vec_type *>(lane), sum);
+    int64_t out = 0;
+    for (unsigned k = 0; k < lanes; ++k) {
+        out += static_cast<int64_t>(lane[k]);
+    }
+    if constexpr (inputDequantifyShift > 0) {
+        out >>= inputDequantifyShift;
+    }
+    out += static_cast<int64_t>(biases[0]);
+    if constexpr (outputDequantifyShift > 0) {
+        out >>= outputDequantifyShift;
+    }
+    output[0] = out;
+}
 #endif
 
 // dot product, input of at least size 4 (to allow 128-bit vector operations)
@@ -645,6 +686,62 @@ inline void dotProductnxn(const InputType *input,
                                                                       output);
 #endif
     }
+}
+
+// nx1 (single-output) int32xint32 dot product with int64 accumulation; see
+// i32dotProductnx1_i64. Selects the widest available vector width.
+template <typename InputType, typename WeightType, typename BiasType, size_t inputSize,
+          size_t roundedInputSize, unsigned inputDequantifyShift, unsigned outputDequantifyShift>
+inline void dotProductnx1_i64(const InputType *input,
+                              const WeightType weights[1][roundedInputSize],
+                              const BiasType *biases, int64_t *output) {
+    static_assert(sizeof(InputType) == 4 && sizeof(WeightType) == 4);
+    static_assert(inputSize * sizeof(InputType) >= 128);
+#ifdef NEON
+    constexpr unsigned inputChunks = chunks<InputType, simdWidth>(inputSize);
+    static_assert(inputChunks > 0);
+    const vec32_t *inp = reinterpret_cast<const vec32_t *>(input);
+    const vec32_t *col = reinterpret_cast<const vec32_t *>(weights[0]);
+    vec32_t sum = vec_set_32(0);
+    for (size_t j = 0; j < inputChunks; ++j) {
+        auto x = vec_load32(inp + j);
+        auto w = vec_load32(col + j);
+        sum = vec_add32(sum, vec_mullo32(x, w));
+    }
+    alignas(16) int32_t lane[4];
+    vec_store32(reinterpret_cast<vec32_t *>(lane), sum);
+    int64_t out = static_cast<int64_t>(lane[0]) + lane[1] + lane[2] + lane[3];
+    if constexpr (inputDequantifyShift > 0) {
+        out >>= inputDequantifyShift;
+    }
+    out += static_cast<int64_t>(biases[0]);
+    if constexpr (outputDequantifyShift > 0) {
+        out >>= outputDequantifyShift;
+    }
+    output[0] = out;
+#else
+#ifdef AVX512
+    if (chunks<int32_t, 512>(inputSize) >= 1) {
+        i32dotProductnx1_i64<__m512i, 512, BiasType, inputSize, roundedInputSize,
+                             inputDequantifyShift, outputDequantifyShift>(input, weights, biases,
+                                                                          output);
+        return;
+    }
+#endif
+#ifdef AVX2
+    if (chunks<int32_t, 256>(inputSize) >= 1) {
+        i32dotProductnx1_i64<__m256i, 256, BiasType, inputSize, roundedInputSize,
+                             inputDequantifyShift, outputDequantifyShift>(input, weights, biases,
+                                                                          output);
+        return;
+    }
+#endif
+#if defined(SSE2) || defined(SSE3)
+    i32dotProductnx1_i64<__m128i, 128, BiasType, inputSize, roundedInputSize,
+                         inputDequantifyShift, outputDequantifyShift>(input, weights, biases,
+                                                                      output);
+#endif
+#endif
 }
 
 #ifndef NEON

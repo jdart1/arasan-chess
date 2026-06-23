@@ -150,6 +150,7 @@ static inline vec32_t dpbusd_epi32(vec32_t sum, vec8_t a, vec8_t b) {
     return vaddq_s32(sum, vaddq_s32(vpaddlq_s16(prod_lo), vpaddlq_s16(prod_hi)));
 #endif
 }
+
 #else
 // x86 functions are templatized
 template <typename T> static inline T vec_load(const T *);
