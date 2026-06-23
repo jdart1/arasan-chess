@@ -46,8 +46,12 @@ class LinearLayer : public TypedLayer<InputType, OutputType, inputSize, outputSi
             simd::dotProductnx1_i64<InputType, WeightType, BiasType, inputSize, roundedInputSize,
                                     inputDequantifyShift, outputDequantifyShift>(
                 input, _weights[bucket], _biases[bucket], output);
-        } else if constexpr (inputSize >= 32 && sizeof(BiasType) == 4 &&
-                             (sizeof(WeightType) == 1 || sizeof(WeightType) == 4)) {
+        } else if constexpr (sizeof(BiasType) == 4 &&
+                             ((sizeof(WeightType) == 1 && inputSize >= 32) ||
+                              (sizeof(WeightType) == 4 && inputSize >= 16 && inputSize % 16 == 0))) {
+            // int8 inputs need inputSize>=32 (DPBUSD groups); int32 inputs (e.g.
+            // the L2 layer, 16 wide) vectorize once inputSize fills a 512-bit
+            // register and divides evenly across the selected SIMD width.
             simd::dotProductnxn<InputType, WeightType, BiasType, OutputType, inputSize,
                                 roundedInputSize, outputSize, inputDequantifyShift,
                                 outputDequantifyShift>(input, _weights[bucket], _biases[bucket],

@@ -633,7 +633,7 @@ template <typename InputType, typename WeightType, typename BiasType, typename O
 inline void dotProductnxn(const InputType *input,
                           const WeightType weights[outputSize][roundedInputSize],
                           const BiasType *biases, OutputType *output) {
-    static_assert(inputSize * sizeof(InputType) >= 128);
+    static_assert(inputSize * sizeof(InputType) >= 16, "input must fill at least one 128-bit register");
     if constexpr (sizeof(InputType) == 1) {
         i8dotProductnxn<inputSize, roundedInputSize, outputSize, inputDequantifyShift,
                         outputDequantifyShift>(input, weights, biases, output);
