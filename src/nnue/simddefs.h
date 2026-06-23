@@ -45,25 +45,21 @@ using vec32_t = int32x4_t;
 static constexpr size_t VEC_ALIGN = 32;
 static constexpr size_t simdWidth = 128;
 static constexpr size_t simdRegCount = 16;
-using MaskType_t = uint32_t;
 #elif defined(AVX512)
 using vec_t = __m512i;
 static constexpr size_t VEC_ALIGN = 64;
 static constexpr size_t simdWidth = 512;
 static constexpr size_t simdRegCount = 32;
-using MaskType_t = uint64_t;
 #elif defined(AVX2)
 using vec_t = __m256i;
 static constexpr size_t VEC_ALIGN = 32;
 static constexpr size_t simdWidth = 256;
 static constexpr size_t simdRegCount = 16;
-using MaskType_t = uint32_t;
 #else
 using vec_t = __m128i;
 static constexpr size_t VEC_ALIGN = 32;
 static constexpr size_t simdWidth = 128;
 static constexpr size_t simdRegCount = 16;
-using MaskType_t = uint32_t;
 #endif
 
 #if defined(NEON)
@@ -138,8 +134,6 @@ static inline int32_t hsum32(int32x4_t reg) {
 // must be templatized because shift must be a compile-time constant
 template<unsigned shift>
 static inline vec32_t vec_rshift32(vec32_t x) { return vshrq_n_s32(x, shift); }
-// templatize this for compatibility with x86 code
-template <typename T> static inline MaskType_t nnzMask(T x);
 static inline vec32_t dpbusd_epi32(vec32_t sum, vec8_t a, vec8_t b) {
 #if defined(__aarch64__)
     return vdotq_s32(sum, a, b);
@@ -150,6 +144,7 @@ static inline vec32_t dpbusd_epi32(vec32_t sum, vec8_t a, vec8_t b) {
     return vaddq_s32(sum, vaddq_s32(vpaddlq_s16(prod_lo), vpaddlq_s16(prod_hi)));
 #endif
 }
+
 #else
 // x86 functions are templatized
 template <typename T> static inline T vec_load(const T *);
@@ -174,7 +169,6 @@ template <typename T> static inline T vec_shr16(T x, unsigned shift);
 template <typename T> static inline T vec_shr32(T x, unsigned shift);
 template <typename T> static inline void dpbusd_epi32(T &x, T y, T z);
 template <typename T> static inline int32_t hsum32(T x);
-template <typename T> static inline MaskType_t nnzMask(T x);
 
 #endif
 
@@ -229,10 +223,6 @@ template <> __m512i vec_shl16(__m512i x, unsigned shift) { return _mm512_slli_ep
 template <> __m512i vec_shr16(__m512i x, unsigned shift) { return _mm512_srai_epi16(x, shift); }
 template <> __m512i vec_shr32(__m512i x, unsigned shift) { return _mm512_srai_epi32(x, shift); }
 template <> int32_t hsum32(__m512i prod) { return _mm512_reduce_add_epi32(prod); }
-template <> MaskType_t nnzMask(__m512i x) {
-    // AVX512 returns a 64-bit mask for byte comparisons
-    return _mm512_cmpgt_epu8_mask(x, _mm512_setzero_si512());
-}
 template <>
 [[maybe_unused]]
 void dpbusd_epi32(__m512i &acc, __m512i a, __m512i b) {
@@ -285,17 +275,6 @@ template <> __m256i vec_shr32(__m256i x, unsigned shift) { return _mm256_srai_ep
 template <> int32_t hsum32(__m256i x) {
     __m128i sum128 = _mm_add_epi32(_mm256_castsi256_si128(x), _mm256_extracti128_si256(x, 1));
     return hsum32<__m128i>(sum128);
-}
-template <> MaskType_t nnzMask(__m256i x) {
-    auto zero = _mm256_setzero_si256();
-#ifdef AVX512BW
-    return _mm256_cmpgt_epu8_mask(x, zero);
-#else
-    // set dest vector to 0xff for non-zero bytes in x, 0 for zero bytes
-    auto nz = _mm256_cmpgt_epi8(x, zero);
-    // extract hi-order bit of each byte and pack into dest integer
-    return _mm256_movemask_epi8(nz);
-#endif
 }
 template <>
 [[maybe_unused]] void dpbusd_epi32(__m256i &acc, __m256i a, __m256i b) {
@@ -375,10 +354,6 @@ template <> __m128i vec_rshift32(__m128i x, unsigned shift) { return _mm_srai_ep
 template <> __m128i vec_shl16(__m128i x, unsigned shift) { return _mm_slli_epi16(x, shift); }
 template <> __m128i vec_shr16(__m128i x, unsigned shift) { return _mm_srai_epi16(x, shift); }
 template <> __m128i vec_shr32(__m128i x, unsigned shift) { return _mm_srai_epi32(x, shift); }
-template <> MaskType_t nnzMask(__m128i x) {
-    // set dest vector to 0xff for non-zero bytes in x, 0 for zero bytes
-    return _mm_movemask_epi8(_mm_cmpgt_epi8(x, zero128));
-}
 template <>
 void dpbusd_epi32(__m128i &x, __m128i y, __m128i z) {
 #ifdef VNNI

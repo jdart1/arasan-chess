@@ -58,87 +58,15 @@ public:
         NnzData nnzContext;
         calcNnzData(input, nnzContext);
 
-        // perform SIMD-optimized dot product
-        dotProductOptimized(bucket, input, output, nnzContext);
+        // perform SIMD-optimized sparse dot product
+        simd::sparseDotProduct<InputType, WeightType, BiasType, OutputType, inputSize, outputSize,
+                               inputDequantifyShift, outputDequantifyShift>(
+            input, _optimizedWeights[bucket], this->_biases[bucket], nnzContext.nzIndices.data(),
+            nnzContext.nzCount, output);
 
 #ifdef NNUE_TRACE
         this->trace(output);
 #endif
-    }
-
-    inline void dotProductOptimized(size_t bucket, const InputType *input,
-                                    OutputType *output, const NnzData &nnzContext) const noexcept {
-        using namespace simd;
-
-        static constexpr size_t outputChunkSize = simdWidth / (8*sizeof(OutputType)); // 32 bit quantities in a vector register
-        static_assert(outputSize >= outputChunkSize && (outputSize % outputChunkSize) == 0, "output size does not meet criteria for this class");
-        // fill the output values with zeros
-        vec_t accum[outputSize / outputChunkSize];
-        for (size_t i = 0; i < outputSize / outputChunkSize; ++i) {
-#ifdef NEON
-            accum[i] = zeros32;
-#else
-            vec_set_zero(accum[i]);
-#endif
-        }
-        // TBD: unroll loop
-        for (size_t i = 0; i < nnzContext.nzCount; ++i) {
-            // nzIndices contains group indices (groups of 4 elements)
-            unsigned groupIdx = nnzContext.nzIndices[i];
-
-            // Load 4 consecutive input bytes as 32-bit value and broadcast.
-            // inps vector register will have layout:
-            // (index0 index1 index2 index3 index 0 index 1 index 2 index 3 ...)
-            // repeated for the width of a SIMD register.
-            uint32_t inp4 = *reinterpret_cast<const uint32_t*>(&input[groupIdx * 4]);
-#ifdef NEON
-            vec_t inps = vec_set_32(inp4);
-#else
-            vec_t inps = vec_set_32<vec_t>(inp4);
-#endif
-            // iterate over the output dimensions, in chunks that correspond to a SIMD
-            // register width
-            for (size_t outIdx = 0; outIdx < outputSize; outIdx += outputChunkSize) {
-                // Load weights for this group of outputs
-                // we load weights in chunks, each of which is outputChunkSize bytes
-#ifdef NEON
-                auto weights = vec_load32(reinterpret_cast<const vec32_t*>(&_optimizedWeights[bucket][groupIdx][outIdx][0]));
-#else
-                vec_t weights = vec_load<vec_t>(reinterpret_cast<const vec_t*>(&_optimizedWeights[bucket][groupIdx][outIdx][0]));
-#endif
-                // multiply/sum into accumulator
-                dpbusd_epi32(accum[outIdx/outputChunkSize], inps, weights);
-            }
-        }
-        // add biases and copy to output, applying scaling if needed
-        for (size_t outIdx = 0; outIdx < outputSize / outputChunkSize; ++outIdx) {
-            if constexpr (inputDequantifyShift > 0) {
-#ifdef NEON
-                accum[outIdx] = vec_shr32<inputDequantifyShift>(accum[outIdx]);
-#else
-                accum[outIdx] = vec_shr32(accum[outIdx], inputDequantifyShift);
-#endif
-            }
-            // add biases
-#ifdef NEON
-            auto bias = vec_load32(reinterpret_cast<const vec32_t *>(this->_biases[bucket]) + outIdx);
-#else
-            vec_t bias = vec_load<vec_t>(reinterpret_cast<const vec_t *>(this->_biases[bucket]) + outIdx);
-#endif
-            accum[outIdx] = vec_add32(accum[outIdx],bias);
-            if constexpr (outputDequantifyShift > 0) {
-#ifdef NEON
-                accum[outIdx] = vec_shr32<outputDequantifyShift>(accum[outIdx]);
-#else
-                accum[outIdx] = vec_shr32(accum[outIdx], outputDequantifyShift);
-#endif
-            }
-#ifdef NEON
-            vec_store32(reinterpret_cast<vec32_t*>(&output[outIdx * outputChunkSize]), accum[outIdx]);
-#else
-            vec_store<vec_t>(reinterpret_cast<vec_t*>(&output[outIdx * outputChunkSize]), accum[outIdx]);
-#endif
-        }
     }
 
     virtual void postProcess() {
@@ -175,7 +103,7 @@ public:
     alignas(alignment) WeightType _optimizedWeights[buckets][inputSize/4][outputSize][4];
 
     void calcNnzData(const InputType *input, NnzData &nzInputs) const noexcept {
-        simd::calcNnzData<typename NnzData::IndexType>(input, inputSize, nzInputs.nzIndices.data(), nzInputs.nzCount);
+        simd::calcNnzData<inputSize, typename NnzData::IndexType>(input, nzInputs.nzIndices.data(), nzInputs.nzCount);
     }
 
 

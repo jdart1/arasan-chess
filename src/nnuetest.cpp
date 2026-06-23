@@ -21,7 +21,6 @@ namespace nnue {
 #include "layers/pairwisemult.h"
 #include "layers/sparselinear.h"
 #include "layers/linear.h"
-#include "layers/sqrcrelu.h"
 }
 
 // Helper to fill arrays with random values
@@ -67,31 +66,6 @@ static int testCReLU() {
     err = compare_outputs<OutputType,inputSize>(output,expected);
     if (err) {
         std::cerr << "CReLU test with size " << inputSize << " and parameters " << clamp << ", " << shift << " failed" << std::endl;
-    }
-
-    return err;
-}
-
-template<typename InputType, typename OutputType, size_t inputSize, unsigned clampMax, unsigned shift>
-static int testSqrCReLU() {
-    int err = 0;
-    alignas(nnue::DEFAULT_ALIGN) InputType input[inputSize];
-    alignas(nnue::DEFAULT_ALIGN) OutputType output[inputSize] = {0};
-    alignas(nnue::DEFAULT_ALIGN) OutputType expected[inputSize] = {0};
-
-    fill_random<InputType>(input, inputSize, -static_cast<int>(clampMax), clampMax);
-
-    nnue::SqrCReLU<InputType, OutputType, inputSize, clampMax, shift> layer;
-
-    layer.forward(input, output);
-
-    // compute expected result using non-SIMD code
-    layer.sqrCReLUGeneric(input, expected);
-
-    err = compare_outputs<OutputType, inputSize>(output, expected);
-    if (err) {
-        std::cerr << "SqrCReLU test with size " << inputSize << " and parameters " 
-                  << clampMax << ", " << shift << " failed" << std::endl;
     }
 
     return err;
@@ -161,6 +135,53 @@ static int testLinearLayer() {
                   << sizeof(InputType) << " failed." << std::endl;
     }
 
+    return err;
+}
+
+// Exercises the output-layer SIMD path (int32 inputs/weights, int64
+// accumulation: simd::dotProductnx1_i64). Uses realistic L2-activation
+// magnitudes and high all-positive weights so the accumulated product sum
+// exceeds the int32 range, verifying the int64 reduction matches the scalar
+// reference (an int32-only reduction would overflow here). Inputs stay within
+// the regime where the per-lane int32 partial sums do not overflow.
+static int testOutputLayerInt64() {
+    constexpr size_t inputSize = 32;
+    constexpr size_t outputSize = 1;
+    constexpr int32_t L2_OUT_CLAMP = 1044480; // QA*QB*QC
+    int err = 0;
+    alignas(nnue::DEFAULT_ALIGN) int32_t input[inputSize];
+    alignas(nnue::DEFAULT_ALIGN) int64_t output[outputSize];
+    alignas(nnue::DEFAULT_ALIGN) int64_t expected[outputSize];
+
+    // L2 activations are CReLU-clamped to [0, L2_OUT_CLAMP]; weights to [-127, 127].
+    fill_random<int32_t>(input, inputSize, L2_OUT_CLAMP * 9 / 10, L2_OUT_CLAMP);
+
+    nnue::LinearLayer<int32_t, int32_t, int32_t, int64_t, inputSize, outputSize, 1 /* buckets */,
+                      0, 0, false>
+        layer;
+
+    int32_t biasdata[outputSize];
+    fill_random(biasdata, outputSize, -(1 << 24), 1 << 24);
+    int32_t weightdata[inputSize];
+    fill_random(weightdata, inputSize, 64, 127);
+    layer.setCol(0, 0, weightdata);
+    layer.setBiases(0, biasdata);
+
+    layer.forward(0, input, output);
+    layer.dotProductGeneric(0, input, expected);
+
+    // confirm the test actually exercises int64 accumulation: the reference sum
+    // must exceed the signed 32-bit range
+    if (expected[0] <= 0x7fffffffLL && expected[0] >= -0x7fffffffLL) {
+        std::cerr << "testOutputLayerInt64: sum " << expected[0]
+                  << " did not exceed int32 range" << std::endl;
+        ++err;
+    }
+
+    err += compare_outputs<int64_t, outputSize>(output, expected);
+    if (err) {
+        std::cerr << "OutputLayer int64 SIMD path failed." << std::endl;
+    }
     return err;
 }
 
@@ -320,7 +341,7 @@ static int testNnz() {
         expectedGroupCount--;
     }
 
-    simd::calcNnzData(input, size, output, outputCount);
+    simd::calcNnzData<size>(input, output, outputCount);
 
     // Build expected set of group indices with non-zero elements
     std::set<uint16_t> expectedGroups;
@@ -457,6 +478,83 @@ static int testWholeNetwork() {
     return errs;
 }
 
+
+// Validate the full int32 head pipeline (Raphael-style quantization): L1-output
+// CReLU clamp -> int32 L2 affine (no shift) -> CReLU clamp -> int32/int64 output
+// affine -> final OUTPUT_SCALE/OUTPUT_DIVISOR scaling. Self-contained: builds the
+// head layers with synthetic weights and compares against an independent scalar
+// reference, so it does not depend on a loaded network file.
+static int testIntHead() {
+    int err = 0;
+    constexpr size_t IS1 = nnue::NetworkParams::L1_SIZE; // L2 input width
+    constexpr size_t IS2 = nnue::NetworkParams::L2_SIZE; // output input width
+    constexpr int L1c = static_cast<int>(nnue::NetworkParams::L1_OUT_CLAMP);
+    constexpr int L2c = static_cast<int>(nnue::NetworkParams::L2_OUT_CLAMP);
+
+    nnue::CReLU<int32_t, int32_t, IS1, nnue::NetworkParams::L1_OUT_CLAMP, 0> creluL1;
+    nnue::CReLU<int32_t, int32_t, IS2, nnue::NetworkParams::L2_OUT_CLAMP, 0> creluL2;
+    nnue::LinearLayer<int32_t, int32_t, int32_t, int32_t, IS1, IS2, 1, 0, 0, false> l2;
+    nnue::LinearLayer<int32_t, int32_t, int64_t, int64_t, IS2, 1, 1, 0, 0, false> outLayer;
+
+    // synthetic L2 weights/biases (weights ~ QC scale, biases ~ S1*QC scale)
+    int32_t w2[IS2][IS1];
+    int32_t b2[IS2];
+    for (size_t i = 0; i < IS2; ++i) {
+        fill_random(w2[i], IS1, -100, 100);
+        l2.setCol(0, i, w2[i]);
+    }
+    fill_random(b2, IS2, -L1c, L1c);
+    l2.setBiases(0, b2);
+
+    // synthetic output weights/biases (int64 bias)
+    int32_t w3[IS2];
+    fill_random(w3, IS2, -100, 100);
+    int64_t b3[1];
+    fill_random(b3, 1, -L2c, L2c);
+    outLayer.setCol(0, 0, w3);
+    outLayer.setBiases(0, b3);
+
+    // synthetic L1 output spanning the clamp range (negatives -> 0, large -> L1c)
+    alignas(nnue::DEFAULT_ALIGN) int32_t l1Out[IS1];
+    fill_random(l1Out, IS1, -L1c, 2 * L1c);
+
+    // run the head pipeline
+    alignas(nnue::DEFAULT_ALIGN) int32_t l1Act[IS1];
+    creluL1.forward(l1Out, l1Act);
+    alignas(nnue::DEFAULT_ALIGN) int32_t l2Out[IS2];
+    l2.forward(0, l1Act, l2Out);
+    alignas(nnue::DEFAULT_ALIGN) int32_t l2Act[IS2];
+    creluL2.forward(l2Out, l2Act);
+    alignas(nnue::DEFAULT_ALIGN) int64_t out[1];
+    outLayer.forward(0, l2Act, out);
+    const int32_t score = static_cast<int32_t>(out[0] * nnue::NetworkParams::OUTPUT_SCALE /
+                                               nnue::NetworkParams::OUTPUT_DIVISOR);
+
+    // independent scalar reference
+    int32_t refL1Act[IS1];
+    for (size_t i = 0; i < IS1; ++i)
+        refL1Act[i] = std::clamp<int32_t>(l1Out[i], 0, L1c);
+    int32_t refL2Act[IS2];
+    for (size_t j = 0; j < IS2; ++j) {
+        int64_t s = 0;
+        for (size_t i = 0; i < IS1; ++i)
+            s += static_cast<int64_t>(refL1Act[i]) * w2[j][i];
+        s += b2[j];
+        refL2Act[j] = static_cast<int32_t>(std::clamp<int64_t>(s, 0, L2c));
+    }
+    int64_t refOut = b3[0];
+    for (size_t j = 0; j < IS2; ++j)
+        refOut += static_cast<int64_t>(refL2Act[j]) * w3[j];
+    const int32_t refScore = static_cast<int32_t>(refOut * nnue::NetworkParams::OUTPUT_SCALE /
+                                                  nnue::NetworkParams::OUTPUT_DIVISOR);
+
+    if (score != refScore) {
+        ++err;
+        std::cerr << "testIntHead failed: got " << score << " expected " << refScore << std::endl;
+    }
+    return err;
+}
+
 int testNNUE() {
 
     int errs = 0;
@@ -465,14 +563,14 @@ int testNNUE() {
     errs += testCReLU<int32_t,int32_t,1024,255,0>();
     errs += testCReLU<int32_t,int32_t,16, 255, 6>(); // should not use SIMD
     errs += testCReLU<int32_t,int32_t,16, 255, 0>(); // should not use SIMD
-    errs += testSqrCReLU<int32_t,int32_t,1024,255,6>();
-    errs += testSqrCReLU<int32_t,int32_t,32,64,0>();
-    errs += testSqrCReLU<int32_t,int32_t,16,64,0>(); // should not use SIMD
     errs += testPairwiseMult<int16_t,int8_t,1024>();
+    // v8 sparse head: pairwise-mul of one perspective (2*HIDDEN_WIDTH/2 -> u8)
+    errs += testPairwiseMult<int16_t,uint8_t,nnue::NetworkParams::HIDDEN_WIDTH>();
     errs += testLinearLayer<int8_t, int8_t, int32_t, int32_t,16,1024,2,2>();
     errs += testLinearLayer<int32_t,int32_t,int32_t,int32_t,16,32,0,6>();
     errs += testLinearLayer<int32_t,int32_t,int32_t,int32_t,32,32,6,0>();
     errs += testLinearLayer<int32_t,int32_t,int32_t,int32_t,32,1,0,0>();
+    errs += testOutputLayerInt64();
     int tmp = errs;
     errs += testNnz<1024>();
     if (errs - tmp > 0) {
@@ -480,7 +578,13 @@ int testNNUE() {
     }
     else {
         errs += testSparseLinear<uint8_t,int8_t,int32_t,int32_t,1024,16,7,0>();
+        // v8 sparse L1: pairwise-mul u8 input (HIDDEN_WIDTH) -> L1_SIZE, no shift
+        errs += testSparseLinear<uint8_t,int8_t,int32_t,int32_t,
+                                 nnue::NetworkParams::HIDDEN_WIDTH,
+                                 nnue::NetworkParams::L1_SIZE,0,0>();
     }
+
+    errs += testIntHead();
 
     errs += testWholeNetwork();
 

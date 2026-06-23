@@ -6,6 +6,7 @@
 #include <cstddef>
 #include <cstring>
 #include <cassert>
+#include <cmath>
 #include <algorithm>
 #include <iostream>
 #include <sstream>

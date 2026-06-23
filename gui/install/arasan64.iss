@@ -43,7 +43,7 @@ Source: "gui\fonts\chessmar.ttf"; DestDir: "{commonfonts}"; Components: GUI; Fon
 Source: "gui\fonts\tt_usual.ttf"; DestDir: "{commonfonts}"; Components: GUI; FontInstall: "Chess Usual"; Flags: onlyifdoesntexist uninsneveruninstall
 Source: "book\chess-openings\*"; DestDir: "{app}\chess-openings"; Components: GUI
 Source: "win64\release\arasanx-64.exe"; DestDir: "{app}"; Components: engine
-Source: "network\arasanv5-20251222.nnue"; DestDir: "{app}"; Components: engine
+Source: "network\arasanv8-20260622.nnue"; DestDir: "{app}"; Components: engine
 Source: "book\book.bin"; DestDir: "{app}"; Components: book
 Source: "LICENSE"; DestDir: "{app}"; Components: engine;
 
