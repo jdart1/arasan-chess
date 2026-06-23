@@ -341,7 +341,7 @@ static int testNnz() {
         expectedGroupCount--;
     }
 
-    simd::calcNnzData(input, size, output, outputCount);
+    simd::calcNnzData<size>(input, output, outputCount);
 
     // Build expected set of group indices with non-zero elements
     std::set<uint16_t> expectedGroups;

@@ -908,36 +908,28 @@ static inline void pairwiseMult(const InType *input, OutType *output) {
 #endif
 }
 
-// Lookup table for non-zero indices in a byte
-static const class BitmaskToIndices {
-
-public:
-
-    BitmaskToIndices() {
-        for (unsigned i = 0; i < 256; ++i) {
-            uint64_t j = i, k = 0;
-            data[i].dataAsInt64 = 0;
-            while (j) {
-                // note: bit indices start at 1
-                data[i].dataAsArray[k++] = BitUtils::firstOne(j) + 1;
-                j &= j - 1;
+// Lookup table giving, for each 8-bit mask, the 0-based positions of its set
+// bits packed at the front (zero-filled after). Used to scatter the indices of
+// nonzero input groups into a contiguous array in one SIMD store per 8 groups.
+static const class NnzGroupScatter {
+  public:
+    NnzGroupScatter() {
+        for (unsigned m = 0; m < 256; ++m) {
+            for (unsigned p = 0; p < 8; ++p)
+                data[m][p] = 0;
+            uint64_t bits = m;
+            unsigned k = 0;
+            while (bits) {
+                data[m][k++] = static_cast<uint16_t>(BitUtils::firstOne(bits));
+                bits &= bits - 1;
             }
         }
     }
+    const uint16_t *operator[](uint8_t m) const noexcept { return data[m]; }
 
-    const auto &lookup(uint8_t x) const noexcept {
-        return data[x].dataAsArray;
-    }
-
-private:
-    union DataUnion {
-        uint8_t dataAsArray[8];
-        uint64_t dataAsInt64;
-    };
-
-    alignas(64) DataUnion data[256];
-
-} bitmaskToIndices;
+  private:
+    alignas(16) uint16_t data[256][8];
+} nnzGroupScatter;
 
 #ifdef NEON
 template<int lane, typename IndexType>
@@ -955,54 +947,150 @@ static inline void check_lane(uint64x2_t comp_u64, unsigned i, unsigned& lastGro
  // compute a vector of group indices (groups of 4 consecutive elements) for which
 // at least one element in the group is non-zero. This is optimized for DPBUSD
 // operations which work on 4-element groups.
-template <typename IndexType>
-void calcNnzData(const uint8_t *input, size_t inputSize, IndexType *nzIndices, size_t &nzCount) {
-    // bytes that will fit in a vector register of simdWidth bits:
-    static unsigned inputChunkSize = simdWidth / (8 * sizeof(int8_t));
+template <size_t inputSize, typename IndexType>
+void calcNnzData(const uint8_t *input, IndexType *nzIndices, size_t &nzCount) {
+    static_assert(sizeof(IndexType) == 2, "nonzero indices are 16-bit");
+    // Each DPBUSD group is 4 consecutive int8 inputs = one int32. A group is
+    // non-zero iff its int32 value is non-zero, so we detect non-zero groups
+    // directly with an int32 compare and a movemask, then scatter their indices
+    // using a precomputed table (no per-element scalar work).
     nzCount = 0;
-    unsigned lastGroupIdx = UINT_MAX;
+    constexpr size_t numGroups = inputSize / 4;
 #if defined(NEON)
-    // We do not emulate the x86 approach, because NEON has no direct equivalent of
-    // instructions such as _mm512_cmpgt_epu8_mask that pack the results of a comparision
-    // operation into a mask vector.
+    // NEON has no direct movemask equivalent, so test groups of 4 bytes per lane.
+    unsigned inputChunkSize = simdWidth / (8 * sizeof(int8_t));
+    unsigned lastGroupIdx = UINT_MAX;
     for (unsigned i = 0; i < inputSize; i += inputChunkSize) {
-        auto x = vec_load8(reinterpret_cast<const vec8_t*>(input + i));
+        auto x = vec_load8(reinterpret_cast<const vec8_t *>(input + i));
         uint8x16_t input_u8 = vreinterpretq_u8_s8(x);
         uint8x16_t comp = vcgtq_u8(input_u8, vdupq_n_u8(0));
         uint64x2_t comp_u64 = vreinterpretq_u64_u8(comp);
-
-        // check groups of 4 bytes
         check_lane<0>(comp_u64, i, lastGroupIdx, nzIndices, nzCount);
         check_lane<1>(comp_u64, i, lastGroupIdx, nzIndices, nzCount);
         check_lane<2>(comp_u64, i, lastGroupIdx, nzIndices, nzCount);
         check_lane<3>(comp_u64, i, lastGroupIdx, nzIndices, nzCount);
     }
-#else
-    for (unsigned i = 0; i < inputSize; i += inputChunkSize) {
-        // obtain bitmask of the non-zero values in the current input chunk of simdWidth bits
-        MaskType_t mask = nnzMask(vec_load(reinterpret_cast<const vec_t*>(input + i)));
-        // process the output one byte at a time
-        for (unsigned j = 0; j < sizeof(MaskType_t) / sizeof(int8_t); ++j) {
-            const uint8_t byte = static_cast<uint8_t>((mask >> (j * 8)) & 0xFF); // next byte to process
-            if (byte == 0) continue; // skip if no bits set
-            auto indexLookup = bitmaskToIndices.lookup(byte); // list of indices
-
-            // Process individual elements but group them into sets of 4.
-            // Track which groups of 4 have at least one non-zero element.
-            for (unsigned k = 0; k < 8 && indexLookup[k]; ++k) {
-                // -1 to correct for addition of 1 in the lookup table
-                unsigned elementIdx = i + j * 8 + indexLookup[k] - 1;
-                unsigned groupIdx = elementIdx / 4; // group index for DPBUSD
-
-                // Only add if this is a new group (avoid duplicates)
-                if (groupIdx != lastGroupIdx) {
-                    nzIndices[nzCount++] = groupIdx;
-                    lastGroupIdx = groupIdx;
-                }
-            }
+#elif defined(AVX512)
+    static_assert(numGroups % 16 == 0, "group count must be a multiple of 16");
+    const __m512i *v32 = reinterpret_cast<const __m512i *>(input);
+    const __m512i zero = _mm512_setzero_si512();
+    for (size_t g = 0; g < numGroups; g += 16) {
+        unsigned nz = (~static_cast<unsigned>(
+            _mm512_cmpeq_epi32_mask(_mm512_load_si512(v32 + g / 16), zero)));
+        for (unsigned half = 0; half < 2; ++half) {
+            uint8_t m = static_cast<uint8_t>(nz >> (8 * half));
+            _mm_storeu_si128(
+                reinterpret_cast<__m128i *>(nzIndices + nzCount),
+                _mm_add_epi16(_mm_loadu_si128(reinterpret_cast<const __m128i *>(nnzGroupScatter[m])),
+                              _mm_set1_epi16(static_cast<short>(g + 8 * half))));
+            nzCount += BitUtils::bitCount(m);
         }
     }
+#elif defined(AVX2)
+    static_assert(numGroups % 8 == 0, "group count must be a multiple of 8");
+    const __m256i *v32 = reinterpret_cast<const __m256i *>(input);
+    const __m256i zero = _mm256_setzero_si256();
+    for (size_t g = 0; g < numGroups; g += 8) {
+        uint8_t m = static_cast<uint8_t>(~static_cast<unsigned>(_mm256_movemask_ps(
+            _mm256_castsi256_ps(_mm256_cmpeq_epi32(_mm256_load_si256(v32 + g / 8), zero)))));
+        _mm_storeu_si128(
+            reinterpret_cast<__m128i *>(nzIndices + nzCount),
+            _mm_add_epi16(_mm_loadu_si128(reinterpret_cast<const __m128i *>(nnzGroupScatter[m])),
+                          _mm_set1_epi16(static_cast<short>(g))));
+        nzCount += BitUtils::bitCount(m);
+    }
+#else // SSE2
+    static_assert(numGroups % 4 == 0, "group count must be a multiple of 4");
+    const __m128i *v32 = reinterpret_cast<const __m128i *>(input);
+    const __m128i zero = _mm_setzero_si128();
+    for (size_t g = 0; g < numGroups; g += 4) {
+        uint8_t m = static_cast<uint8_t>((~static_cast<unsigned>(_mm_movemask_ps(_mm_castsi128_ps(
+                        _mm_cmpeq_epi32(_mm_load_si128(v32 + g / 4), zero))))) & 0xFu);
+        _mm_storeu_si128(
+            reinterpret_cast<__m128i *>(nzIndices + nzCount),
+            _mm_add_epi16(_mm_loadu_si128(reinterpret_cast<const __m128i *>(nnzGroupScatter[m])),
+                          _mm_set1_epi16(static_cast<short>(g))));
+        nzCount += BitUtils::bitCount(m);
+    }
 #endif
+}
+
+// Sparse int8 affine dot product. For each non-zero input group (4 consecutive
+// uint8 inputs, indices supplied in nzIndices) broadcast the group as an int32
+// and accumulate it against the matching DPBUSD-rearranged weight chunk for
+// every output. The optimizedWeights layout is
+// [inputSize/4][outputSize][4] (one bucket). Biases are added at the end, with
+// optional input/output dequantizing right shifts.
+template <typename InputType, typename WeightType, typename BiasType, typename OutputType,
+          size_t inputSize, size_t outputSize, unsigned inputDequantifyShift,
+          unsigned outputDequantifyShift>
+inline void sparseDotProduct(const InputType *input,
+                             const WeightType optimizedWeights[inputSize / 4][outputSize][4],
+                             const BiasType *biases, const uint16_t *nzIndices, size_t nzCount,
+                             OutputType *output) {
+    // 32-bit output quantities in a vector register
+    constexpr size_t outputChunkSize = simdWidth / (8 * sizeof(OutputType));
+    static_assert(outputSize >= outputChunkSize && (outputSize % outputChunkSize) == 0,
+                  "output size does not meet criteria for the sparse linear layer");
+    vec_t accum[outputSize / outputChunkSize];
+    for (size_t i = 0; i < outputSize / outputChunkSize; ++i) {
+#ifdef NEON
+        accum[i] = zeros32;
+#else
+        vec_set_zero(accum[i]);
+#endif
+    }
+    for (size_t i = 0; i < nzCount; ++i) {
+        // nzIndices holds group indices (groups of 4 elements)
+        unsigned groupIdx = nzIndices[i];
+        // Load 4 consecutive input bytes as a 32-bit value and broadcast across
+        // the register: (i0 i1 i2 i3 i0 i1 i2 i3 ...).
+        uint32_t inp4 = *reinterpret_cast<const uint32_t *>(&input[groupIdx * 4]);
+#ifdef NEON
+        vec_t inps = vec_set_32(inp4);
+#else
+        vec_t inps = vec_set_32<vec_t>(inp4);
+#endif
+        // iterate over the output dimensions in SIMD-register-width chunks
+        for (size_t outIdx = 0; outIdx < outputSize; outIdx += outputChunkSize) {
+#ifdef NEON
+            auto weights =
+                vec_load32(reinterpret_cast<const vec32_t *>(&optimizedWeights[groupIdx][outIdx][0]));
+#else
+            vec_t weights =
+                vec_load<vec_t>(reinterpret_cast<const vec_t *>(&optimizedWeights[groupIdx][outIdx][0]));
+#endif
+            dpbusd_epi32(accum[outIdx / outputChunkSize], inps, weights);
+        }
+    }
+    // apply optional shifts, add biases, store to output
+    for (size_t outIdx = 0; outIdx < outputSize / outputChunkSize; ++outIdx) {
+        if constexpr (inputDequantifyShift > 0) {
+#ifdef NEON
+            accum[outIdx] = vec_shr32<inputDequantifyShift>(accum[outIdx]);
+#else
+            accum[outIdx] = vec_shr32(accum[outIdx], inputDequantifyShift);
+#endif
+        }
+#ifdef NEON
+        auto bias = vec_load32(reinterpret_cast<const vec32_t *>(biases) + outIdx);
+#else
+        vec_t bias = vec_load<vec_t>(reinterpret_cast<const vec_t *>(biases) + outIdx);
+#endif
+        accum[outIdx] = vec_add32(accum[outIdx], bias);
+        if constexpr (outputDequantifyShift > 0) {
+#ifdef NEON
+            accum[outIdx] = vec_shr32<outputDequantifyShift>(accum[outIdx]);
+#else
+            accum[outIdx] = vec_shr32(accum[outIdx], outputDequantifyShift);
+#endif
+        }
+#ifdef NEON
+        vec_store32(reinterpret_cast<vec32_t *>(&output[outIdx * outputChunkSize]), accum[outIdx]);
+#else
+        vec_store<vec_t>(reinterpret_cast<vec_t *>(&output[outIdx * outputChunkSize]), accum[outIdx]);
+#endif
+    }
 }
 
 // Combination of piece-wise multitplication with CRelU activation and a linear layer with 1-dimensional output.
