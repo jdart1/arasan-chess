@@ -180,7 +180,7 @@ class Hash {
     HashEntry::ValueType searchHash(hash_t hashCode, int depth, unsigned age, HashEntry &he) {
         if (!hashSize)
             return HashEntry::NoHit;
-        int probe = static_cast<int>(hashCode & hashMask);
+        size_t probe = static_cast<size_t>(hashCode & hashMask);
 
         HashEntry *p = &hashTable[probe];
         HashEntry *hit = nullptr;
@@ -219,7 +219,7 @@ class Hash {
 
         if (!hashSize)
             return;
-        int probe = static_cast<int>(hashCode & hashMask);
+        size_t probe = static_cast<size_t>(hashCode & hashMask);
         HashEntry *p = &hashTable[probe];
 
         HashEntry *best = nullptr;
