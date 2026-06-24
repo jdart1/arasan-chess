@@ -387,6 +387,13 @@ Move SearchController::findBestMove(
     timeCheckFactor = 1.0;
     last_time_check = 0;
     tb_probe_in_search = true;
+#ifdef SYZYGY_TBS
+    // For selfplay: skip in-search TB probing when the root position is far
+    // from the endgame, to avoid disk-bound probes deep in the search tree.
+    if (srcOpts.tb_in_search_men_limit && board.men() > srcOpts.tb_in_search_men_limit) {
+        tb_probe_in_search = false;
+    }
+#endif
     computerSide = board.sideToMove();
 
 #ifdef NUMA

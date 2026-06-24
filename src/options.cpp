@@ -25,7 +25,7 @@ Options::SearchOptions::SearchOptions()
       resign_threshold(-500),
 #ifdef SYZYGY_TBS
       use_tablebases(false), syzygy_path("syzygy"), syzygy_50_move_rule(true),
-      syzygy_probe_depth(4),
+      syzygy_probe_depth(4), tb_in_search_men_limit(0),
 #endif
       strength(100), multipv(1), ncpus(1),
       nnueFile(MAKE_STR(NETWORK)),

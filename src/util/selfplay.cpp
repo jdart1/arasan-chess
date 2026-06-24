@@ -83,7 +83,7 @@ static struct SelfPlayOptions {
     unsigned cores = 1;
     unsigned posCount = 10000000;
     unsigned depthLimit = 9;
-    unsigned semiRandomDepthLimit = 0; // 0 = use depthLimit
+    unsigned semiRandomDepthLimit = 0; // 0 = use max(1, depthLimit - 2)
     bool adjudicateDraw = true;
     bool adjudicateTB = true;
     int adjudicateTBMen = 3;
@@ -309,7 +309,7 @@ static void semiRandomMove(const Board &board, SelfPlayOptions::RandomizeType ty
         numCandidates = 0;
         unsigned depth = sp_options.semiRandomDepthLimit
                              ? sp_options.semiRandomDepthLimit
-                             : sp_options.depthLimit;
+                             : (sp_options.depthLimit > 2 ? sp_options.depthLimit - 2 : 1);
         td.searcher->setMultiPV(sp_options.multipv_limit);
         (void) td.searcher->findBestMove(
             board, FixedDepth, Constants::INFINITE_TIME, 0, depth,
@@ -664,6 +664,9 @@ int CDECL main(int argc, char **argv) {
     globals::options.search.ponder = false;
     globals::options.search.widePlies = 2;
     globals::options.search.wideWindow = 3 * Scoring::PAWN_VALUE;
+    // Skip in-search TB probing when the root is far from the endgame, to
+    // avoid disk-bound probes deep in the tree slowing down generation.
+    globals::options.search.tb_in_search_men_limit = 10;
 
     // update book to use new variety setting
     globals::openingBook.setVariety(globals::options.book.variety);

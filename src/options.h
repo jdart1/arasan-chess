@@ -35,6 +35,10 @@ class Options {
         std::string syzygy_path;
         bool syzygy_50_move_rule;
         int syzygy_probe_depth;
+        // If >0, suppress in-search TB probing when the root position has more
+        // than this many men. Used by the selfplay utility to avoid disk-bound
+        // probes deep in the tree; not exposed via UCI/CECP. 0 = no limit.
+        int tb_in_search_men_limit;
 #endif
         int strength; // 0 .. 100
         int multipv;
