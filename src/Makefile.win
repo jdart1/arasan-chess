@@ -219,7 +219,7 @@ default: dirs $(BUILD)\$(ARASANX).exe
 profile: dirs $(PROFILE)\$(ARASANX).exe
 
 utils: dirs $(BUILD)\playchess.exe $(BUILD)\makebook.exe \
-$(BUILD)\ecocoder.exe $(BUILD)\selfplay.exe
+$(BUILD)\ecocoder.exe $(BUILD)\selfplay.exe $(BUILD)\blundercheck.exe
 
 unit: dirs $(BUILD)\unit.exe
 
@@ -287,6 +287,8 @@ PLAYCHESS_OBJS = $(BUILD)\playchess.obj $(UTIL_OBJS)
 
 SELFPLAY_OBJS = $(BUILD)\selfplay.obj $(UTIL_OBJS) $(BUILD)\binformat.obj
 
+BLUNDERCHECK_OBJS = $(BUILD)\blundercheck.obj $(UTIL_OBJS)
+
 UNIT_OBJS = $(TEST_OBJS) $(UTIL_OBJS)
 
 {}.cpp{$(BUILD)}.obj:
@@ -312,6 +314,9 @@ $(BUILD)\playchess.exe: dirs $(PLAYCHESS_OBJS)
 
 $(BUILD)\selfplay.exe: dirs $(SELFPLAY_OBJS)
         $(LD) $(SELFPLAY_OBJS) $(LINKOPT) $(LDFLAGS) /out:$(BUILD)\selfplay.exe
+
+$(BUILD)\blundercheck.exe: dirs $(BLUNDERCHECK_OBJS)
+        $(LD) $(BLUNDERCHECK_OBJS) $(LINKOPT) $(LDFLAGS) /out:$(BUILD)\blundercheck.exe
 
 $(BUILD)\unit.exe: dirs $(UNIT_OBJS)
         $(LD) $(UNIT_OBJS) $(LINKOPT) $(LDFLAGS) /out:$(BUILD)\unit.exe

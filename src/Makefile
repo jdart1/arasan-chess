@@ -281,7 +281,7 @@ endif
 default: dirs $(EXPORT)/$(ARASANX)
 
 utils: dirs $(EXPORT)/playchess $(EXPORT)/makebook $(EXPORT)/ecocoder \
-$(EXPORT)/selfplay
+$(EXPORT)/selfplay $(EXPORT)/blundercheck
 
 unit: dirs $(EXPORT)/unit
 
@@ -293,7 +293,7 @@ clean: dirs
 	rm -f $(PROFILE)/*.dyn
 	rm -f $(PROFILE)/*.nnue
 	rm -f $(PROF_DATA)/*.*
-	cd $(EXPORT) && rm -f arasanx* makebook playchess ecocoder selfplay unit
+	cd $(EXPORT) && rm -f arasanx* makebook playchess ecocoder selfplay blundercheck unit
 
 dirs:
 	mkdir -p $(BUILD)
@@ -400,12 +400,15 @@ PLAYCHESS_SOURCES = playchess.cpp $(UTIL_SOURCES)
 
 SELFPLAY_SOURCES = selfplay.cpp $(UTIL_SOURCES) binformat.cpp
 
+BLUNDERCHECK_SOURCES = blundercheck.cpp $(UTIL_SOURCES)
+
 ARASANX_PROFILE_OBJS := $(patsubst %.cpp, $(PROFILE)/%.o, $(ARASANX_SOURCES)) $(ASM_PROFILE_OBJS) $(TB_PROFILE_OBJS) $(NUMA_PROFILE_OBJS)
 ARASANX_OBJS    := $(patsubst %.cpp, $(BUILD)/%.o, $(ARASANX_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
 MAKEBOOK_OBJS   := $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEBOOK_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
 ECOCODER_OBJS   := $(patsubst %.cpp, $(BUILD)/%.o, $(ECOCODER_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
 PLAYCHESS_OBJS  := $(patsubst %.cpp, $(BUILD)/%.o, $(PLAYCHESS_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
 SELFPLAY_OBJS   := $(patsubst %.cpp, $(BUILD)/%.o, $(SELFPLAY_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
+BLUNDERCHECK_OBJS := $(patsubst %.cpp, $(BUILD)/%.o, $(BLUNDERCHECK_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
 UNIT_OBJS       := $(patsubst %.cpp, $(BUILD)/%.o, $(UNIT_SOURCES)) $(TB_OBJS) $(NUMA_OBJS)
 
 $(EXPORT)/makebook:  $(MAKEBOOK_OBJS)
@@ -419,6 +422,9 @@ $(EXPORT)/playchess:  $(PLAYCHESS_OBJS)
 
 $(EXPORT)/selfplay:  $(SELFPLAY_OBJS)
 	cd $(BUILD) && $(LD) $(LDFLAGS) $(LTO) $(OPT) $(SELFPLAY_OBJS) $(DEBUG) $(CXXFLAGS) -o $(EXPORT)/selfplay -lstdc++ $(LIBS) $(SMPLIB)
+
+$(EXPORT)/blundercheck:  $(BLUNDERCHECK_OBJS)
+	cd $(BUILD) && $(LD) $(LDFLAGS) $(LTO) $(OPT) $(BLUNDERCHECK_OBJS) $(DEBUG) $(CXXFLAGS) -o $(EXPORT)/blundercheck -lstdc++ $(LIBS) $(SMPLIB)
 
 $(EXPORT)/unit: $(UNIT_OBJS)
 	cd $(BUILD) && $(LD) $(LDFLAGS) $(LTO) $(OPT) $(UNIT_OBJS) $(DEBUG) $(CXXFLAGS) -o $(EXPORT)/unit -lstdc++ $(LIBS) $(SMPLIB)

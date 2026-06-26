@@ -178,6 +178,8 @@ add_executable (ecocoder EXCLUDE_FROM_ALL util/ecocoder.cpp ${UTIL_SRC})
 
 add_executable (selfplay EXCLUDE_FROM_ALL util/selfplay.cpp ${UTIL_SRC} util/binformat.cpp)
 
+add_executable (blundercheck EXCLUDE_FROM_ALL util/blundercheck.cpp ${UTIL_SRC})
+
 add_executable (unit EXCLUDE_FROM_ALL unit.cpp nnuetest.cpp util/binformat.cpp ${UTIL_SRC})
 
 target_link_libraries(${EXE_NAME} PRIVATE Threads::Threads)
@@ -185,10 +187,11 @@ target_link_libraries(playchess PRIVATE Threads::Threads)
 target_link_libraries(ecocoder PRIVATE Threads::Threads)
 target_link_libraries(makebook PRIVATE Threads::Threads)
 target_link_libraries(selfplay PRIVATE Threads::Threads)
+target_link_libraries(blundercheck PRIVATE Threads::Threads)
 target_link_libraries(unit PRIVATE Threads::Threads)
 
-set_target_properties(${EXE_NAME} playchess makebook ecocoder selfplay unit PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
+set_target_properties(${EXE_NAME} playchess makebook ecocoder selfplay blundercheck unit PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
 
 add_custom_target(utils)
 
-add_dependencies(utils playchess ecocoder makebook selfplay)
+add_dependencies(utils playchess ecocoder makebook selfplay blundercheck)
