@@ -812,11 +812,6 @@ hash key for the position. If another thread has overwritten or is
 overwriting the data field, then the comparison will fail and a match
 will not be returned.</p>
 
-<p>Besides the main hash table, some smaller hash tables are used by
-the Scoring module to store the results of pawn structure scoring and
-king cover calculation. These are relatively small in size and are
-allocated on a per-thread basis (each thread has its own tables).</p>
-
 <h3>Position Scoring</h3>
 
 <p>Arasan now uses exclusively an NNUE evaluation function, in place of its
