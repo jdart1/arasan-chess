@@ -1,4 +1,4 @@
-// Copyright 2021-2025 by Jon Dart. All Rights Reserved.
+// Copyright 2021-2026 by Jon Dart. All Rights Reserved.
 #include "board.h"
 #include "boardio.h"
 #include "binformat.h"
@@ -109,7 +109,7 @@ static struct SelfPlayOptions {
     unsigned semiRandomizeInterval = 1;
     unsigned semiRandomPerGame = 14;
     unsigned multipv_limit = 8;
-    int multiPVMargin = static_cast<int>(0.3 * Scoring::PAWN_VALUE);
+    score_t multiPVMargin = static_cast<score_t>(0.45 * Scoring::PAWN_VALUE);
     bool skipNonQuiet = true;
     bool nonQuietSearchTest = false;
     score_t nonQuietSearchMargin = static_cast<score_t>(Scoring::PAWN_VALUE);
@@ -811,8 +811,12 @@ int CDECL main(int argc, char **argv) {
     init_threads();
     launch_threads();
 
-    std::cout << "White wins: " << wins << " Black wins: " << losses << " Draws: " << draws <<
-        " draw percentage: " << std::setprecision(4) << draws*100.0/(draws + losses + wins) << "%" << std::endl;
+    std::cout << "White wins: " << wins << " Black wins: " << losses << " Draws: " << draws
+              << std::endl;
+    std::cout << std::setprecision(4)
+              << "White score percentage: " << ((wins + draws/2) * 100.0) / (draws + losses + wins) << '%'
+              << " draw percentage: " << draws * 100.0 / (draws + losses + wins) << '%'
+              << std::endl;
     uint64_t skipped = 0;
     for (unsigned i = 0; i < sp_options.cores; i++) {
         skipped += threadDatas[i].skipped;
