@@ -351,7 +351,15 @@ static void selfplay(ThreadData &td) {
         std::vector<BinFormats::PositionData> output;
         uint64_t prevNodes = 0ULL;
         int prevScore = 0;
-        unsigned noSemiRandom = 0, semiRandomCount = 0, prevDepth = 0;
+        unsigned prevDepth = 0;
+        // Semi-randomization is scheduled independently per color. Otherwise,
+        // with a small semiRandomizeInterval the fixed ply spacing between
+        // semi-random moves locks onto a single color (determined by the
+        // parity of bookMoves), so all the deliberate weakenings hit one
+        // side and skew the White/Black result. Index 0 = White, 1 = Black.
+        unsigned noSemiRandom[2] = {0, 0}, semiRandomCount[2] = {0, 0};
+        const unsigned semiRandomBudget[2] = {(sp_options.semiRandomPerGame + 1) / 2,
+                                              sp_options.semiRandomPerGame / 2};
         unsigned bookMoves = sp_options.maxBookPly;
         for (unsigned ply = 0; ply <= sp_options.maxOutPly && !adjudicated && !terminated; ++ply) {
             stats.clear();
@@ -380,10 +388,11 @@ static void selfplay(ThreadData &td) {
                     // We have no score from a random move, so reset the
                     // adjudication counter
                     low_score_count = 0;
-                } else if (sp_options.semiRandomize && !skipRandom &&
+                } else if (int ci = (board.sideToMove() == White) ? 0 : 1;
+                           sp_options.semiRandomize && !skipRandom &&
                            (ply > bookMoves + sp_options.randomizeRange) &&
-                           (semiRandomCount == 0 || noSemiRandom >= sp_options.semiRandomizeInterval) &&
-                           (semiRandomCount < sp_options.semiRandomPerGame) &&
+                           (semiRandomCount[ci] == 0 || noSemiRandom[ci] >= sp_options.semiRandomizeInterval) &&
+                           (semiRandomCount[ci] < semiRandomBudget[ci]) &&
                            (int(board.men()) > globals::EGTBMenCount) &&
                            ((sp_options.randomizeType != SelfPlayOptions::RandomizeType::Nodes) ||
                             (prevNodes && prevDepth >= sp_options.depthLimit))) {
@@ -402,8 +411,8 @@ static void selfplay(ThreadData &td) {
                         low_score_count = 0;
                     if (sp_options.randomizeType == SelfPlayOptions::RandomizeType::Nodes ||
                         candCount > 1) {
-                        noSemiRandom = 0;
-                        ++semiRandomCount;
+                        noSemiRandom[ci] = 0;
+                        ++semiRandomCount[ci];
                     }
                 } else {
                     m = searcher->findBestMove(board, FixedDepth, Constants::INFINITE_TIME,
@@ -419,7 +428,7 @@ static void selfplay(ThreadData &td) {
                         ++low_score_count;
                     else
                         low_score_count = 0;
-                    ++noSemiRandom;
+                    ++noSemiRandom[ci];
                     if (score >= sp_options.adjudicateWinScore)
                         ++high_score_count;
                     else
