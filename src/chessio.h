@@ -48,12 +48,15 @@ class ChessIO {
         Token(TokenType t, std::string v) : type(t), val(v) {}
     };
 
+    static inline const std::regex HeaderPattern{"^\\s*\\[([^\\s]+)\\s+\"([^\"]*)\"\\][\\s\\r\\n]*$"};
+
     class PGNReader {
         friend class TokenReader;
 
       public:
         PGNReader(std::istream &s)
-            : stream(s), HeaderPattern("^\\s*\\[([^\\s]+)\\s+\"([^\"]*)\"\\][\\s\\r\\n]*$") {}
+            : stream(s) {
+        }
 
         virtual ~PGNReader() = default;
 
@@ -73,7 +76,6 @@ class ChessIO {
 
         std::istream &stream;
         std::queue<std::string> buffer;
-        std::regex HeaderPattern;
     };
 
     class TokenReader {
