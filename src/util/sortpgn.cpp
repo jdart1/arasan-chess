@@ -69,16 +69,25 @@ static int32_t roundCode(const std::string &roundStr) {
     return parts[0]*1000 + parts[1];
 }
 
+// Read a line, stripping a trailing '\r' so that CRLF-terminated files
+// parse correctly (blank separator lines are otherwise seen as "\r").
+static std::istream &readLine(std::istream &pgn_file, std::string &line) {
+    std::getline(pgn_file, line);
+    if (!line.empty() && line.back() == '\r')
+        line.pop_back();
+    return pgn_file;
+}
+
 static void processHeaders(std::ifstream &pgn_file, char *buffer, size_t &index, ListItem &item) {
     item.date = item.round = 0;
+    item.startIndex = index;
     std::string line;
     // skip blank lines
     while (pgn_file.good()) {
-        std::getline(pgn_file, line);
+        readLine(pgn_file, line);
         if (!line.empty())
             break;
     }
-    item.startIndex = index;
     while (pgn_file.good()) {
         if (line.empty()) {
             // end of headers, start of game moves
@@ -106,14 +115,14 @@ static void processHeaders(std::ifstream &pgn_file, char *buffer, size_t &index,
         line.copy(buffer + index, line.size());
         buffer[index + line.size()] = '\n';
         index += line.size() + 1;
-        if (!std::getline(pgn_file, line)) break;
+        if (!readLine(pgn_file, line)) break;
     }
 }
 
 static void processMoves(std::ifstream &pgn_file, char *buffer, size_t &index, ListItem &item) {
     std::string line;
     while (pgn_file.good()) {
-        std::getline(pgn_file, line);
+        readLine(pgn_file, line);
         if (pgn_file.eof() || line.empty()) {
             // end of game moves
             buffer[index++] = '\n';
@@ -137,17 +146,33 @@ int CDECL main(int argc, char **argv) {
     }
 
     std::ifstream pgn_file(argv[1], std::ios::in | std::ios::binary);
-    pgn_file.seekg(0, std::ios::end);
-    std::streamsize size = pgn_file.tellg();
-    pgn_file.seekg(0);
-
     if (!pgn_file.good()) {
         std::cerr << "could not open file " << argv[1] << std::endl;
         exit(-1);
     }
 
+    pgn_file.seekg(0, std::ios::end);
+    std::streamsize size = pgn_file.tellg();
+    pgn_file.seekg(0, std::ios::beg);
+
     // allocate buffer
-    auto buffer = std::make_unique<char[]>(static_cast<size_t>(size));
+    std::unique_ptr<char []> buffer;
+    try {
+        buffer = std::make_unique<char[]>(static_cast<size_t>(size));
+    } catch (std::bad_alloc &ex) {
+        std::cerr << "out of memory" << std::endl;
+        exit(-1);
+    }
+
+    // discard UTF-8 BOM if present
+    const int BOM = 0xef;
+    int x = pgn_file.get();
+    if (x == BOM) {
+        x = pgn_file.get();
+        x = pgn_file.get();
+    } else {
+        pgn_file.putback(x);
+    }
 
     size_t index = 0;
 
