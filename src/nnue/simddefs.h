@@ -134,15 +134,24 @@ static inline int32_t hsum32(int32x4_t reg) {
 // must be templatized because shift must be a compile-time constant
 template<unsigned shift>
 static inline vec32_t vec_rshift32(vec32_t x) { return vshrq_n_s32(x, shift); }
-static inline vec32_t dpbusd_epi32(vec32_t sum, vec8_t a, vec8_t b) {
-#if defined(__aarch64__)
-    return vdotq_s32(sum, a, b);
+static inline void dpbusd_epi32(vec_t &sum, vec8_t a, vec8_t b) {
+    vec32_t sum32 = vreinterpretq_s32_s16(sum);
+#if defined(__ARM_FEATURE_MATMUL_INT8)
+    sum32 = vusdotq_s32(sum32, vreinterpretq_u8_s8(a), b);
 #else
     // emulate x86 multipy-add instruction with NEON
-    int16x8_t prod_lo = vmull_s8(vget_low_s8(vreinterpretq_s8_u8(a)), vget_low_s8(b));
-    int16x8_t prod_hi = vmull_s8(vget_high_s8(vreinterpretq_s8_u8(a)), vget_high_s8(b));
-    return vaddq_s32(sum, vaddq_s32(vpaddlq_s16(prod_lo), vpaddlq_s16(prod_hi)));
+    uint8x16_t au = vreinterpretq_u8_s8(a);
+    int16x8_t a_lo = vreinterpretq_s16_u16(vmovl_u8(vget_low_u8(au)));
+    int16x8_t a_hi = vreinterpretq_s16_u16(vmovl_u8(vget_high_u8(au)));
+    int16x8_t b_lo = vmovl_s8(vget_low_s8(b));
+    int16x8_t b_hi = vmovl_s8(vget_high_s8(b));
+    int32x4_t pair_lo = vpaddlq_s16(vmulq_s16(a_lo, b_lo));
+    int32x4_t pair_hi = vpaddlq_s16(vmulq_s16(a_hi, b_hi));
+    int32x2_t group_lo = vpadd_s32(vget_low_s32(pair_lo), vget_high_s32(pair_lo));
+    int32x2_t group_hi = vpadd_s32(vget_low_s32(pair_hi), vget_high_s32(pair_hi));
+    sum32 = vaddq_s32(sum32, vcombine_s32(group_lo, group_hi));
 #endif
+    sum = vreinterpretq_s16_s32(sum32);
 }
 
 #else

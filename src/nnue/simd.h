@@ -955,7 +955,7 @@ void calcNnzData(const uint8_t *input, IndexType *nzIndices, size_t &nzCount) {
     // directly with an int32 compare and a movemask, then scatter their indices
     // using a precomputed table (no per-element scalar work).
     nzCount = 0;
-    constexpr size_t numGroups = inputSize / 4;
+    [[maybe_unused]] constexpr size_t numGroups = inputSize / 4;
 #if defined(NEON)
     // NEON has no direct movemask equivalent, so test groups of 4 bytes per lane.
     unsigned inputChunkSize = simdWidth / (8 * sizeof(int8_t));
