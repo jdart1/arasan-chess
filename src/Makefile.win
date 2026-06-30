@@ -219,7 +219,7 @@ default: dirs $(BUILD)\$(ARASANX).exe
 profile: dirs $(PROFILE)\$(ARASANX).exe
 
 utils: dirs $(BUILD)\playchess.exe $(BUILD)\makebook.exe \
-$(BUILD)\ecocoder.exe $(BUILD)\selfplay.exe $(BUILD)\blundercheck.exe ]
+$(BUILD)\ecocoder.exe $(BUILD)\selfplay.exe $(BUILD)\blundercheck.exe \
 $(BUILD)\sortpgn.exe
 
 unit: dirs $(BUILD)\unit.exe
