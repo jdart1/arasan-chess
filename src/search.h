@@ -254,6 +254,7 @@ protected:
                CheckStatusType in_check_after_move,
                int moveIndex,
                int improving,
+               int opponentWorsening,
                Move move);
 
     int extend(const Board &board,

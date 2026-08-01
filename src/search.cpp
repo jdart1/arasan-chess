@@ -113,9 +113,11 @@ TUNABLE(RAZOR_MARGIN_SLOPE, static_cast<score_t>(1.25*Scoring::PAWN_VALUE),
         static_cast<int>(0.75*Scoring::PAWN_VALUE),
         static_cast<int>(2.0*Scoring::PAWN_VALUE));
 #endif
-TUNABLE(FUTILITY_MARGIN_BASE, static_cast<int>(0.04*Scoring::PAWN_VALUE), 0,
+TUNABLE(FUTILITY_MARGIN_BASE, static_cast<int>(0.45*Scoring::PAWN_VALUE), 0,
         static_cast<int>(1.0*Scoring::PAWN_VALUE));
-TUNABLE(FUTILITY_MARGIN_SLOPE, static_cast<int>(0.90*Scoring::PAWN_VALUE),
+TUNABLE(FUTILITY_MARGIN_MIN, static_cast<int>(0.45*Scoring::PAWN_VALUE), 0,
+        static_cast<int>(1.0*Scoring::PAWN_VALUE));
+TUNABLE(FUTILITY_MARGIN_SLOPE, static_cast<int>(0.85*Scoring::PAWN_VALUE),
         static_cast<int>(0.5*Scoring::PAWN_VALUE),
         static_cast<int>(1.5*Scoring::PAWN_VALUE));
 TUNABLE(CAPTURE_FUTILITY_MARGIN_BASE, static_cast<int>(1.66*Scoring::PAWN_VALUE),
@@ -1039,12 +1041,17 @@ score_t Search::tbScoreAdjust(const Board &b,
 #endif
 
 template <bool quiet>
-static score_t futilityMargin(int depth)
+static score_t futilityMargin(int depth, int improving, int opponentWorsening)
 {
-    if (quiet)
-      return FUTILITY_MARGIN_BASE + std::max<int>(depth/DEPTH_INCREMENT,1)*FUTILITY_MARGIN_SLOPE;
-    else
-      return CAPTURE_FUTILITY_MARGIN_BASE + (depth/DEPTH_INCREMENT)*CAPTURE_FUTILITY_MARGIN_SLOPE;
+    const int d = std::max<int>(depth/DEPTH_INCREMENT,1);
+    if (quiet) {
+        // formula similar to Stockfish 18
+        int mult = std::max(FUTILITY_MARGIN_SLOPE, FUTILITY_MARGIN_BASE + d * 4);
+        return std::max(FUTILITY_MARGIN_MIN,mult * d - (3*128*improving - (128/3)*opponentWorsening)/128);
+    }
+    else {
+       return CAPTURE_FUTILITY_MARGIN_BASE + d * CAPTURE_FUTILITY_MARGIN_SLOPE;
+    }
 }
 
 #ifdef STATIC_NULL_PRUNING
@@ -2357,6 +2364,7 @@ bool Search::prune(const Board &b,
                    CheckStatusType in_check_after_move,
                    int moveIndex,
                    int improving,
+                   int opponentWorsening,
                    Move m) {
     assert(n->ply > 0);
     if (n->num_legal &&
@@ -2364,14 +2372,14 @@ bool Search::prune(const Board &b,
         b.getMaterial(b.sideToMove()).hasPieces() &&
         n->best_score > -Constants::MATE_RANGE) {
         const bool quiet = !CaptureOrPromotion(m) && in_check_after_move != InCheck;
+        const bool killer = GetPhase(m) < MoveGenerator::HISTORY_PHASE;
         int depth = n->depth;
         // for pruning decisions, use modified depth but not the same as
         // regular reduced search depth (idea from Laser)
         const int pruneDepth = quiet ? depth - lmr(n,depth,moveIndex) : depth;
         if (quiet) {
             // do not use pruneDepth for LMP
-            if (GetPhase(m) >= MoveGenerator::HISTORY_PHASE &&
-                moveIndex > lmpCount(depth,improving)) {
+            if (!killer && moveIndex > lmpCount(depth,improving)) {
 #ifdef SEARCH_STATS
                 ++stats.lmp;
 #endif
@@ -2402,7 +2410,7 @@ bool Search::prune(const Board &b,
             if (pruneDepth <= FUTILITY_DEPTH && hist < futilityHistoryThreshold(improving)) {
                 // Threshold was formerly increased with the move index
                 // but this tests worse now.
-                score_t threshold = n->alpha - futilityMargin<true>(pruneDepth);
+                score_t threshold = n->alpha - futilityMargin<true>(pruneDepth, improving, opponentWorsening);
                 if (n->eval == Constants::INVALID_SCORE) {
                     n->eval = n->staticEval = evalu8(b);
                 }
@@ -2421,7 +2429,7 @@ bool Search::prune(const Board &b,
         } else {
             if (pruneDepth <= CAPTURE_FUTILITY_DEPTH) {
                 assert(n->eval != Constants::INVALID_SCORE);
-                score_t margin = futilityMargin<false>(pruneDepth) +
+                score_t margin = futilityMargin<false>(pruneDepth, improving, opponentWorsening) +
                     Scoring::maxValue(m) +
                     context.captureHistoryScore(b, m) / CAPTURE_FUTILITY_HISTORY_DIVISOR;
                 if (n->eval + margin < node->alpha) {
@@ -2772,9 +2780,13 @@ score_t Search::search()
         !node->PV() &&
         !(node->flags & (VERIFY|IID));
 
-    const int improving = ply >= 3 && !in_check &&
+    const int improving = ply >= 2 && !in_check &&
         (node-2)->staticEval != Constants::INVALID_SCORE &&
         (node->staticEval >= (node-2)->staticEval);
+
+    const int opponentWorsening = ply >= 1 &&
+        (node-1)->staticEval != Constants::INVALID_SCORE &&
+        (node->staticEval >= -(node-1)->staticEval);
 
     // Reset killer moves for children (idea from Ethereal)
     context.clearKillers(node->ply+1);
@@ -3216,7 +3228,8 @@ score_t Search::search()
 #endif
             }
             else {
-                if (pruneOk && prune(board, node, in_check_after_move, move_index, improving, move)) {
+                if (pruneOk && prune(board, node, in_check_after_move, move_index, improving,
+                                     opponentWorsening, move)) {
                     continue;
                 }
                 extension = extend(board, node, in_check_after_move, move);
