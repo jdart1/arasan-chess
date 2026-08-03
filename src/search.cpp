@@ -1046,8 +1046,8 @@ static score_t futilityMargin(int depth, int improving, int opponentWorsening)
     const int d = std::max<int>(depth/DEPTH_INCREMENT,1);
     if (quiet) {
         // formula similar to Stockfish 18
-        int mult = std::max(FUTILITY_MARGIN_SLOPE, FUTILITY_MARGIN_BASE + d * 4);
-        return std::max(FUTILITY_MARGIN_MIN,mult * d - (3*128*improving - (128/3)*opponentWorsening)/128);
+        int mult = std::max<int>(FUTILITY_MARGIN_SLOPE, FUTILITY_MARGIN_BASE + d * 4);
+        return std::max<int>(FUTILITY_MARGIN_MIN,mult * d - (3*128*improving - (128/3)*opponentWorsening)/128);
     }
     else {
        return CAPTURE_FUTILITY_MARGIN_BASE + d * CAPTURE_FUTILITY_MARGIN_SLOPE;
