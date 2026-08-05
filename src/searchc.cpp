@@ -8,15 +8,43 @@
 #include <cassert>
 #include <cmath>
 
-TUNABLE(MAX_HISTORY_DEPTH,17,8,20);
-TUNABLE(HISTORY_BASE,-10,-150,150);
-TUNABLE(HISTORY_SLOPE,25,0,600);
-TUNABLE(HISTORY_SLOPE2,5,0,15);
-TUNABLE(MAX_CAPTURE_HISTORY_DEPTH,10,4,20);
-TUNABLE(CAPTURE_HISTORY_BASE,-129,-150,150);
-TUNABLE(CAPTURE_HISTORY_SLOPE,440,0,600);
-TUNABLE(CAPTURE_HISTORY_SLOPE2,4,0,15);
-TUNABLE(CAPTURE_HISTORY_ORDERING_DIVISOR,111,1,128);
+// main (butterfly) quiet-move history: quadratic in depth, capped.
+// BASE/SLOPE/MAX derived from Alexandria's history_bonus/history_malus
+// (https://github.com/PGG106/Alexandria/blob/master/src/tune.h), scaled
+// by HISTORY_DIVISOR / Alexandria's HH_MAX (4096/8192 = 0.5) since we
+// keep a smaller divisor than Alexandria's. SLOPE2 is an added quadratic
+// kicker (Alexandria's formula is linear).
+TUNABLE(HISTORY_BONUS_BASE,82,-512,512);
+TUNABLE(HISTORY_BONUS_SLOPE,179,1,750);
+TUNABLE(HISTORY_BONUS_SLOPE2,5,0,15);
+TUNABLE(HISTORY_BONUS_MAX,1388,1,4096);
+TUNABLE(HISTORY_MALUS_BASE,63,-512,512);
+TUNABLE(HISTORY_MALUS_SLOPE,219,1,750);
+TUNABLE(HISTORY_MALUS_SLOPE2,5,0,15);
+TUNABLE(HISTORY_MALUS_MAX,420,1,4096);
+// capture history: quadratic in depth, capped. BASE/SLOPE/MAX derived from
+// Alexandria's capthistory_bonus/capthistory_malus, scaled by
+// CAPTURE_HISTORY_DIVISOR / Alexandria's CAPTHIST_MAX (4096/16384 = 0.25).
+TUNABLE(CAPTURE_HISTORY_BONUS_BASE,-11,-256,256);
+TUNABLE(CAPTURE_HISTORY_BONUS_SLOPE,84,1,375);
+TUNABLE(CAPTURE_HISTORY_BONUS_SLOPE2,3,0,15);
+TUNABLE(CAPTURE_HISTORY_BONUS_MAX,647,1,4096);
+TUNABLE(CAPTURE_HISTORY_MALUS_BASE,1,-256,256);
+TUNABLE(CAPTURE_HISTORY_MALUS_SLOPE,84,1,375);
+TUNABLE(CAPTURE_HISTORY_MALUS_SLOPE2,4,0,15);
+TUNABLE(CAPTURE_HISTORY_MALUS_MAX,256,1,4096);
+// counter-move/follow-up ("continuation") history: linear in depth, capped;
+// shared between counterMoveHistory and fuMoveHistory. BASE/SLOPE/MAX
+// derived from Alexandria's conthistory_bonus/conthistory_malus, scaled by
+// HISTORY_DIVISOR / Alexandria's CH_MAX (4096/16384 = 0.25) since this
+// table shares HISTORY_DIVISOR with the main history table.
+TUNABLE(CONT_HISTORY_BONUS_BASE,-48,-256,256);
+TUNABLE(CONT_HISTORY_BONUS_SLOPE,56,1,375);
+TUNABLE(CONT_HISTORY_BONUS_MAX,868,1,2048);
+TUNABLE(CONT_HISTORY_MALUS_BASE,13,-256,256);
+TUNABLE(CONT_HISTORY_MALUS_SLOPE,87,1,375);
+TUNABLE(CONT_HISTORY_MALUS_MAX,179,1,4096);
+TUNABLE(CAPTURE_HISTORY_ORDERING_DIVISOR,224,20,512);
 TUNABLE(CORR_HIST_EVAL_DIVISOR,663,128,1024);
 TUNABLE(CORR_PAWN_WEIGHT,28,0,128);
 TUNABLE(CORR_NON_PAWN_WEIGHT,21,0,128);
@@ -25,37 +53,80 @@ TUNABLE(CORR_CONT_WEIGHT,60,0,128);
 TUNABLE(CORR_HIST_MAX_BONUS,156,100,400);
 
 // not tunable
-static constexpr int HISTORY_DIVISOR = 2048;
-static constexpr int CAPTURE_HISTORY_DIVISOR = 2048;
+static constexpr int HISTORY_DIVISOR = 4096;
+static constexpr int CAPTURE_HISTORY_DIVISOR = 4096;
 static constexpr int CORR_HIST_DIVISOR = 1024;
 
-static inline void update(int &val, int bonus, int divisor, bool is_best) {
-    assert(bonus >= 0);
-    val -= val * bonus / divisor;
-    if (is_best)
-        val += bonus;
+// Whether a history update is rewarding the move that caused a cutoff
+// (Bonus) or penalizing a move that was tried and did not (Malus). Bonus
+// and malus use independently tuned magnitudes rather than assuming
+// malus == -bonus.
+enum class HistoryUpdateType { Bonus, Malus };
+
+template <HistoryUpdateType T>
+static inline void updateHistoryValue(int &val, int magnitude, int divisor) {
+    assert(magnitude >= 0);
+    val -= val * magnitude / divisor;
+    if constexpr (T == HistoryUpdateType::Bonus)
+        val += magnitude;
     else
-        val -= bonus;
+        val -= magnitude;
+}
+
+// Dispatch to the Bonus or Malus update based on a runtime flag, using
+// the (already depth-scaled) magnitude appropriate to each.
+static inline void applyHistoryUpdate(int &val, bool positive, int bonusAmount,
+                                      int malusAmount, int divisor) {
+    if (positive)
+        updateHistoryValue<HistoryUpdateType::Bonus>(val, bonusAmount, divisor);
+    else
+        updateHistoryValue<HistoryUpdateType::Malus>(val, malusAmount, divisor);
 }
 
 static inline void updateCorrHist(int &val, int bonus, int divisor) {
     val = val + bonus - (val * std::abs(bonus)) / divisor;
 }
 
-static int bonus(int depth) {
+// Quiet-move (butterfly) history bonus/malus: quadratic in depth, capped
+// (no longer cut off entirely at some maximum depth).
+static int historyBonus(int depth) {
     const int d = std::max<int>(1, depth / DEPTH_INCREMENT);
-    if (d > MAX_HISTORY_DEPTH)
-        return 0;
-    else
-        return HISTORY_BASE + HISTORY_SLOPE*d + HISTORY_SLOPE2*d*d;
+    return std::min<int>(HISTORY_BONUS_MAX,
+                          HISTORY_BONUS_BASE + HISTORY_BONUS_SLOPE * d + HISTORY_BONUS_SLOPE2 * d * d);
 }
 
-static int captureBonus(int depth) {
+static int historyMalus(int depth) {
     const int d = std::max<int>(1, depth / DEPTH_INCREMENT);
-    if (d > MAX_CAPTURE_HISTORY_DEPTH)
-        return 0;
-    else
-        return CAPTURE_HISTORY_BASE + CAPTURE_HISTORY_SLOPE*d + CAPTURE_HISTORY_SLOPE2*d*d;
+    return std::min<int>(HISTORY_MALUS_MAX,
+                          HISTORY_MALUS_BASE + HISTORY_MALUS_SLOPE * d + HISTORY_MALUS_SLOPE2 * d * d);
+}
+
+// Capture history bonus/malus: quadratic in depth, capped.
+static int captureHistoryBonus(int depth) {
+    const int d = std::max<int>(1, depth / DEPTH_INCREMENT);
+    return std::min<int>(CAPTURE_HISTORY_BONUS_MAX,
+                          CAPTURE_HISTORY_BONUS_BASE + CAPTURE_HISTORY_BONUS_SLOPE * d +
+                          CAPTURE_HISTORY_BONUS_SLOPE2 * d * d);
+}
+
+static int captureHistoryMalus(int depth) {
+    const int d = std::max<int>(1, depth / DEPTH_INCREMENT);
+    return std::min<int>(CAPTURE_HISTORY_MALUS_MAX,
+                          CAPTURE_HISTORY_MALUS_BASE + CAPTURE_HISTORY_MALUS_SLOPE * d +
+                          CAPTURE_HISTORY_MALUS_SLOPE2 * d * d);
+}
+
+// Counter-move/follow-up ("continuation") history bonus/malus: linear in
+// depth (not quadratic), capped. Shared between counterMoveHistory and
+// fuMoveHistory.
+static int contHistoryBonus(int depth) {
+    const int d = std::max<int>(1, depth / DEPTH_INCREMENT);
+    return std::min<int>(CONT_HISTORY_BONUS_MAX, CONT_HISTORY_BONUS_BASE + CONT_HISTORY_BONUS_SLOPE * d);
+}
+
+static int contHistoryMalus(int depth) {
+    const int d = std::max<int>(1, depth / DEPTH_INCREMENT);
+    return std::min<int>(CONT_HISTORY_MALUS_MAX, CONT_HISTORY_MALUS_BASE + CONT_HISTORY_MALUS_SLOPE * d);
 }
 
 CorrectionHistory::CorrectionHistory() {
@@ -179,37 +250,41 @@ void SearchContext::updateStats(const Board &board, const NodeInfo *node) {
 
 void SearchContext::updateQuietMove(const Board &board, const NodeInfo *node, Move m,
                                     bool positive, bool continuationOnly) {
-    const int b = bonus(node->depth);
     if (!continuationOnly) {
-        update((*history)[board.sideToMove()][StartSquare(m)][DestSquare(m)], b,
-           HISTORY_DIVISOR, positive);
+        const int b = historyBonus(node->depth);
+        const int malus = historyMalus(node->depth);
+        applyHistoryUpdate((*history)[board.sideToMove()][StartSquare(m)][DestSquare(m)],
+                            positive, b, malus, HISTORY_DIVISOR);
         if (positive && PieceMoved(m) != Pawn) {
-            update((*history)[board.sideToMove()][DestSquare(m)][StartSquare(m)], b,
-                   HISTORY_DIVISOR, false);
+            // penalize the reverse (to->from) entry for this move
+            applyHistoryUpdate((*history)[board.sideToMove()][DestSquare(m)][StartSquare(m)],
+                                false, b, malus, HISTORY_DIVISOR);
         }
     }
     if (node->ply > 0) {
+        const int cb = contHistoryBonus(node->depth);
+        const int cm = contHistoryMalus(node->depth);
         Move lastMove = (node - 1)->last_move;
         if (!IsNull(lastMove)) {
-            update((*counterMoveHistory)[PieceMoved(lastMove)][DestSquare(
-                       lastMove)][PieceMoved(m)][DestSquare(m)],
-                   b, HISTORY_DIVISOR, positive);
+            applyHistoryUpdate((*counterMoveHistory)[PieceMoved(lastMove)][DestSquare(
+                                   lastMove)][PieceMoved(m)][DestSquare(m)],
+                                positive, cb, cm, HISTORY_DIVISOR);
         }
         if (node->ply > 1) {
             lastMove = (node - 2)->last_move;
             if (!IsNull(lastMove)) {
-                update((*fuMoveHistory)[PieceMoved(lastMove)][DestSquare(
-                           lastMove)][PieceMoved(m)][DestSquare(m)],
-                       b, HISTORY_DIVISOR, positive);
+                applyHistoryUpdate((*fuMoveHistory)[PieceMoved(lastMove)][DestSquare(
+                                       lastMove)][PieceMoved(m)][DestSquare(m)],
+                                    positive, cb, cm, HISTORY_DIVISOR);
             }
         }
     }
 }
 
 void SearchContext::updateNonQuietMove(const Board &board, const NodeInfo *node, Move m, bool positive) {
-    update((*captureHistory)[board[StartSquare(m)]][DestSquare(m)][Capture(m)],
-            captureBonus(node->depth),
-            CAPTURE_HISTORY_DIVISOR, positive);
+    applyHistoryUpdate((*captureHistory)[board[StartSquare(m)]][DestSquare(m)][Capture(m)],
+                        positive, captureHistoryBonus(node->depth), captureHistoryMalus(node->depth),
+                        CAPTURE_HISTORY_DIVISOR);
 }
 
 int SearchContext::getCmHistory(NodeInfo *node, Move move) const noexcept {
