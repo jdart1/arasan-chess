@@ -4,6 +4,7 @@
 #include "boardio.h"
 #include "chessio.h"
 #include "stdendian.h"
+#include <algorithm>
 #include <array>
 #include <sstream>
 #include <unordered_map>
@@ -237,7 +238,7 @@ template <typename T> static void deserialize(std::istream &in, T &data) {
     } // end switch
 }
 
-static const std::array<std::string,4> format_names = {"bin", "marlin", "bullet", "text"};
+static const std::array<std::string,5> format_names = {"bin", "marlin", "bullet", "text", "viri"};
 
 bool BinFormats::fromString(const std::string &s, Format &format) {
     size_t i = 0;
@@ -386,22 +387,26 @@ bool BinFormats::readBin(std::istream &in, int &result, PositionData &out) {
     return true;
 }
 
-bool BinFormats::writeMarlin(const BinFormats::PositionData &data, int result, std::ostream &out) {
-    Board board;
-    if (!BoardIO::readFEN(board, data.fen)) {
-        std::cerr << "bad fen" << std::endl;
-        return false;
+// marlinformat "PackedBoard", shared by Format::Marlin and Format::Viri.
+// 'whiteScore' and 'wdl' are from White's perspective, 'wdl' being 0 for a
+// Black win, 1 for a draw and 2 for a White win. Bytes are emitted explicitly
+// little-endian.
+static void packMarlinBoard(const Board &board, int16_t whiteScore, uint8_t wdl, unsigned ply,
+                            std::array<uint8_t, 32> &out) {
+    out.fill(0);
+    const uint64_t occupied = static_cast<uint64_t>(board.allOccupied);
+    for (unsigned i = 0; i < 8; ++i) {
+        out[i] = static_cast<uint8_t>(occupied >> (8 * i));
     }
-    serialize<uint64_t>(out, uint64_t(board.allOccupied));
-    std::array<uint8_t, 16> pos;
-    pos.fill(0);
-    unsigned idx = 0;
+    // 32 4-bit piece codes, in ascending square order
     Bitboard occ(board.allOccupied);
     Square sq;
-    while ((sq = occ.lastOne()) != InvalidSquare) {
+    unsigned idx = 0;
+    while ((sq = occ.firstOne()) != InvalidSquare) {
+        occ.clear(sq);
         const Piece p = board[sq];
         assert(TypeOfPiece(p) != Empty);
-        unsigned pieceCode = static_cast<unsigned>(TypeOfPiece(p) - 1);
+        unsigned pieceCode = static_cast<unsigned>(TypeOfPiece(p)) - 1;
         // This allows encoding castling status.
         static constexpr unsigned UnMovedRook = 6;
         if (TypeOfPiece(p) == Rook) {
@@ -417,28 +422,112 @@ bool BinFormats::writeMarlin(const BinFormats::PositionData &data, int result, s
                 }
             }
         }
-        pos[idx / 2] |= (pieceCode | (static_cast<unsigned>(ColorOfPiece(p)) << 3))
-                        << (4 * (idx & 1));
-        occ.clear(sq);
+        pieceCode |= static_cast<unsigned>(ColorOfPiece(p)) << 3;
+        out[8 + idx / 2] |= static_cast<uint8_t>(pieceCode << (4 * (idx & 1)));
         ++idx;
     }
-    out.write(reinterpret_cast<const char *>(pos.data()), 16);
-    Square epsq = board.state.enPassantSq;
-    Square target = 0;
+    // 7-bit enpassant target square (64 if none) + side to move
+    unsigned target = 64;
+    const Square epsq = board.state.enPassantSq;
     if (epsq != InvalidSquare) {
+        // Arasan's internal en passant square is the square of the pawn that
+        // just moved two squares, not the square behind it.
         target = (board.sideToMove() == White) ? epsq + 8 : epsq - 8;
     }
-    // encode enpassant + side to move
-    out << static_cast<uint8_t>((static_cast<unsigned>(target) & 0b111111) |
-                                static_cast<unsigned>(board.sideToMove() << 7));
-    serialize<uint8_t>(out, board.state.moveCount);
-    serialize<uint16_t>(out, static_cast<uint16_t>(2 * (data.ply / 2)));
-    // score and result from White's perspective
-    serialize<int16_t>(
-        out, static_cast<int16_t>(board.sideToMove() == White ? data.score : -data.score));
-    serialize<uint8_t>(out, static_cast<uint8_t>(result + 1));
-    // add extra byte
-    out << static_cast<uint8_t>(0);
+    out[24] = static_cast<uint8_t>((target & 0x7f) |
+                                   (board.sideToMove() == White ? 0 : 0x80));
+    out[25] = static_cast<uint8_t>(board.state.moveCount);
+    // The reader recovers the game ply from this, so it must be accurate and
+    // nonzero.
+    const uint16_t fullMove = static_cast<uint16_t>(ply / 2 + 1);
+    out[26] = static_cast<uint8_t>(fullMove);
+    out[27] = static_cast<uint8_t>(fullMove >> 8);
+    const uint16_t score = static_cast<uint16_t>(whiteScore);
+    out[28] = static_cast<uint8_t>(score);
+    out[29] = static_cast<uint8_t>(score >> 8);
+    out[30] = wdl;
+    // extra byte
+    out[31] = 0;
+}
+
+// viriformat move: 6-bit from | 6-bit to | 2-bit promotion piece | 2-bit type,
+// where the promotion piece is knight=0, bishop=1, rook=2, queen=3 and the type
+// is 0 for a normal move, 1 for en passant, 2 for castling and 3 for promotion.
+// Castling is encoded king-takes-rook, for Chess960 compatibility.
+static uint16_t encodeViriMove(const Board &board, Move m) {
+    unsigned from = static_cast<unsigned>(StartSquare(m));
+    unsigned to = static_cast<unsigned>(DestSquare(m));
+    unsigned promotion = 0, type = 0;
+    switch (TypeOfMove(m)) {
+    case Normal:
+        break;
+    case EnPassant:
+        type = 1;
+        break;
+    case KCastle:
+        type = 2;
+        to = (board.sideToMove() == White) ? chess::H1 : chess::H8;
+        break;
+    case QCastle:
+        type = 2;
+        to = (board.sideToMove() == White) ? chess::A1 : chess::A8;
+        break;
+    case Promotion:
+        type = 3;
+        promotion = static_cast<unsigned>(PromoteTo(m)) - static_cast<unsigned>(Knight);
+        break;
+    }
+    // the all-zero bit pattern terminates a game record
+    assert(from != to);
+    return static_cast<uint16_t>(from | (to << 6) | (promotion << 12) | (type << 14));
+}
+
+void BinFormats::ViriGame::restart(const Board &board, unsigned ply) {
+    moves.clear();
+    // The header score is unused (each ply carries its own) and the result byte
+    // is filled in by write().
+    packMarlinBoard(board, 0, 1, ply, header);
+    begun = true;
+}
+
+void BinFormats::ViriGame::addMove(const Board &board, Move m, score_t score) {
+    assert(begun);
+    // scores are White relative; clamp so that mate scores do not wrap
+    static constexpr score_t MAX_SCORE = 32000;
+    const score_t whiteScore = (board.sideToMove() == White) ? score : -score;
+    moves.emplace_back(encodeViriMove(board, m),
+                       static_cast<int16_t>(std::clamp(whiteScore, -MAX_SCORE, MAX_SCORE)));
+}
+
+bool BinFormats::ViriGame::write(int result, std::ostream &out) const {
+    if (!begun || moves.empty()) {
+        return true;
+    }
+    std::array<uint8_t, 32> hdr = header;
+    hdr[30] = static_cast<uint8_t>(result + 1);
+    out.write(reinterpret_cast<const char *>(hdr.data()), hdr.size());
+    for (const auto &[move, score] : moves) {
+        const uint16_t s = static_cast<uint16_t>(score);
+        const uint8_t buf[4] = {static_cast<uint8_t>(move), static_cast<uint8_t>(move >> 8),
+                                static_cast<uint8_t>(s), static_cast<uint8_t>(s >> 8)};
+        out.write(reinterpret_cast<const char *>(buf), sizeof(buf));
+    }
+    static const uint8_t terminator[4] = {0, 0, 0, 0};
+    out.write(reinterpret_cast<const char *>(terminator), sizeof(terminator));
+    return !out.fail();
+}
+
+bool BinFormats::writeMarlin(const BinFormats::PositionData &data, int result, std::ostream &out) {
+    Board board;
+    if (!BoardIO::readFEN(board, data.fen)) {
+        std::cerr << "bad fen" << std::endl;
+        return false;
+    }
+    std::array<uint8_t, 32> packed;
+    packMarlinBoard(board,
+                    static_cast<int16_t>(board.sideToMove() == White ? data.score : -data.score),
+                    static_cast<uint8_t>(result + 1), data.ply, packed);
+    out.write(reinterpret_cast<const char *>(packed.data()), packed.size());
     return !out.fail();
 }
 

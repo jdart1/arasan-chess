@@ -346,6 +346,16 @@ static void selfplay(ThreadData &td) {
     std::uniform_int_distribution<unsigned> dist(1, sp_options.outputPlyFrequency);
     std::uniform_int_distribution<unsigned> rand_dist(1, sp_options.randomizeInterval);
     auto startTime = getCurrentTime();
+    auto reportProgress = [&startTime](unsigned count) {
+        auto elapsedTime = getElapsedTime(startTime, getCurrentTime()) / 1000;
+        std::ios_base::fmtflags original_flags = std::cout.flags();
+        std::cout << std::setprecision(2) << count << " positions ("
+                  << (count * 100.0) / sp_options.posCount << "% done),"
+                  << " elapsed time: " << elapsedTime
+                  << " sec., positions/second: " << count / elapsedTime << std::flush
+                  << std::endl;
+        std::cout.flags(original_flags);
+    };
     while (posCounter < sp_options.posCount) {
         if (sp_options.saveGames) {
             td.gameMoves.reset();
@@ -356,6 +366,7 @@ static void selfplay(ThreadData &td) {
         unsigned low_score_count = 0, tb_score_count = 0, high_score_count = 0;
         enum class Result { WhiteWin, BlackWin, Draw, Unknown } result = Result::Unknown;
         std::vector<BinFormats::PositionData> output;
+        BinFormats::ViriGame viriGame;
         uint64_t prevNodes = 0ULL;
         int prevScore = 0;
         unsigned prevDepth = 0;
@@ -392,6 +403,7 @@ static void selfplay(ThreadData &td) {
                     // game result after a random move. Stockfish though does do
                     // this.
                     output.clear();
+                    viriGame.reset();
                     // We have no score from a random move, so reset the
                     // adjudication counter
                     low_score_count = 0;
@@ -492,7 +504,19 @@ static void selfplay(ThreadData &td) {
                 if (sp_options.saveGames) {
                     Notation::image(board, m, Notation::OutputFormat::SAN, image);
                 }
-                if (ply >= sp_options.minOutPly &&
+                if (sp_options.format == BinFormats::Format::Viri) {
+                    // Viriformat stores whole games, so every ply is recorded,
+                    // quiet or not: the trainer does the filtering. minOutPly
+                    // is likewise applied at training time, via the min_ply
+                    // setting of the trainer's filter.
+                    if (!viriGame.started() &&
+                        (ply > sp_options.maxBookPly + sp_options.randomizeRange)) {
+                        viriGame.restart(board, ply);
+                    }
+                    if (viriGame.started()) {
+                        viriGame.addMove(board, m, score);
+                    }
+                } else if (ply >= sp_options.minOutPly &&
                     (ply > sp_options.maxBookPly + sp_options.randomizeRange) &&
                     !board.repCount(1) &&
                     (!sp_options.checkHash ||
@@ -545,25 +569,38 @@ static void selfplay(ThreadData &td) {
         if (sp_options.saveGames) {
             saveGame(td, resultStrs[i], *game_out_file);
         }
+        int resultVal = 0; // result from White POV
+        if (result == Result::WhiteWin) {
+            resultVal = 1;
+        }
+        else if (result == Result::BlackWin) {
+            resultVal = -1;
+        }
+        if (sp_options.format == BinFormats::Format::Viri) {
+            const unsigned plies = static_cast<unsigned>(viriGame.plies());
+            // a game record must be contiguous in the file, so take the lock
+            // once and write the whole game
+            {
+                std::unique_lock<std::mutex> lock(outputLock);
+                if (!viriGame.write(resultVal, *pos_out_file)) {
+                    std::cerr << "write error" << std::endl;
+                    break;
+                }
+            }
+            // Note this counts recorded plies, not the positions that will
+            // remain after the trainer has filtered them.
+            const unsigned prev = posCounter.fetch_add(plies);
+            const unsigned interval = sp_options.verboseReportingInterval;
+            if ((prev + plies) / interval != prev / interval) {
+                reportProgress(prev + plies);
+            }
+            continue;
+        }
         for (const BinFormats::PositionData &data : output) {
             if (posCounter++ >= sp_options.posCount)
                 break;
             if (posCounter % sp_options.verboseReportingInterval == 0) {
-                auto elapsedTime = getElapsedTime(startTime, getCurrentTime()) / 1000;
-                std::ios_base::fmtflags original_flags = std::cout.flags();
-                std::cout << std::setprecision(2) << posCounter << " positions ("
-                          << (posCounter * 100.0) / sp_options.posCount << "% done),"
-                          << " elapsed time: " << elapsedTime
-                          << " sec., positions/second: " << posCounter / elapsedTime << std::flush
-                          << std::endl;
-                std::cout.flags(original_flags);
-            }
-            int resultVal = 0; // result from White POV
-            if (result == Result::WhiteWin) {
-                resultVal = 1;
-            }
-            else if (result == Result::BlackWin) {
-                resultVal = -1;
+                reportProgress(posCounter);
             }
             std::unique_lock<std::mutex> lock(outputLock);
             bool writeResult = false;
@@ -611,7 +648,8 @@ static void usage() {
     std::cerr << "Usage:" << std::endl;
     std::cerr << "selfplay [-a (append)] [-d depth] [-s semi-random depth] [-v (verbose)]" << std::endl;
     std::cerr << "         [-c cores] [-n positions] [-m output every m positions]" << std::endl;
-    std::cerr << "         [-f output format] [-g filename (save games)]" << std::endl;
+    std::cerr << "         [-f output format (bin|marlin|bullet|text|viri)]" << std::endl;
+    std::cerr << "         [-g filename (save games)]" << std::endl;
 }
 
 static void init_threads() {
@@ -786,6 +824,23 @@ int CDECL main(int argc, char **argv) {
         } else {
             usage();
             return -1;
+        }
+    }
+
+    if (sp_options.format == BinFormats::Format::Viri) {
+        // Viriformat stores whole games as a move sequence, so positions
+        // cannot be omitted from the output.
+        if (sp_options.checkHash || sp_options.outputPlyFrequency != 1 ||
+            sp_options.nonQuietSearchTest) {
+            std::cerr << "error: -h, -m and the non-quiet search test cannot be "
+                      << "used with the viri format: positions cannot be omitted "
+                      << "from a game record." << std::endl;
+            return -1;
+        }
+        if (sp_options.skipNonQuiet) {
+            std::cout << "note: viri format records all plies; set "
+                      << "filter_tactical/filter_check in the trainer's filter "
+                      << "configuration to skip non-quiet positions." << std::endl;
         }
     }
 
