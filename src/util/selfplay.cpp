@@ -646,10 +646,19 @@ static void threadp(ThreadData *td) {
 
 static void usage() {
     std::cerr << "Usage:" << std::endl;
-    std::cerr << "selfplay [-a (append)] [-d depth] [-s semi-random depth] [-v (verbose)]" << std::endl;
-    std::cerr << "         [-c cores] [-n positions] [-m output every m positions]" << std::endl;
+    std::cerr << "selfplay [-a (append)]" << std::endl;
+    std::cerr << "         [-b book plies]" << std::endl;
+    std::cerr << "         [-c cores]" << std::endl;
+    std::cerr << "         [-d depth]" << std::endl;;
     std::cerr << "         [-f output format (bin|marlin|bullet|text|viri)]" << std::endl;
     std::cerr << "         [-g filename (save games)]" << std::endl;
+    std::cerr << "         [-h (use hashtable to check dups)]" << std::endl;
+    std::cerr << "         [-n positions]" << std::endl;
+    std::cerr << "         [-m output every m positions]" << std::endl;
+    std::cerr << "         [-o filename (output file)]" << std::endl;
+    std::cerr << "         [-r n m (randomize moves, every n to max of m)]" << std::endl;
+    std::cerr << "         [-s semi-random depth]" << std::endl;
+    std::cerr << "         [-v (verbose)]" << std::endl;
 }
 
 static void init_threads() {
