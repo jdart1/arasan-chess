@@ -42,8 +42,11 @@ TUNABLE(FUTILITY_HISTORY_THRESHOLD_IMP, 1909, 1000, 8000);
 TUNABLE(FUTILITY_HISTORY_THRESHOLD_NON_IMP, 4100, 1000, 8000);
 TUNABLE(CAPTURE_FUTILITY_DEPTH, 5*DEPTH_INCREMENT, 3*DEPTH_INCREMENT, 8*DEPTH_INCREMENT);
 TUNABLE(CAPTURE_FUTILITY_HISTORY_DIVISOR, 125, 40, 400);
-TUNABLE(HISTORY_PRUNING_THRESHOLD_IMP, -474, -2000, 0);
-TUNABLE(HISTORY_PRUNING_THRESHOLD_NON_IMP, -472, -2000, 0);
+TUNABLE(HISTORY_PRUNING_DEPTH, 6*DEPTH_INCREMENT, 2*DEPTH_INCREMENT, 10*DEPTH_INCREMENT);
+TUNABLE(HISTORY_PRUNING_SLOPE_IMP, -5496, -6000, -1000);
+TUNABLE(HISTORY_PRUNING_SLOPE2_IMP, -52, -300, 0);
+TUNABLE(HISTORY_PRUNING_SLOPE_NON_IMP, -5547, -6000, -100);
+TUNABLE(HISTORY_PRUNING_SLOPE2_NON_IMP, -12, -300, 0);
 TUNABLE(HISTORY_REDUCTION_DIVISOR, 4436, 1000, 8000);
 #ifdef RAZORING
 TUNABLE(RAZOR_DEPTH, DEPTH_INCREMENT, 0, 2*DEPTH_INCREMENT);
@@ -147,8 +150,13 @@ static inline int futilityHistoryThreshold(bool improving) {
     return improving ? FUTILITY_HISTORY_THRESHOLD_IMP : FUTILITY_HISTORY_THRESHOLD_NON_IMP;
 }
 
-static inline int historyPruningThreshold(bool improving) {
-    return improving ? HISTORY_PRUNING_THRESHOLD_IMP : HISTORY_PRUNING_THRESHOLD_NON_IMP;
+static inline int historyPruningThreshold(int depth, bool improving) {
+    int d = std::max<int>(1,depth/DEPTH_INCREMENT);
+    if (improving) {
+        return d * HISTORY_PRUNING_SLOPE_IMP * d + HISTORY_PRUNING_SLOPE2_IMP * d * d;
+    } else {
+        return d * HISTORY_PRUNING_SLOPE_NON_IMP * d + HISTORY_PRUNING_SLOPE2_NON_IMP * d * d;
+    }
 }
 
 // global vars are updated only once this many nodes (to minimize
@@ -2390,11 +2398,9 @@ bool Search::prune(const Board &b,
 #endif
                 return true;
             }
-            // History pruning.
             const int hist = context.historyScore(m, n, board.sideToMove());
-            if (pruneDepth <= (3-improving)*DEPTH_INCREMENT &&
-                context.getCmHistory(n,m) < historyPruningThreshold(improving) &&
-                context.getFuHistory(n,m) < historyPruningThreshold(improving)) {
+            // History pruning.
+            if (depth <= HISTORY_PRUNING_DEPTH && hist < historyPruningThreshold(depth, improving)) {
 #ifdef SEARCH_TRACE
                 if (mainThread()) {
                     indent(n->ply); std::cout << "history: pruned" << std::endl;
