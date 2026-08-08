@@ -838,9 +838,8 @@ int CDECL main(int argc, char **argv) {
             return -1;
         }
         if (sp_options.skipNonQuiet) {
-            std::cout << "note: viri format records all plies; set "
-                      << "filter_tactical/filter_check in the trainer's filter "
-                      << "configuration to skip non-quiet positions." << std::endl;
+            std::cout << "note: position skipping omitted, viri format records all plies"
+                      << std::endl;
         }
     }
 
@@ -881,11 +880,15 @@ int CDECL main(int argc, char **argv) {
     std::cout << std::setprecision(4)
               << "White score percentage: " << winPct + drawPct/2 << '%'
               << " draw percentage: " << drawPct << std::endl;
-    uint64_t skipped = 0;
-    for (unsigned i = 0; i < sp_options.cores; i++) {
-        skipped += threadDatas[i].skipped;
+    if (sp_options.format != BinFormats::Format::Viri) {
+        // Viriformat does no position skipping: trainer is in charge of that
+        uint64_t skipped = 0;
+        for (unsigned i = 0; i < sp_options.cores; i++) {
+            skipped += threadDatas[i].skipped;
+        }
+        std::cout << skipped << " non-quiet positions skipped ("
+                  << (100.0 * skipped) / (skipped + sp_options.posCount) << "%)" << std::endl;
     }
-    std::cout << skipped << " non-quiet positions skipped" << std::endl;
     delete pos_out_file;
     delete game_out_file;
 
