@@ -2358,7 +2358,7 @@ score_t Search::quiesce(int ply,int depth)
        val_type = HashEntry::Valid;
    controller->hashTable.storeHash(hash, QSEARCH_DEPTH, age, val_type,
                                    HashEntry::scoreToHashValue(node->best_score, node->ply),
-                                   node->staticEval, val_type, hashMove);
+                                   node->staticEval, 0, hashMove);
    if (node->inBounds(node->best_score)) {
        if (!IsNull(node->best)) {
            updatePV(board,node->best,ply);
