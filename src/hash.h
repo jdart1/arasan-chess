@@ -1,4 +1,4 @@
-// Copyright 1992, 1999, 2011-2015, 2017-2019, 2021, 2023, 2025 by Jon Dart.  All Rights Reserved.
+// Copyright 1992, 1999, 2011-2015, 2017-2019, 2021, 2023, 2025-2026 by Jon Dart.  All Rights Reserved.
 
 #ifndef _HASH_H
 #define _HASH_H
@@ -16,7 +16,7 @@ class HashEntry {
 
   public:
     // Contents of the flag field
-    enum { TYPE_MASK = 0x7, TB_MASK = 0x08, LEARNED_MASK = 0x10 };
+    enum { TYPE_MASK = 0x7, TB_MASK = 0x08, LEARNED_MASK = 0x10, PV_MASK = 0x20 };
 
     // Only the first 4 values are actually stored - Invalid indicates
     // a hash hit with inadequate depth; NoHit indicates failure to find
@@ -103,6 +103,8 @@ class HashEntry {
 
     bool tb() const noexcept { return ((contents.flags & TB_MASK) != 0); }
 
+    bool wasPv() const noexcept { return ((contents.flags & PV_MASK) != 0); }
+
     uint8_t flags() const noexcept { return contents.flags; }
 
     Move bestMove(const Board &b) const noexcept {
@@ -180,7 +182,7 @@ class Hash {
     HashEntry::ValueType searchHash(hash_t hashCode, int depth, unsigned age, HashEntry &he) {
         if (!hashSize)
             return HashEntry::NoHit;
-        size_t probe = static_cast<size_t>(hashCode & hashMask);
+        size_t probe = hashCode & hashMask;
 
         HashEntry *p = &hashTable[probe];
         HashEntry *hit = nullptr;
@@ -216,10 +218,9 @@ class Hash {
 
     void storeHash(hash_t hashCode, const int depth, unsigned age, HashEntry::ValueType type,
                    score_t value, score_t staticValue, unsigned flags, Move best_move) {
-
         if (!hashSize)
             return;
-        size_t probe = static_cast<size_t>(hashCode & hashMask);
+        size_t probe = hashCode & hashMask;
         HashEntry *p = &hashTable[probe];
 
         HashEntry *best = nullptr;

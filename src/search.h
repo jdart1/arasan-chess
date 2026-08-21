@@ -84,6 +84,10 @@ struct NodeInfo {
         return nodeType == PvNode || beta > alpha + 1;
     }
 
+    bool cutNode() const noexcept {
+        return nodeType == CutNode;
+    }
+
     bool inBounds(score_t score) const noexcept {
         return score > alpha && score < beta;
     }
@@ -266,6 +270,8 @@ protected:
                NodeInfo *node,
                int moveIndex,
                int improving,
+               bool ttPv,
+               Move hashMove,
                int newDepth,
                Move move);
 
