@@ -59,6 +59,7 @@ w## Instructions for Claude
 - Use constexpr where possible when declaring variables.
 - Pass small-sized values to functions by value, larger values as references (const references if only read-only access is needed)
 - std::array is generally preferred over C-style arrays. But avoid structures with dynamically allocated contents (such as std::list) in peformance-senstive code.
+- Keep comments concise
 
 ## Git guidelines
 - Create a local branch for your work.
