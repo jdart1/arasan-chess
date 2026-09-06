@@ -58,7 +58,7 @@ fn main() {
 
     const INITIAL_LR: f32 = 0.001;
     let final_lr = INITIAL_LR * 0.01;
-    const SUPERBATCHES: usize = 800;
+    const SUPERBATCHES: usize = 600;
 
     #[rustfmt::skip]
     let mut trainer = ValueTrainerBuilder::default()
@@ -141,10 +141,10 @@ fn main() {
             start_superbatch: 1,
             end_superbatch: SUPERBATCHES,
         },
-        wdl_scheduler: wdl::ConstantWDL { value: 0.0 },
+        wdl_scheduler: wdl::ConstantWDL { value: 0.1 },
         lr_scheduler: lr::Warmup{ inner: lr::CosineDecayLR { initial_lr: INITIAL_LR, final_lr: final_lr, final_superbatch: SUPERBATCHES },
                 warmup_batches: 10},
-        save_rate: 100,
+        save_rate: 200,
     };
 
     let stricter_clipping = optimiser::AdamWParams { max_weight: 0.99, min_weight: -0.99, ..Default::default() };
@@ -155,6 +155,7 @@ fn main() {
 
     let data_loader = DirectSequentialDataLoader::new(&[
         "/data3/bullet/apr-may2026/dec25-may26-shuffled-interleaved.bullet",
+//        "/data3/bullet/aug2026/dec25-aug26-shuffled-interleaved.bullet"
     ]);
 
     trainer.run(&schedule, &settings, &data_loader);

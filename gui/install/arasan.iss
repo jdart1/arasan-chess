@@ -36,7 +36,7 @@ Source: "gui\help\arasan.chm"; DestDir: "{app}"; Components: GUI
 Source: "gui\pieces\*"; DestDir: "{app}\pieces"; Flags: recursesubdirs createallsubdirs; Components: GUI
 Source: "book\chess-openings\*"; DestDir: "{app}\chess-openings"; Components: GUI
 Source: "win32\release\arasanx-32.exe"; DestDir: "{app}"; Components: engine
-Source: "network\arasanv8-20260622.nnue"; DestDir: "{app}"; Components: engine
+Source: "network\arasanv8-20260906.nnue"; DestDir: "{app}"; Components: engine
 Source: "book\book.bin"; DestDir: "{app}"; Components: book
 Source: "LICENSE"; DestDir: "{app}\LICENSES"; Components: engine; DestName: "LICENSE.txt"
 Source: "gui\lunasvg\LICENSE"; DestDir: "{app}\LICENSES"; DestName: "LICENSE-lunasvg.txt"; Components: GUI;

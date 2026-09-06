@@ -30,7 +30,7 @@ STB=syzygy/src
 UTIL = util
 
 # default network
-NETWORK ?= arasanv8-20260622.nnue
+NETWORK ?= arasanv8-20260906.nnue
 
 # Path to git_archive_all (https://github.com/Kentzo/git-archive-all)
 GIT_ARCHIVE_ALL_PATH ?= /home/jdart/bin/git-archive-all
