@@ -2566,8 +2566,8 @@ int Search::reduce(const Board &b,
         }
     }
     // do not allow negative reduction
-    int r = std::clamp<int>(newDepth - DEPTH_INCREMENT,0,reduction/LMR_RESOLUTION);
-    return r < DEPTH_INCREMENT ? 0 : r;
+    int r = std::clamp<int>(reduction/LMR_RESOLUTION,0,std::max<int>(0,newDepth - DEPTH_INCREMENT));
+    return (r < DEPTH_INCREMENT) ? 0 : r;
 }
 
 // Recursive function, implements alpha/beta search below ply 0 but
