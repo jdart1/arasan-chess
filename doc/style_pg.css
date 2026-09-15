@@ -31,6 +31,15 @@ h3{
 	line-height: 1em;
 	}
 
+h4{
+	font-weight: bold;
+        font-size: 1.0em;
+        font-style: italic;
+	margin-top: 0.2em;
+	margin-bottom: 0.5em;
+	text-decoration: none;
+	line-height: 0.9em;
+	}
 p {
 padding-bottom: 1em;
 }

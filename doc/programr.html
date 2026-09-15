@@ -487,7 +487,9 @@ extending it into unprofitable and very unlikely lines of play. The
 precise nature of this balance depends not only on the search
 algorithms used, but also the relative efficiency of operations such
 as move generation, position evaluation and move ordering. Each
-program therefore strikes this balance in a somewhat different way.</p>
+  program therefore strikes this balance in a somewhat different way.</p>
+
+<h4>Top-level search (ply 0)</h4>
 
 <p>The entry point for a search is a routine called findBestMove. This
 function does some initialization, and then calls ply0_search, which
@@ -500,16 +502,25 @@ The variable "iterationDepth" holds the current nominal ply depth for
 the search. However, the presence of search extensions means that
 some nodes may be searched to a greater depth than this.</p>
 
-<p>In the first few iterations of the ply0 search, Arasan now uses wider
+<p>In the first few iterations of the ply 0 search, Arasan now uses wider
 than usual search bounds, so that each move gets a preliminary score.
 The scores are used to order the moves for deeper searching, and for
 "easy move" detection: if one move is found to have a significantly
 higher score than all others, and if subsequent searching still
-selects this move, then the search may be terminated early.</p>
+  selects this move, then the search may be terminated early.</p>
+
+<p>If in the ply 0 search routine, but not in the "wide window"
+  phase of the overall search, moves past the first one
+  are searched with a zero-width evaluation window. If such a move
+  "fails high," i.e. produces a score greater than beta, its search
+  window is progressively widened until the score is within the search bounds.
+</p>  
 
 <p>ply0_search does some other special processing and bookkeeping because
 it is at the top of the search tree. This function then calls search()
-to recursively process lower-depth nodes.</p>
+  to recursively process lower-depth nodes.</p>
+
+<h4>Draw, repetition and score check</h4>
 
 <p>The first step in search() is to check if the current board position
 is drawn, due to insufficient material, a 3-fold repetition of
@@ -518,27 +529,41 @@ moves, or the 50-move rule.</p>
 <p>If the position is drawn, move_search calls the function drawScore.
 Usually a draw is given a score of 0, but when playing on a chess server,
 the relative rating of the opponent is also factored in, so that
-draws against a lower-rated opponent are penalized.</p>
+  draws against a lower-rated opponent are penalized.</p>
+
+<p>"Mate distance pruning" is also used to terminate the search early.
+  This takes into account that no score returned from the search can be
+  beyond a mate score, corrected for the current ply (mate scores are
+  ply-relative). If the search window lies either above or below the
+  mate range at the current ply, then search cannot improve the score,
+  and the beta value can be returned as the search result.
+</p>
 
 <p>Arasan will also terminate the search immediately if the absolute
-maximum ply depth is reached. This is quite unlikely.</p>
+  maximum ply depth is reached. This is quite unlikely.</p>
 
-<p>If no draw is present and the maximum depth hasn't been reached, the
-next step is to look in the hash table (further described in the next
-section), in order to see if an identical position has been visited
-before. This may happen due to a transposition of moves that lead to
-the same position, or because a previous search to a shallower depth
-visited the same node. If a hash table entry is found and if it
-contains a valid value (i.e. one that did not cause cutoff), then that
-value is returned immediately and no further searching from that node
+<h4>Hash table probing</h4>
+
+<p>If no draw is present and the maximum depth hasn't been reached,
+the next step is to look in the hash table (further described below),
+in order to see if an identical position has been visited before. This
+may happen due to a transposition of moves that lead to the same
+position, or because a previous search to a shallower depth visited
+the same node. If a hash table entry is found and if it contains a
+valid value (i.e. one that did not cause cutoff), then that value is
+returned immediately and no further searching from that node
 occurs. In other cases, the hash table may not contain an exact value,
 but may hold an upper or lower bound that can be used to narrow the
 alpha-beta window.</p>
 
+<h4>Endgame tablebase probing</h4>
+
 <p>If the hash table lookup didn't produce an exact value or narrow the
 bounds enough to cause cutoff, then we may also try the endgame 
 tablebases, if they are installed and enabled, and if material is
-reduced enough that they can give an exact score.</p>
+  reduced enough that they can give an exact score.</p>
+
+<h4>Pre-search pruning</h4>
 
 <p>In non-PV nodes where the side to move is not in check,
 Arasan first tries a couple of techniques to
@@ -575,7 +600,9 @@ actually valid. The verification search uses reduced depth, but doesn't
 insert the null move first.</p>
 
 <p>After null move search, but before the regular search, Arasan
-now applies a pruning mechanism called ProbCut (see Buro).</p>
+  now applies a pruning mechanism called ProbCut (see Buro).</p>
+
+<h4>Principal variation</h4>
 
 <p>If neither the null move search nor ProbCut cause cutoff, then we must actually do some searching from the current node.</p>
 
@@ -629,6 +656,9 @@ full ply and a full ply.</p>
 Individual extensions can be combined, but at any given ply, the total
 depth reduction from extensions cannot exceed DEPTH_INCREMENT, the
 equivalent of one extra ply.</p>
+
+<h4>Non-PV moves</h4>
+
 <p>
 The principal variation phase of the search is over when we have found
 a legal move and searched its descendants (including quiesence nodes)
@@ -636,6 +666,7 @@ so that we have a value for it. It is possible that this value will
 be greater than beta, which means that we have set the initial search
 window wrong and must repeat the search with a different window.</p>
 <p>
+
 Assuming the principal variation move does not cause cutoff or mate,
 then the search function proceeds to search the remainder of the
 moves. These moves are searched with a zero-width alpha-beta window
@@ -709,6 +740,9 @@ In addition at depths just before the quiescence search, moves that
 appear to lose material based on a static exchange analysis are
 pruned. This is done with more liberal pruning conditions than other
 types of pruning.</p>
+
+<h4>Post-search actions</h4>
+
 <p>
 The final part of search() checks to see if checkmate or stalemate
 occurred, updates the hash table, and maintains the best variation.
