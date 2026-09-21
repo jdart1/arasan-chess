@@ -1,4 +1,4 @@
-// Copyright 1996-2008, 2013, 2017, 2021, 2024 by Jon Dart. All Rights Reserved
+// Copyright 1996-2008, 2013, 2017, 2021, 2024, 2026 by Jon Dart. All Rights Reserved
 #ifndef __CHESSIO_H__
 #define __CHESSIO_H__
 

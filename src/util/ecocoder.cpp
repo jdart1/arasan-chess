@@ -1,4 +1,4 @@
-// Copyright 1996, 2013, 2014, 2017, 2021-2025 by Jon Dart. All Rights Reserved.
+// Copyright 1996, 2013, 2014, 2017, 2021-2026 by Jon Dart. All Rights Reserved.
 
 // Utility to add ECO codes to PGN game files.
 
