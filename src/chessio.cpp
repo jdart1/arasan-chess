@@ -241,6 +241,92 @@ bool ChessIO::store_pgn(std::ostream &ofile, MoveArray &moves, const std::string
     return (bool)ofile;
 }
 
+namespace {
+
+// Accumulates PGN movetext into margin-wrapped lines.
+class MovetextWriter {
+  public:
+    MovetextWriter(std::ostream &os) : ofile(os), suppressSpace(false) {}
+
+    // Append an atom. If "spaceBefore" is true, a separating space is
+    // added (unless the line is empty, or the immediately preceding atom
+    // was "(", via suppressNextSpace).
+    void put(const std::string &atom, bool spaceBefore) {
+        bool useSpace = spaceBefore && !suppressSpace && buf.tellp() != (std::streampos)0;
+        suppressSpace = false;
+        std::string add = useSpace ? (' ' + atom) : atom;
+        if (buf.tellp() != (std::streampos)0 && (int)buf.tellp() + (int)add.size() >= (int)PGN_MARGIN) {
+            ofile << buf.str() << std::endl;
+            buf.str("");
+            add = atom;
+        }
+        buf << add;
+    }
+
+    // Suppress the separating space before the next atom put().
+    void suppressNextSpace() { suppressSpace = true; }
+
+    void flush() {
+        if (buf.tellp() != (std::streampos)0) {
+            ofile << buf.str() << std::endl;
+            buf.str("");
+        }
+    }
+
+  private:
+    std::ostream &ofile;
+    std::stringstream buf;
+    bool suppressSpace;
+};
+
+// Write one sequence of moves (the mainline, or a variation), starting at
+// half-move index "ply" (0-based, even = White to move). "needNum" tracks
+// whether the next move written must show its move number even if Black
+// is to move (set after "(" or ")").
+void write_movetext(MovetextWriter &w, const std::vector<ChessIO::MoveNode> &seq, int ply,
+                    bool needNum) {
+    for (const ChessIO::MoveNode &node : seq) {
+        bool white = (ply % 2 == 0);
+        if (white || needNum) {
+            w.put(std::to_string(ply / 2 + 1) + (white ? "." : "..."), true);
+        }
+        needNum = false;
+        w.put(node.image, true);
+        for (const std::string &nag : node.nags) {
+            w.put(nag, true);
+        }
+        if (!node.comment.empty()) {
+            w.put("{" + node.comment + "}", true);
+        }
+        for (const std::vector<ChessIO::MoveNode> &variation : node.variations) {
+            w.put("(", true);
+            w.suppressNextSpace();
+            write_movetext(w, variation, ply, true);
+            w.put(")", false);
+            needNum = true;
+        }
+        ++ply;
+    }
+}
+
+} // namespace
+
+bool ChessIO::store_pgn(std::ostream &ofile, const std::vector<MoveNode> &moves,
+                        const std::string &result, std::vector<Header> &headers) {
+    for (auto it = headers.begin(); it != headers.end(); it++) {
+        Header p = *it;
+        ofile << "[" << p.tag() << " \"" << p.value() << "\"]" << std::endl;
+    }
+    ofile << std::endl;
+
+    MovetextWriter w(ofile);
+    write_movetext(w, moves, 0, true);
+    w.put(result, true);
+    w.flush();
+    ofile << std::endl;
+    return (bool)ofile;
+}
+
 bool ChessIO::readEPDRecord(std::istream &ifs, Board &board, EPDRecord &rec) {
     rec.clear();
     // read FEN description

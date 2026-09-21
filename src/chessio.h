@@ -50,6 +50,16 @@ class ChessIO {
 
     static inline const std::regex HeaderPattern{"^\\s*\\[([^\\s]+)\\s+\"([^\"]*)\"\\][\\s\\r\\n]*$"};
 
+    // Represents one ply of PGN movetext, including any NAGs, a trailing
+    // comment, and variations (alternatives to this move). A whole game
+    // (or a variation) is a std::vector<MoveNode>.
+    struct MoveNode {
+        std::string image;
+        std::vector<std::string> nags;
+        std::string comment;
+        std::vector<std::vector<MoveNode>> variations;
+    };
+
     class PGNReader {
         friend class TokenReader;
 
@@ -112,6 +122,11 @@ class ChessIO {
 
     static bool store_pgn(std::ostream &ofs, MoveArray &moves, const std::string &result,
                           std::vector<Header> &headers);
+
+    // Store a PGN file with the specified headers, including variations,
+    // NAGs, and comments recorded in "moves".
+    static bool store_pgn(std::ostream &ofs, const std::vector<MoveNode> &moves,
+                          const std::string &result, std::vector<Header> &headers);
 
     static bool load_fen(std::istream &ifs, Board &board);
     static bool store_fen(std::ostream &ofs, const Board &board);

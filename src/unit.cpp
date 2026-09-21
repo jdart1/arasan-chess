@@ -460,6 +460,36 @@ static int testPGN() {
       return errs;
 }
 
+static int testPGNStore() {
+    int errs = 0;
+
+    // 1. e4 e5 (1... c5 2. Nf3 $1) 2. Nf3 {developing} Nc6
+    std::vector<ChessIO::MoveNode> moves;
+    moves.push_back(ChessIO::MoveNode{"e4", {}, "", {}});
+    ChessIO::MoveNode e5{"e5", {}, "", {}};
+    e5.variations.push_back(
+        {ChessIO::MoveNode{"c5", {}, "", {}}, ChessIO::MoveNode{"Nf3", {"$1"}, "", {}}});
+    moves.push_back(e5);
+    moves.push_back(ChessIO::MoveNode{"Nf3", {}, "developing", {}});
+    moves.push_back(ChessIO::MoveNode{"Nc6", {}, "", {}});
+
+    std::vector<ChessIO::Header> hdrs;
+    hdrs.push_back(ChessIO::Header("Event", "Test"));
+    hdrs.push_back(ChessIO::Header("Result", "*"));
+
+    std::ostringstream out;
+    ChessIO::store_pgn(out, moves, "*", hdrs);
+
+    static const std::string expected =
+        "[Event \"Test\"]\n[Result \"*\"]\n\n"
+        "1. e4 e5 (1... c5 2. Nf3 $1) 2. Nf3 {developing} Nc6 *\n\n";
+    if (out.str() != expected) {
+        ++errs;
+        std::cout << "PGN store test: unexpected output:" << std::endl << out.str() << std::endl;
+    }
+    return errs;
+}
+
 static int testEval() {
 
     struct Case {
@@ -1765,6 +1795,7 @@ static int doUnit() {
    errs += testGetPinned();
    errs += testSee();
    errs += testPGN();
+   errs += testPGNStore();
    errs += testBitbases();
    errs += testDrawEval();
    errs += testCheckStatus();

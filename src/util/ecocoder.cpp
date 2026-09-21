@@ -18,9 +18,11 @@ extern "C" {
 #include <stddef.h>
 #include <string.h>
 };
+#include <algorithm>
 #include <ctype.h>
 #include <fstream>
 #include <iostream>
+#include <utility>
 #include <vector>
 
 static struct ECOptions {
@@ -48,6 +50,18 @@ int CDECL main(int argc, char **argv) {
         std::cerr << "failed to load ECO database from " << ecoPath << std::endl;
         exit(-1);
     }
+
+    // One nesting level of PGN movetext being parsed: "board" is the
+    // current position at this level, "boardBeforeLast" is the position
+    // before the last move added to "seq" (needed if a variation branches
+    // off that move), and "plyAtStart" is the ply (0-based half-move
+    // index) of the first move in "seq".
+    struct VarFrame {
+        Board boardBeforeLast;
+        Board board;
+        int plyAtStart;
+        std::vector<ChessIO::MoveNode> seq;
+    };
 
     Board board;
     int arg = 1;
@@ -85,24 +99,27 @@ int CDECL main(int argc, char **argv) {
                 break;
             board.reset();
             MoveArray moves;
+            std::vector<VarFrame> varStack;
+            varStack.push_back(VarFrame{board, board, 0, {}});
             ChessIO::TokenReader tokenReader(pgnReader);
             // read game body
             while (ok && !exit && !done) {
                 ChessIO::Token tok = tokenReader.nextToken();
-                std::string num;
                 switch (tok.type) {
                 case ChessIO::Eof: {
                     exit = true;
                     break;
                 }
                 case ChessIO::Number: {
-                    num = tok.val;
+                    // move numbers are regenerated on output, input value not needed
                     break;
                 }
                 case ChessIO::GameMove: {
+                    VarFrame &top = varStack.back();
                     // parse the move
-                    Move m = Notation::value(board, board.sideToMove(), Notation::InputFormat::SAN, tok.val);
-                    if (IsNull(m) || !legalMove(board, m)) {
+                    Move m = Notation::value(top.board, top.board.sideToMove(),
+                                             Notation::InputFormat::SAN, tok.val);
+                    if (IsNull(m) || !legalMove(top.board, m)) {
                         // echo to both stdout and stderr
                         std::cerr << "Illegal move: " << tok.val << std::endl;
                         std::cout << "Illegal move: " << tok.val << std::endl;
@@ -110,9 +127,14 @@ int CDECL main(int argc, char **argv) {
                     } else {
                         std::string img;
                         // convert to SAN
-                        Notation::image(board, m, Notation::OutputFormat::SAN, img);
-                        moves.add_move(board, m, img);
-                        board.doMove(m);
+                        Notation::image(top.board, m, Notation::OutputFormat::SAN, img);
+                        if (varStack.size() == 1) {
+                            // only the mainline is used for ECO classification
+                            moves.add_move(top.board, m, img);
+                        }
+                        top.boardBeforeLast = top.board;
+                        top.board.doMove(m);
+                        top.seq.push_back(ChessIO::MoveNode{img, {}, "", {}});
                     }
                     break;
                 }
@@ -121,7 +143,54 @@ int CDECL main(int argc, char **argv) {
                     break;
                 }
                 case ChessIO::Comment: {
-                    // ignored for now
+                    std::string text = tok.val;
+                    if (text.size() >= 2 && text.front() == '{' && text.back() == '}') {
+                        text = text.substr(1, text.size() - 2);
+                    }
+                    std::replace(text.begin(), text.end(), '\n', ' ');
+                    std::replace(text.begin(), text.end(), '\r', ' ');
+                    VarFrame &top = varStack.back();
+                    if (!top.seq.empty()) {
+                        std::string &comment = top.seq.back().comment;
+                        if (!comment.empty())
+                            comment += ' ';
+                        comment += text;
+                    } else {
+                        std::cerr << "Warning: misplaced comment, ignored" << std::endl;
+                    }
+                    break;
+                }
+                case ChessIO::NAG: {
+                    VarFrame &top = varStack.back();
+                    if (!top.seq.empty()) {
+                        top.seq.back().nags.push_back(tok.val);
+                    } else {
+                        std::cerr << "Warning: misplaced NAG, ignored" << std::endl;
+                    }
+                    break;
+                }
+                case ChessIO::OpenVar: {
+                    VarFrame &top = varStack.back();
+                    if (top.seq.empty()) {
+                        std::cerr << "Warning: misplaced variation start, ignored" << std::endl;
+                        varStack.push_back(VarFrame{top.board, top.board, top.plyAtStart, {}});
+                    } else {
+                        int plyAtStart = top.plyAtStart + (int)top.seq.size() - 1;
+                        varStack.push_back(
+                            VarFrame{top.boardBeforeLast, top.boardBeforeLast, plyAtStart, {}});
+                    }
+                    break;
+                }
+                case ChessIO::CloseVar: {
+                    if (varStack.size() <= 1) {
+                        std::cerr << "Warning: unmatched ')', ignored" << std::endl;
+                    } else {
+                        std::vector<ChessIO::MoveNode> finished = std::move(varStack.back().seq);
+                        varStack.pop_back();
+                        if (!finished.empty() && !varStack.back().seq.empty()) {
+                            varStack.back().seq.back().variations.push_back(std::move(finished));
+                        }
+                    }
                     break;
                 }
                 case ChessIO::Result: {
@@ -129,13 +198,18 @@ int CDECL main(int argc, char **argv) {
                     done = true;
                     break;
                 }
-                case ChessIO::OpenVar:
-                    std::cerr << "Warning: variations not supported" << std::endl;
-                    done = true;
                 default:
                     break;
 
                 } // end switch
+            }
+            // close any variations left open by malformed/truncated input
+            while (varStack.size() > 1) {
+                std::vector<ChessIO::MoveNode> finished = std::move(varStack.back().seq);
+                varStack.pop_back();
+                if (!finished.empty() && !varStack.back().seq.empty()) {
+                    varStack.back().seq.back().variations.push_back(std::move(finished));
+                }
             }
             // output headers
             std::string ecoC, name;
@@ -171,7 +245,7 @@ int CDECL main(int argc, char **argv) {
                 }
             }
             if (moves.num_moves() > 0)
-                ChessIO::store_pgn(std::cout, moves, result, hdrs);
+                ChessIO::store_pgn(std::cout, varStack.front().seq, result, hdrs);
         }
     }
     return 0;
