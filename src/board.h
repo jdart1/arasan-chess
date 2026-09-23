@@ -1,4 +1,4 @@
-// Copyright 1994-2000, 2004, 2005, 2013, 2015, 2019-2021, 2023-2025 by Jon Dart.
+// Copyright 1994-2000, 2004, 2005, 2013, 2015, 2019-2021, 2023-2026 by Jon Dart.
 // All Rights Reserved.
 
 #include "types.h"
@@ -125,6 +125,42 @@ public:
       return castleStatus(c) == CanCastleQSide ||
           castleStatus(c) == CanCastleEitherSide;
    }
+
+    bool sanityCheckKSideCastling(ColorType c) const noexcept {
+        Square kp = kingSquare(c);
+        if (c == White && (kp != chess::E1 || contents[chess::H1] != WhiteRook)) {
+            return false;
+        } else if (c == Black && (kp != chess::E8 || contents[chess::H8] != BlackRook)) {
+            return false;
+        }
+        return true;
+    }
+
+    bool kSideCastlingLegal(ColorType c) const noexcept {
+        Square kp = kingSquare(c);
+        return contents[kp + 1] == EmptyPiece && contents[kp + 2] == EmptyPiece &&
+            checkStatus() == NotInCheck &&
+            !anyAttacks(kp + 1, OppositeColor(c)) &&
+            !anyAttacks(kp + 2, OppositeColor(c));
+    }
+
+    bool sanityCheckQSideCastling(ColorType c) const noexcept {
+        Square kp = kingSquare(c);
+        if (c == White && (kp != chess::E1 || contents[chess::A1] != WhiteRook)) {
+            return false;
+        } else if (c == Black && (kp != chess::E8 || contents[chess::A8] != BlackRook)) {
+            return false;
+        }
+        return true;
+    }
+
+    bool qSideCastlingLegal(ColorType c) const noexcept {
+        Square kp = kingSquare(c);
+        return contents[kp - 1] == EmptyPiece && contents[kp - 2] == EmptyPiece &&
+            contents[kp - 3] == EmptyPiece && checkStatus() == NotInCheck &&
+            !anyAttacks(kp - 1, OppositeColor(c)) &&
+            !anyAttacks(kp - 2, OppositeColor(c));
+    }
 
    // side to move
    ColorType sideToMove() const  {

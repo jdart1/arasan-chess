@@ -157,7 +157,15 @@ int BoardIO::readFEN(Board &board, const std::string &buf) {
     if (board.kingPos[White] == InvalidSquare || board.kingPos[Black] == InvalidSquare) {
         return 0;
     }
-
+    // Perform some sanity checking on castling status
+    for (ColorType stm : colors) {
+        if (board.canCastleKSide(stm) && !board.sanityCheckKSideCastling(stm)) {
+            return 0;
+        }
+        if (board.canCastleQSide(stm) && !board.sanityCheckQSideCastling(stm)) {
+            return 0;
+        }
+    }
     return 1;
 }
 

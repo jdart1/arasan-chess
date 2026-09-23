@@ -539,41 +539,19 @@ unsigned mg::generateNonCaptures(const Board &board, Move *moves) {
     unsigned numMoves = 0;
     // castling moves
     const ColorType side = board.sideToMove();
-    CastleType CS = board.castleStatus(side);
+    const CastleType CS = board.castleStatus(side);
+    const Square kp = board.kingSquare(side);
     if ((CS == CanCastleEitherSide) || (CS == CanCastleKSide)) {
-        const Square kp = board.kingSquare(side);
-#ifdef _DEBUG
-        if (side == White) {
-            assert(kp == chess::E1);
-            assert(board[chess::H1] == WhiteRook);
-        } else {
-            assert(kp == chess::E8);
-            assert(board[chess::H8] == BlackRook);
-        }
-#endif
-        if (board[kp + 1] == EmptyPiece && board[kp + 2] == EmptyPiece &&
-            board.checkStatus() == NotInCheck && !board.anyAttacks(kp + 1, OppositeColor(side)) &&
-            !board.anyAttacks(kp + 2, OppositeColor(side)))
-            // can castle
+        assert(board.sanityCheckKSideCastling(side));
+        if (board.kSideCastlingLegal(side)) {
             moves[numMoves++] = CreateMove(kp, kp + 2, King, Empty, Empty, KCastle);
+        }
     }
     if ((CS == CanCastleEitherSide) || (CS == CanCastleQSide)) {
-        const Square kp = board.kingSquare(side);
-#ifdef _DEBUG
-        if (side == White) {
-            assert(kp == chess::E1);
-            assert(board[chess::A1] == WhiteRook);
-        } else {
-            assert(kp == chess::E8);
-            assert(board[chess::A8] == BlackRook);
-        }
-#endif
-        if (board[kp - 1] == EmptyPiece && board[kp - 2] == EmptyPiece &&
-            board[kp - 3] == EmptyPiece && board.checkStatus() == NotInCheck &&
-            !board.anyAttacks(kp - 1, OppositeColor(side)) &&
-            !board.anyAttacks(kp - 2, OppositeColor(side)))
-            // can castle
+        assert(board.sanityCheckQSideCastling(side));
+        if (board.qSideCastlingLegal(side)) {
             moves[numMoves++] = CreateMove(kp, kp - 2, King, Empty, Empty, QCastle);
+        }
     }
     // non-pawn moves:
     Square start, dest;
