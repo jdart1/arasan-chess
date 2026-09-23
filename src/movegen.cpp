@@ -15,7 +15,7 @@
 #include <algorithm>
 #include <cmath>
 
-#define _TRACE
+//#define _TRACE
 
 extern const int Direction[2];
 
