@@ -1,4 +1,4 @@
-// Copyright 1994-2025 by Jon Dart. All Rights Reserved.
+// Copyright 1994-2026 by Jon Dart. All Rights Reserved.
 //
 #include "movegen.h"
 #include "attacks.h"
@@ -15,7 +15,7 @@
 #include <algorithm>
 #include <cmath>
 
-//#define _TRACE
+#define _TRACE
 
 extern const int Direction[2];
 
@@ -535,85 +535,80 @@ bool RootMoveGenerator::rank_and_filter_root_moves()
 #endif
 }
 
-unsigned mg::generateNonCaptures(const Board &board, Move *moves)
-{
-   unsigned numMoves = 0;
-   // castling moves
-   const ColorType side = board.sideToMove();
-   CastleType CS = board.castleStatus(side);
-   if ((CS == CanCastleEitherSide) ||
-   (CS == CanCastleKSide)) {
-      const Square kp = board.kingSquare(side);
+unsigned mg::generateNonCaptures(const Board &board, Move *moves) {
+    unsigned numMoves = 0;
+    // castling moves
+    const ColorType side = board.sideToMove();
+    CastleType CS = board.castleStatus(side);
+    if ((CS == CanCastleEitherSide) || (CS == CanCastleKSide)) {
+        const Square kp = board.kingSquare(side);
 #ifdef _DEBUG
-      if (side == White) {
-         assert(kp == chess::E1);
-         assert(board[kp+3] == WhiteRook);
-      }
-      else {
-         assert(kp == chess::E8);
-         assert(board[kp+3] == BlackRook);
-      }
+        if (side == White) {
+            assert(kp == chess::E1);
+            assert(board[chess::H1] == WhiteRook);
+        } else {
+            assert(kp == chess::E8);
+            assert(board[chess::H8] == BlackRook);
+        }
 #endif
-      if (board[kp + 1] == EmptyPiece &&
-         board[kp + 2] == EmptyPiece &&
-         board.checkStatus() == NotInCheck &&
-         !board.anyAttacks(kp + 1,OppositeColor(side)) &&
-         !board.anyAttacks(kp + 2,OppositeColor(side)))
-         // can castle
-         moves[numMoves++] = CreateMove(kp, kp+2, King, Empty,
-            Empty, KCastle);
-   }
-   if ((CS == CanCastleEitherSide) ||
-   (CS == CanCastleQSide)) {
-      const Square kp = board.kingSquare(side);
-      if (board[kp - 1] == EmptyPiece &&
-         board[kp - 2] == EmptyPiece &&
-         board[kp - 3] == EmptyPiece &&
-         board.checkStatus() == NotInCheck  &&
-         !board.anyAttacks(kp - 1,OppositeColor(side)) &&
-         !board.anyAttacks(kp - 2,OppositeColor(side)))
-         // can castle
-         moves[numMoves++] = CreateMove(kp, kp-2, King, Empty,
-            Empty, QCastle);
-   }
-   // non-pawn moves:
-   Square start, dest;
-   Bitboard dests;
-   Bitboard knights(board.knight_bits[side]);
-   while (knights.iterate(start)) {
-      dests = Attacks::knight_attacks[start] & ~board.allOccupied;
-      while (dests.iterate(dest)) {
-         moves[numMoves++] =
-             CreateMove(start,dest,Knight);
-      }
-   }
-   start = board.kingSquare(side);
-   dests = Attacks::king_attacks[start] & ~board.allOccupied &
-               ~Attacks::king_attacks[board.kingSquare(board.oppositeSide())];
-   while (dests.iterate(dest)) {
-      moves[numMoves++] =
-        CreateMove(start,dest,King);
-   }
-   Bitboard bishops(board.bishop_bits[side] | board.queen_bits[side]);
-   while (bishops.iterate(start)) {
-      dests = (board.bishopAttacks(start) & ~board.allOccupied);
-      while (dests.iterate(dest)) {
-         moves[numMoves++] =
-            CreateMove(start,dest,TypeOfPiece(board[start]));
-      }
-   }
-   Bitboard rooks(board.rook_bits[side] | board.queen_bits[side]);
-   while (rooks.iterate(start)) {
-      dests = (board.rookAttacks(start) & ~board.allOccupied);
-      while (dests.iterate(dest)) {
-          moves[numMoves++] =
-            CreateMove(start,dest,TypeOfPiece(board[start]));
-      }
-   }
-   // pawn moves
-   if (board.sideToMove() == White) {
-      Bitboard pawns(board.pawn_bits[White]);
-      pawns.shl8();
+        if (board[kp + 1] == EmptyPiece && board[kp + 2] == EmptyPiece &&
+            board.checkStatus() == NotInCheck && !board.anyAttacks(kp + 1, OppositeColor(side)) &&
+            !board.anyAttacks(kp + 2, OppositeColor(side)))
+            // can castle
+            moves[numMoves++] = CreateMove(kp, kp + 2, King, Empty, Empty, KCastle);
+    }
+    if ((CS == CanCastleEitherSide) || (CS == CanCastleQSide)) {
+        const Square kp = board.kingSquare(side);
+#ifdef _DEBUG
+        if (side == White) {
+            assert(kp == chess::E1);
+            assert(board[chess::A1] == WhiteRook);
+        } else {
+            assert(kp == chess::E8);
+            assert(board[chess::A8] == BlackRook);
+        }
+#endif
+        if (board[kp - 1] == EmptyPiece && board[kp - 2] == EmptyPiece &&
+            board[kp - 3] == EmptyPiece && board.checkStatus() == NotInCheck &&
+            !board.anyAttacks(kp - 1, OppositeColor(side)) &&
+            !board.anyAttacks(kp - 2, OppositeColor(side)))
+            // can castle
+            moves[numMoves++] = CreateMove(kp, kp - 2, King, Empty, Empty, QCastle);
+    }
+    // non-pawn moves:
+    Square start, dest;
+    Bitboard dests;
+    Bitboard knights(board.knight_bits[side]);
+    while (knights.iterate(start)) {
+        dests = Attacks::knight_attacks[start] & ~board.allOccupied;
+        while (dests.iterate(dest)) {
+            moves[numMoves++] = CreateMove(start, dest, Knight);
+        }
+    }
+    start = board.kingSquare(side);
+    dests = Attacks::king_attacks[start] & ~board.allOccupied &
+            ~Attacks::king_attacks[board.kingSquare(board.oppositeSide())];
+    while (dests.iterate(dest)) {
+        moves[numMoves++] = CreateMove(start, dest, King);
+    }
+    Bitboard bishops(board.bishop_bits[side] | board.queen_bits[side]);
+    while (bishops.iterate(start)) {
+        dests = (board.bishopAttacks(start) & ~board.allOccupied);
+        while (dests.iterate(dest)) {
+            moves[numMoves++] = CreateMove(start, dest, TypeOfPiece(board[start]));
+        }
+    }
+    Bitboard rooks(board.rook_bits[side] | board.queen_bits[side]);
+    while (rooks.iterate(start)) {
+        dests = (board.rookAttacks(start) & ~board.allOccupied);
+        while (dests.iterate(dest)) {
+            moves[numMoves++] = CreateMove(start, dest, TypeOfPiece(board[start]));
+        }
+    }
+    // pawn moves
+    if (board.sideToMove() == White) {
+        Bitboard pawns(board.pawn_bits[White]);
+        pawns.shl8();
         // exclude promotions
       pawns &= ~(board.allOccupied | Attacks::rank_mask[7]);
       Square sq;
@@ -637,7 +632,6 @@ unsigned mg::generateNonCaptures(const Board &board, Move *moves)
    }
    return numMoves;
 }
-
 
 unsigned mg::generateCaptures(const Board &board, Move * moves, bool allPromotions, const Bitboard &targets)
 {
