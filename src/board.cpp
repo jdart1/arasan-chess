@@ -193,53 +193,29 @@ const Piece &Board::operator[]( const Square sq ) const
 }
 #endif
 
-static inline CastleType UpdateCastleStatusW( CastleType cs, Square sq )
+static constexpr CastleType LoseKCastling[4] = {CanCastleQSide, CantCastleEitherSide, CanCastleQSide, CantCastleEitherSide};
+static constexpr CastleType LoseQCastling[4] = {CanCastleKSide, CanCastleKSide, CantCastleEitherSide, CantCastleEitherSide};
+
+template <ColorType side>
+static inline CastleType updateCastleStatus(CastleType cs, Square sq)
 // after a move of or capture of the rook on 'sq', update castle status
 // for 'side'
 {
-   assert(cs<3);
-   if (sq == chess::A1) // Queen Rook moved or captured
-   {
-      if (cs == CanCastleEitherSide)
-         return CanCastleKSide;
-      else if (cs == CanCastleQSide)
-         return CantCastleEitherSide;
-   }
-   else if (sq == chess::H1) // King Rook moved or captured
-   {
-      if (cs == CanCastleEitherSide)
-         return CanCastleQSide;
-      else if (cs == CanCastleKSide)
-         return CantCastleEitherSide;
-   }
-   return cs;
+    if (side == White) {
+        if (sq == chess::A1) // Queen Rook moved or captured
+            return LoseQCastling[cs];
+        else if (sq == chess::H1) // King Rook moved or captured
+            return LoseKCastling[cs];
+    } else {
+        if (sq == chess::A8) // Queen Rook moved or captured
+            return LoseQCastling[cs];
+        else if (sq == chess::H8) // King Rook moved or captured
+            return LoseKCastling[cs];
+    }
+    return cs; // no change
 }
 
-static inline CastleType UpdateCastleStatusB(CastleType cs, Square sq)
-// after a move of or capture of the rook on 'sq', update castle status
-// for 'side'
-{
-   assert(cs<3);
-   if (sq == chess::A8) // Queen Rook moved or captured
-   {
-      if (cs == CanCastleEitherSide)
-         return CanCastleKSide;
-      else if (cs == CanCastleQSide)
-         return CantCastleEitherSide;
-   }
-   else if (sq==chess::H8) // King Rook moved or captured
-   {
-      if (cs == CanCastleEitherSide)
-         return CanCastleQSide;
-      else if (cs == CanCastleKSide)
-         return CantCastleEitherSide;
-   }
-   return cs;
-}
-
-static FORCEINLINE void Xor(hash_t &h,Square sq,Piece piece) {
-   h ^= hash_codes[sq][(int)piece];
-}
+static FORCEINLINE void Xor(hash_t &h, Square sq, Piece piece) { h ^= hash_codes[sq][(int)piece]; }
 
 void Board::doNull(NodeInfo *node)
 {
@@ -498,7 +474,7 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
             rook_bits[White].setClear(bits);
             if ((int)state.castleStatus[White]<3) {
                state.hashCode ^= w_castle_status[(int)state.castleStatus[White]];
-               state.castleStatus[White] = UpdateCastleStatusW(state.castleStatus[White],start);
+               state.castleStatus[White] = updateCastleStatus<White>(state.castleStatus[White],start);
                state.hashCode ^= w_castle_status[(int)state.castleStatus[White]];
             }
             break;
@@ -554,7 +530,7 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
                material[Black].removePiece(Rook);
                if ((int)state.castleStatus[Black]<3) {
                   state.hashCode ^= b_castle_status[(int)state.castleStatus[Black]];
-                  state.castleStatus[Black] = UpdateCastleStatusB(state.castleStatus[Black],dest);
+                  state.castleStatus[Black] = updateCastleStatus<Black>(state.castleStatus[Black],dest);
                   state.hashCode ^= b_castle_status[(int)state.castleStatus[Black]];
                }
                break;
@@ -787,7 +763,7 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
             rook_bits[Black].setClear(bits);
             if ((int)state.castleStatus[Black]<3) {
                 state.hashCode ^= b_castle_status[(int)state.castleStatus[Black]];
-                state.castleStatus[Black] = UpdateCastleStatusB(state.castleStatus[Black],start);
+                state.castleStatus[Black] = updateCastleStatus<Black>(state.castleStatus[Black],start);
                 state.hashCode ^= b_castle_status[(int)state.castleStatus[Black]];
             }
             break;
@@ -842,7 +818,7 @@ void Board::doMove( Move move, [[maybe_unused]] NodeInfo *node )
                material[White].removePiece(Rook);
                if ((int)state.castleStatus[White]<3) {
                   state.hashCode ^= w_castle_status[(int)state.castleStatus[White]];
-                  state.castleStatus[White] = UpdateCastleStatusW(state.castleStatus[White],dest);
+                  state.castleStatus[White] = updateCastleStatus<White>(state.castleStatus[White],dest);
                   state.hashCode ^= w_castle_status[(int)state.castleStatus[White]];
                }
                break;
@@ -997,7 +973,7 @@ hash_t Board::hashCode( Move move ) const
             Xor(newHash, dest, WhiteRook );
             if ((int)state.castleStatus[White]<3) {
                newHash ^= w_castle_status[(int)state.castleStatus[White]];
-               newHash ^= w_castle_status[(int)UpdateCastleStatusW(state.castleStatus[White],start)];
+               newHash ^= w_castle_status[(int)updateCastleStatus<White>(state.castleStatus[White],start)];
             }
             break;
          case Queen:
@@ -1019,7 +995,7 @@ hash_t Board::hashCode( Move move ) const
             if (Capture(move) == Rook) {
                if ((int)state.castleStatus[Black]<3) {
                   newHash ^= b_castle_status[(int)state.castleStatus[Black]];
-                  newHash ^= b_castle_status[(int)UpdateCastleStatusB(state.castleStatus[Black],dest)];
+                  newHash ^= b_castle_status[(int)updateCastleStatus<Black>(state.castleStatus[Black],dest)];
                }
             }
          }
@@ -1094,7 +1070,7 @@ hash_t Board::hashCode( Move move ) const
             Xor(newHash, dest, BlackRook );
             if ((int)state.castleStatus[Black]<3) {
                newHash ^= b_castle_status[(int)state.castleStatus[Black]];
-               newHash ^= b_castle_status[(int)UpdateCastleStatusB(state.castleStatus[Black],dest)];
+               newHash ^= b_castle_status[(int)updateCastleStatus<Black>(state.castleStatus[Black],dest)];
             }
             break;
          case Queen:
@@ -1116,7 +1092,7 @@ hash_t Board::hashCode( Move move ) const
             if (Capture(move) == Rook) {
                if ((int)state.castleStatus[White]<3) {
                   newHash ^= w_castle_status[(int)state.castleStatus[White]];
-                  newHash ^= w_castle_status[(int)UpdateCastleStatusW(state.castleStatus[White],dest)];
+                  newHash ^= w_castle_status[(int)updateCastleStatus<White>(state.castleStatus[White],dest)];
                }
             }
          }
