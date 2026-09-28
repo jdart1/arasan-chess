@@ -8,9 +8,11 @@
 #include <sstream>
 
 int BoardIO::readFEN(Board &board, const std::string &buf) {
-    board.reset();
+    // we modify only a temporary board, until all parsing is
+    // done and the FEN is validated.
+    Board temp;
     for (int i = 0; i < 64; i++) {
-        board.contents[i] = EmptyPiece;
+        temp.contents[i] = EmptyPiece;
     }
 
     char c;
@@ -70,7 +72,7 @@ int BoardIO::readFEN(Board &board, const std::string &buf) {
                 default:
                     return 0;
                 }
-                board.contents[sqval] = piece;
+                temp.contents[sqval] = piece;
                 sqval++;
                 bp++;
             } else // not a letter or a digit
@@ -86,9 +88,9 @@ int BoardIO::readFEN(Board &board, const std::string &buf) {
     if (bp == buf.end())
         return 0;
     if (toupper(*bp) == 'W')
-        board.side = White;
+        temp.side = White;
     else if (toupper(*bp) == 'B')
-        board.side = Black;
+        temp.side = Black;
     else {
         return 0;
     }
@@ -99,7 +101,7 @@ int BoardIO::readFEN(Board &board, const std::string &buf) {
         return 0;
     c = *bp;
     if (c == '-') {
-        board.state.castleStatus[White] = board.state.castleStatus[Black] = CantCastleEitherSide;
+        temp.state.castleStatus[White] = temp.state.castleStatus[Black] = CantCastleEitherSide;
         bp++;
     } else {
         int k = 0;
@@ -118,17 +120,17 @@ int BoardIO::readFEN(Board &board, const std::string &buf) {
         }
         static const CastleType vals[4] = {CantCastleEitherSide, CanCastleKSide, CanCastleQSide,
                                            CanCastleEitherSide};
-        board.state.castleStatus[White] = vals[k % 4];
-        board.state.castleStatus[Black] = vals[k / 4];
+        temp.state.castleStatus[White] = vals[k % 4];
+        temp.state.castleStatus[Black] = vals[k / 4];
     }
-    board.setSecondaryVars();
+    temp.setSecondaryVars();
     while (bp != buf.end() && isspace(*bp))
         bp++;
     if (bp == buf.end())
         return 0;
     c = *bp;
     if (c == '-') {
-        board.state.enPassantSq = InvalidSquare;
+        temp.state.enPassantSq = InvalidSquare;
     } else if (isalpha(c)) {
         char sqbuf[2];
         sqbuf[0] = *bp++;
@@ -139,33 +141,33 @@ int BoardIO::readFEN(Board &board, const std::string &buf) {
         if (epsq == InvalidSquare) {
             return 0;
         }
-        board.state.enPassantSq = InvalidSquare;
-        Square ep_candidate = SquareValue(sqbuf) - (8 * Direction[board.sideToMove()]);
+        temp.state.enPassantSq = InvalidSquare;
+        Square ep_candidate = SquareValue(sqbuf) - (8 * Direction[temp.sideToMove()]);
         // only actually set the e.p. square on the board if an en-passant capture
         // is truly possible:
-        if (Attacks::ep_mask[File(ep_candidate) - 1][(int)board.oppositeSide()] &
-            board.pawn_bits[board.sideToMove()]) {
-            board.state.enPassantSq = ep_candidate;
+        if (Attacks::ep_mask[File(ep_candidate) - 1][(int)temp.oppositeSide()] &
+            temp.pawn_bits[temp.sideToMove()]) {
+            temp.state.enPassantSq = ep_candidate;
             // re-calc hash code since ep has changed
-            board.state.hashCode = BoardHash::hashCode(board);
+            temp.state.hashCode = BoardHash::hashCode(board);
         }
     } else {
         return 0;
     }
-    assert(board.state.moveCount + 1 < Board::RepListSize);
-    board.repList[board.state.moveCount++] = board.hashCode();
-    if (board.kingPos[White] == InvalidSquare || board.kingPos[Black] == InvalidSquare) {
+    temp.repList[temp.state.moveCount++] = temp.hashCode();
+    if (temp.kingPos[White] == InvalidSquare || temp.kingPos[Black] == InvalidSquare) {
         return 0;
     }
     // Perform some sanity checking on castling status
     for (ColorType stm : colors) {
-        if (board.canCastleKSide(stm) && !board.sanityCheckKSideCastling(stm)) {
+        if (temp.canCastleKSide(stm) && !temp.sanityCheckKSideCastling(stm)) {
             return 0;
         }
-        if (board.canCastleQSide(stm) && !board.sanityCheckQSideCastling(stm)) {
+        if (temp.canCastleQSide(stm) && !temp.sanityCheckQSideCastling(stm)) {
             return 0;
         }
     }
+    board = temp;
     return 1;
 }
 

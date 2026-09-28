@@ -299,6 +299,7 @@ static int testNotation() {
     board.flip();
     if (board.enPassantSq() != G5) {
         std::cout << "notation: error in case 21" << std::endl;
+        ++errs;
     }
     int casenum = 22;
     // Test WB and UCI formats
