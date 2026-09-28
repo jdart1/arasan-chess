@@ -510,7 +510,7 @@ static int testEval() {
              -15.0,-8.0),  // advanced passer
         Case("5B2/5p2/8/3b4/p7/P5KN/2nk4/8 b - -",0,3.0), // advanced passer, blocked
         // material imbalance
-        Case("8/6pk/5pb1/7p/Q6P/2r1N3/5PP1/6K1 w - -",4.0,10.0),
+        Case("8/6pk/5pb1/7p/Q6P/2r1N3/5PP1/6K1 w - -",9.0,13.0),
         // material imbalance
         Case("r4rk1/1bqnpp1p/pp1p1Bp1/8/P3P3/2N1pN1P/1PP1BPP1/R4RK1 w - -",-10.0,-4.0),
         Case("8/8/4bk2/8/8/4K3/4R3/8 w - -",-1.0,1.0), // even endgame
