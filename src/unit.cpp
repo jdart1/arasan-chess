@@ -3,6 +3,7 @@
 // Unit tests for Arasan
 
 #include "board.h"
+#include "bhash.h"
 #include "boardio.h"
 #include "legal.h"
 #include "movegen.h"
@@ -271,8 +272,10 @@ static int testNotation() {
     }
     // Verify e.p. square is set correctly
     Board board;
-    std::stringstream s(notationData[15].fen);
-    s >> board;
+    if (!BoardIO::readFEN(board, notationData[15].fen)) {
+        std::cerr << "notation: error in FEN: " << notationData[15].fen << std::endl;
+        return ++errs;
+    }
     if (board.enPassantSq() != B5) {
         std::cerr << "notation: error in case 17" << std::endl;
         ++errs;
@@ -283,8 +286,10 @@ static int testNotation() {
         std::cerr << "notation: error in case 18" << std::endl;
         ++errs;
     }
-    std::stringstream s3(notationData[16].fen);
-    s3 >> board;
+    if (!BoardIO::readFEN(board, notationData[16].fen)) {
+        std::cerr << "notation: error in FEN: " << notationData[16].fen << std::endl;
+        return ++errs;
+    }
     if (board.enPassantSq() != G4) {
         std::cerr << "notation: error in case 19" << std::endl;
         ++errs;
@@ -372,6 +377,65 @@ static int testNotation() {
             ++errs;
         }
         ++casenum;
+    }
+    // Verify invalid FENs are rejected and do not modify the board
+    const std::string validFen = "r3k2r/ppqnbp1b/2n1p2p/2ppP1p1/8/P2P1NPP/1PP1QPB1/R1B1RNK1 b kq -";
+    if (!BoardIO::readFEN(board, validFen)) {
+        std::cerr << "notation: error in FEN: " << validFen << std::endl;
+        return ++errs;
+    }
+    std::stringstream before;
+    before << board;
+    const hash_t beforeHash = board.hashCode();
+    const std::string invalidFens[] = {
+        // incorrect castling status
+        "R3k2r/1b1nbppp/4pn2/1pq5/8/2P1NN2/1P2BPPP/2BQ1RK1 b kq - 0 1", // Black Q-side: no rook
+        "r3k1r1/ppqnbp1b/2n1p2p/2ppP1p1/8/P2P1NPP/1PP1QPB1/R1B1RNK1 b k -", // Black K-side: no rook
+        "r3k2r/ppqnbp1b/2n1p2p/2ppP1p1/8/P2P1NPP/1PP1QPB1/R1B1RNK1 b Qkq -", // White Q-side: king moved
+        "r2qkb1r/1p3pp1/p1bppn1p/8/4P3/2NB1Q2/PPPB1PPP/1R2K2R w KQkq -", // White Q-side: no rook
+        "r2qkb1r/1p3pp1/p1bppn1p/8/4P3/2NB1Q2/PPPB1PPP/R3K1R1 w KQkq -", // White K-side: no rook
+        "r2qkb1r/1p3pp1/p1bppn1p/8/4P3/2NB1Q2/PPPB1PPP/R3K2R w KQkx -", // invalid character
+        // missing fields
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq",
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w",
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR",
+        // other malformed FENs
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR x KQkq -",
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNX w KQkq -",
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQ1BNR w kq -", // no White king
+        // too many squares in a rank
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNRR w KQkq -",
+        // too few squares in a rank
+        "rnbqkbnr/pppppppp/7/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -",
+        // invalid e.p. square
+        "rnbqkbnr/pppp1ppp/8/8/3Pp3/8/PPP1PPPP/RNBQKBNR b KQkq e9",
+        "rnbqkbnr/pppp1ppp/8/8/3Pp3/8/PPP1PPPP/RNBQKBNR b KQkq i3",
+        "rnbqkbnr/pppp1ppp/8/8/3Pp3/8/PPP1PPPP/RNBQKBNR b KQkq d"};
+    for (const std::string &fen : invalidFens) {
+        if (BoardIO::readFEN(board, fen)) {
+            std::cout << "notation: error in case " << casenum << ": invalid FEN accepted: " << fen
+                      << std::endl;
+            ++errs;
+        }
+        std::stringstream after;
+        after << board;
+        if (after.str() != before.str() || board.hashCode() != beforeHash) {
+            std::cout << "notation: error in case " << casenum
+                      << ": board modified by invalid FEN: " << fen << std::endl;
+            ++errs;
+            // restore board for subsequent cases
+            BoardIO::readFEN(board, validFen);
+        }
+        ++casenum;
+    }
+    // Verify hash code is correct when e.p. square is set
+    if (!BoardIO::readFEN(board, notationData[16].fen)) {
+        std::cerr << "notation: error in FEN: " << notationData[16].fen << std::endl;
+        return ++errs;
+    }
+    if (board.hashCode() != BoardHash::hashCode(board)) {
+        std::cout << "notation: error in case " << casenum << ": incorrect hash code" << std::endl;
+        ++errs;
     }
     return errs;
 
