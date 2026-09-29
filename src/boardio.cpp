@@ -23,13 +23,17 @@ int BoardIO::readFEN(Board &board, const std::string &buf) {
     }
     for (int line = 0; line < 8; line++) {
         int sqval = 56 - line * 8;
-        while ((c = *bp) != ' ' && c != '/') {
+        const int rankEnd = sqval + 8;
+        while (bp != buf.end() && (c = *bp) != ' ' && c != '/') {
             Piece piece;
             if (isdigit(c)) {
                 sqval += (*bp - '0');
+                if (sqval > rankEnd) {
+                    return 0;
+                }
                 bp++;
             } else if (isalnum(c)) {
-                if (!OnBoard(sqval)) {
+                if (sqval >= rankEnd) {
                     return 0;
                 }
                 switch (c) {
@@ -79,6 +83,9 @@ int BoardIO::readFEN(Board &board, const std::string &buf) {
             {
                 return 0;
             }
+        }
+        if (bp == buf.end() || sqval != rankEnd) {
+            return 0;
         }
         if (c == '/')
             ++bp; // skip delimiter
@@ -149,7 +156,7 @@ int BoardIO::readFEN(Board &board, const std::string &buf) {
             temp.pawn_bits[temp.sideToMove()]) {
             temp.state.enPassantSq = ep_candidate;
             // re-calc hash code since ep has changed
-            temp.state.hashCode = BoardHash::hashCode(board);
+            temp.state.hashCode = BoardHash::hashCode(temp);
         }
     } else {
         return 0;
