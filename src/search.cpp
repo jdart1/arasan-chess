@@ -2089,12 +2089,6 @@ score_t Search::quiesce(int ply,int depth)
       }
       // Note: hash move may be usable even if score is not usable
       hashMove = hashEntry.bestMove(board);
-      // Ensure the hash move if any, meets the conditions for the qsearch
-      if (!IsNull(hashMove) && hashEntry.depth() != QSEARCH_DEPTH && !inCheck) {
-          if (!CaptureOrPromotion(hashMove)) {
-              hashMove = NullMove;
-          }
-      }
    }
    if (inCheck) {
 #ifdef SEARCH_TRACE
