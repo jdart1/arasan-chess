@@ -209,6 +209,10 @@ score_t Scoring::evalu8NNUE(const Board &board, NodeInfo *node) {
     } else {
         nnval = static_cast<score_t>(evaluator.fullEvaluate(globals::network, board));
     }
+    if (!mateScore(nnval)) {
+        // material level scaling
+        nnval = (nnval * (26000 + 178 * board.totalMaterialLevel())) / 32768;
+    }
     int ply = node ? node->ply : 0;
     return std::clamp(nnval, -Constants::MATE + (ply - 1), Constants::MATE - (ply - 1));
 }

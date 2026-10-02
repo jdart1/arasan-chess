@@ -480,6 +480,10 @@ public:
        return getMaterial(White).hasPawns() && getMaterial(Black).hasPawns();
    }
 
+   int totalMaterialLevel() const noexcept {
+       return material[White].totalMaterialLevel() + material[Black].totalMaterialLevel();
+   }
+
    private:
 
    static const int RepListSize = 1024;
