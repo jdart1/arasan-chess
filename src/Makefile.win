@@ -204,7 +204,7 @@ profile: dirs $(PROFILE)\$(ARASANX).exe
 
 utils: dirs $(BUILD)\playchess.exe $(BUILD)\makebook.exe \
 $(BUILD)\ecocoder.exe $(BUILD)\selfplay.exe $(BUILD)\blundercheck.exe \
-$(BUILD)\sortpgn.exe
+$(BUILD)\sortpgn.exe $(BUILD)\bulletstats.exe
 
 unit: dirs $(BUILD)\unit.exe
 
@@ -276,6 +276,8 @@ BLUNDERCHECK_OBJS = $(BUILD)\blundercheck.obj $(UTIL_OBJS)
 
 SORTPGN_OBJS = $(BUILD)\sortpgn.obj $(UTIL_OBJS)
 
+BULLETSTATS_OBJS = $(BUILD)\bulletstats.obj $(UTIL_OBJS)
+
 UNIT_OBJS = $(TEST_OBJS) $(UTIL_OBJS)
 
 {}.cpp{$(BUILD)}.obj:
@@ -307,6 +309,9 @@ $(BUILD)\blundercheck.exe: dirs $(BLUNDERCHECK_OBJS)
 
 $(BUILD)\sortpgn.exe: dirs $(SORTPGN_OBJS)
         $(LD) $(SORTPGN_OBJS) $(LINKOPT) $(LDFLAGS) /out:$(BUILD)\sortpgn.exe
+
+$(BUILD)\bulletstats.exe: dirs $(BULLETSTATS_OBJS)
+        $(LD) $(BULLETSTATS_OBJS) $(LINKOPT) $(LDFLAGS) /out:$(BUILD)\bulletstats.exe
 
 $(BUILD)\unit.exe: dirs $(UNIT_OBJS)
         $(LD) $(UNIT_OBJS) $(LINKOPT) $(LDFLAGS) /out:$(BUILD)\unit.exe

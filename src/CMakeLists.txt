@@ -172,6 +172,8 @@ add_executable (blundercheck EXCLUDE_FROM_ALL util/blundercheck.cpp ${UTIL_SRC})
 
 add_executable (sortpgn EXCLUDE_FROM_ALL util/sortpgn.cpp ${UTIL_SRC})
 
+add_executable (bulletstats EXCLUDE_FROM_ALL util/bulletstats.cpp ${UTIL_SRC})
+
 add_executable (unit EXCLUDE_FROM_ALL unit.cpp nnuetest.cpp util/binformat.cpp ${UTIL_SRC})
 
 target_link_libraries(${EXE_NAME} PRIVATE Threads::Threads)
@@ -181,10 +183,11 @@ target_link_libraries(makebook PRIVATE Threads::Threads)
 target_link_libraries(selfplay PRIVATE Threads::Threads)
 target_link_libraries(blundercheck PRIVATE Threads::Threads)
 target_link_libraries(sortpgn PRIVATE Threads::Threads)
+target_link_libraries(bulletstats PRIVATE Threads::Threads)
 target_link_libraries(unit PRIVATE Threads::Threads)
 
-set_target_properties(${EXE_NAME} playchess makebook ecocoder selfplay blundercheck sortpgn unit PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
+set_target_properties(${EXE_NAME} playchess makebook ecocoder selfplay blundercheck sortpgn bulletstats unit PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
 
 add_custom_target(utils)
 
-add_dependencies(utils playchess ecocoder makebook selfplay blundercheck sortpgn)
+add_dependencies(utils playchess ecocoder makebook selfplay blundercheck sortpgn bulletstats)

@@ -259,7 +259,7 @@ endif
 
 default: dirs $(EXPORT)/$(ARASANX)
 
-utils: dirs $(EXPORT)/playchess $(EXPORT)/makebook $(EXPORT)/ecocoder $(EXPORT)/selfplay $(EXPORT)/blundercheck $(EXPORT)/sortpgn
+utils: dirs $(EXPORT)/playchess $(EXPORT)/makebook $(EXPORT)/ecocoder $(EXPORT)/selfplay $(EXPORT)/blundercheck $(EXPORT)/sortpgn $(EXPORT)/bulletstats
 
 unit: dirs $(EXPORT)/unit
 
@@ -271,7 +271,7 @@ clean: dirs
 	rm -f $(PROFILE)/*.dyn
 	rm -f $(PROFILE)/*.nnue
 	rm -f $(PROF_DATA)/*.*
-	cd $(EXPORT) && rm -f arasanx* makebook playchess ecocoder selfplay blundercheck sortpgn unit
+	cd $(EXPORT) && rm -f arasanx* makebook playchess ecocoder selfplay blundercheck sortpgn bulletstats unit
 
 dirs:
 	mkdir -p $(BUILD)
@@ -382,6 +382,8 @@ BLUNDERCHECK_SOURCES = blundercheck.cpp $(UTIL_SOURCES)
 
 SORTPGN_SOURCES = sortpgn.cpp $(UTIL_SOURCES)
 
+BULLETSTATS_SOURCES = bulletstats.cpp $(UTIL_SOURCES)
+
 ARASANX_PROFILE_OBJS := $(patsubst %.cpp, $(PROFILE)/%.o, $(ARASANX_SOURCES)) $(ASM_PROFILE_OBJS) $(TB_PROFILE_OBJS)
 ARASANX_OBJS    := $(patsubst %.cpp, $(BUILD)/%.o, $(ARASANX_SOURCES)) $(TB_OBJS)
 MAKEBOOK_OBJS   := $(patsubst %.cpp, $(BUILD)/%.o, $(MAKEBOOK_SOURCES)) $(TB_OBJS)
@@ -390,6 +392,7 @@ PLAYCHESS_OBJS  := $(patsubst %.cpp, $(BUILD)/%.o, $(PLAYCHESS_SOURCES)) $(TB_OB
 SELFPLAY_OBJS   := $(patsubst %.cpp, $(BUILD)/%.o, $(SELFPLAY_SOURCES)) $(TB_OBJS)
 BLUNDERCHECK_OBJS := $(patsubst %.cpp, $(BUILD)/%.o, $(BLUNDERCHECK_SOURCES)) $(TB_OBJS)
 SORTPGN_OBJS 	:= $(patsubst %.cpp, $(BUILD)/%.o, $(SORTPGN_SOURCES)) $(TB_OBJS)
+BULLETSTATS_OBJS := $(patsubst %.cpp, $(BUILD)/%.o, $(BULLETSTATS_SOURCES)) $(TB_OBJS)
 UNIT_OBJS       := $(patsubst %.cpp, $(BUILD)/%.o, $(UNIT_SOURCES)) $(TB_OBJS)
 
 $(EXPORT)/makebook:  $(MAKEBOOK_OBJS)
@@ -409,6 +412,9 @@ $(EXPORT)/blundercheck:  $(BLUNDERCHECK_OBJS)
 
 $(EXPORT)/sortpgn:  $(SORTPGN_OBJS)
 	cd $(BUILD) && $(LD) $(LDFLAGS) $(LTO) $(OPT) $(SORTPGN_OBJS) $(DEBUG) $(CXXFLAGS) -o $(EXPORT)/sortpgn -lstdc++ $(LIBS) $(SMPLIB)
+
+$(EXPORT)/bulletstats:  $(BULLETSTATS_OBJS)
+	cd $(BUILD) && $(LD) $(LDFLAGS) $(LTO) $(OPT) $(BULLETSTATS_OBJS) $(DEBUG) $(CXXFLAGS) -o $(EXPORT)/bulletstats -lstdc++ $(LIBS) $(SMPLIB)
 
 $(EXPORT)/unit: $(UNIT_OBJS)
 	cd $(BUILD) && $(LD) $(LDFLAGS) $(LTO) $(OPT) $(UNIT_OBJS) $(DEBUG) $(CXXFLAGS) -o $(EXPORT)/unit -lstdc++ $(LIBS) $(SMPLIB)

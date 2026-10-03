@@ -8,8 +8,9 @@ following other console programs:
 - ecococder - adds ECO codes to a PGN file
 - playchess - filters PGN games, removing those where end eval differs from result (and short games)
 - selfplay - generates positions for NNUE tuning
-- sortpgn - utility to sort PGN files by date and round
-- blundercheck - utility to blunder-check PGN files
+- sortpgn - sorts PGN files by date and round
+- blundercheck - blunder-checks PGN files
+- bulletstats - reports statistics for bullet format data files
 
 Following is a sketch of the Arasan source directory tree:
 
