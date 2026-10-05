@@ -60,6 +60,16 @@ fn main() {
     let final_lr = INITIAL_LR * 0.01;
     const SUPERBATCHES: usize = 600;
 
+    // Three-stage schedule (LR and WDL), after bullet's examples/advanced/main.rs.
+    // The stage lengths must sum to SUPERBATCHES.
+    const STAGE0: usize = 100;
+    const STAGE1: usize = 400;
+    const STAGE2: usize = 100;
+    const WARMUP_SBS: usize = STAGE0 / 2;
+    const WARMUP_MAX_LR: f32 = 2e-3;
+    const WARMUP_MIN_LR: f32 = 1e-4;
+    const _: () = assert!(STAGE0 + STAGE1 + STAGE2 == SUPERBATCHES);
+
     #[rustfmt::skip]
     let mut trainer = ValueTrainerBuilder::default()
         .dual_perspective()
@@ -123,8 +133,12 @@ fn main() {
             // perspective), matching the engine's PairwiseMult<int16,u8> FT
             // activation. The pairwise product is the only nonlinearity feeding
             // the head; subsequent layers use plain clipped ReLU [0,1].
-            let stm_hidden = l0.forward(stm_inputs).crelu().pairwise_mul();
-            let ntm_hidden = l0.forward(ntm_inputs).crelu().pairwise_mul();
+            //
+            // Follow the bullet multilayer.rs example here - note pairwise-mul method is
+            // now deprecated:
+            let ft = |input, start, end| l0.slice(start, end).forward(input).crelu();
+            let stm_hidden = ft(stm_inputs, 0, L1 / 2) * ft(stm_inputs, L1 / 2, L1);
+            let ntm_hidden = ft(ntm_inputs, 0, L1 / 2) * ft(ntm_inputs, L1 / 2, L1);
             let hidden_layer = stm_hidden.concat(ntm_hidden);
 
             let l1_out = l1.forward(hidden_layer).select(output_buckets).crelu();
@@ -141,9 +155,28 @@ fn main() {
             start_superbatch: 1,
             end_superbatch: SUPERBATCHES,
         },
-        wdl_scheduler: wdl::ConstantWDL { value: 0.1 },
-        lr_scheduler: lr::Warmup{ inner: lr::CosineDecayLR { initial_lr: INITIAL_LR, final_lr: final_lr, final_superbatch: SUPERBATCHES },
-                warmup_batches: 10},
+        wdl_scheduler: wdl::Sequence {
+            first: wdl::ConstantWDL { value: 0.2 },
+            second: wdl::Sequence {
+                first: wdl::LinearWDL { start: 0.2, end: 0.5 },
+                second: wdl::ConstantWDL { value: 1.0 },
+                first_scheduler_final_superbatch: STAGE1,
+            },
+            first_scheduler_final_superbatch: STAGE0,
+        },
+        lr_scheduler: lr::Sequence {
+            first: lr::Sequence {
+                first: lr::LinearDecayLR { initial_lr: WARMUP_MIN_LR, final_lr: WARMUP_MAX_LR, final_superbatch: WARMUP_SBS },
+                second: lr::LinearDecayLR { initial_lr: WARMUP_MAX_LR, final_lr: WARMUP_MIN_LR, final_superbatch: STAGE0 - WARMUP_SBS },
+                first_scheduler_final_superbatch: WARMUP_SBS,
+            },
+            second: lr::Sequence {
+                first: lr::LinearDecayLR { initial_lr: 1e-3, final_lr: 1e-6, final_superbatch: STAGE1 },
+                second: lr::LinearDecayLR { initial_lr: 1e-5, final_lr: 1e-7, final_superbatch: STAGE2 },
+                first_scheduler_final_superbatch: STAGE1,
+            },
+            first_scheduler_final_superbatch: STAGE0,
+        },
         save_rate: 200,
     };
 
