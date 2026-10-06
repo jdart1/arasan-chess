@@ -1212,11 +1212,11 @@ static int testMoveGen()
           };
     };
 
-    static const std::array<Case,8> cases = { Case("rn1rb2k/1p2q3/p2NpB1p/1Pb5/P5Q1/5N2/5PPP/3R1RK1 b - - 0 25",
-                                                   "Qxf6 Qg7 Kh7",
-                                                   "Qxf6 Qg7 Kh7",
-                                                   "Qxf6 Qg7 Kh7",
-                                                   "Qxf6 Qg7 Kh7"),
+    static const std::list<Case> cases = { Case("rn1rb2k/1p2q3/p2NpB1p/1Pb5/P5Q1/5N2/5PPP/3R1RK1 b - - 0 25",
+                                                "Qxf6 Qg7 Kh7",
+                                                "Qxf6 Qg7 Kh7",
+                                                "Qxf6 Qg7 Kh7",
+                                                "Qxf6 Qg7 Kh7"),
         Case("3k4/3p4/8/r7/K7/8/8/8 w - - 0 3",
              "Kxa5 Kb4 Kb3",
              "Kxa5 Kb4 Kb3",
@@ -1247,7 +1247,9 @@ static int testMoveGen()
              "Kf6 Kf7 Kh7 Kf8 Kg8 Kh8 Qc7 Qe7 Qb8 Qf8 Qc6 Qe6 Qf6 Qg6 Qd7 Qd8 Ra1 Ra2 Ra3 Ra4 Ra5 Ra6 Rb7 Rc7 Rd7 Re7 Rf7 Ra8 e4+ b5 Qxd5 Kg6",
              "Qxd5",
              "Qxd5 e4+"),
-        Case("1r2r3/8/4pP1B/ppp2p1R/n4k2/5B1P/P3PP2/6K1 b - - 0 33","Ke5","Ke5","Ke5","Ke5")
+        Case("1r2r3/8/4pP1B/ppp2p1R/n4k2/5B1P/P3PP2/6K1 b - - 0 33","Ke5","Ke5","Ke5","Ke5"),
+        Case("2kR4/p1N1bp1p/qp2n1pP/6P1/1P2rPQ1/P7/1B3KB1/R7 b - - 0 26","Kxd8 Kxc7 Kb7 Bxd8","Kxd8 Kxc7 Kb7 Bxd8","Kxd8 Kxc7 Kb7 Bxd8",
+             "Kxd8 Kxc7 Kb7 Bxd8")
     };
 
     struct MoveKey
@@ -1316,6 +1318,7 @@ static int testMoveGen()
                             num_moves += mg::generateChecks(board,moves+num_moves,disc);
                         }
                     }
+                    std::set<Move> allMoves;
                     for (;;) {
                         if (type == QsNoCheck || type == QsCheck) {
                             if (move_index >= num_moves) {
@@ -1331,6 +1334,11 @@ static int testMoveGen()
                             gen = mg.nextMove(order);
                         }
                         if (IsNull(gen)) break;
+                        if (allMoves.find(gen) != allMoves.end()) {
+                            std::cerr << "duplicate move generated, case " << casenum << std::endl;
+                            ++errs;
+                        }
+                        allMoves.insert(gen);
                         auto it = std::find_if(correct.begin(), correct.end(),[&] (const MoveKey &m) -> int
                                                {return MovesEqual(gen,m.move);});
                         if (it == correct.end()) {
