@@ -569,20 +569,18 @@ static int testEval() {
         Case("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -",
              -1.0,1.0), // start position
         Case("r1bq1rk1/p2nbppp/1pp1pn2/3p4/2PP1B2/5NP1/PPQ1PPBP/RN3RK1 w - -",-1.0,1.0), // even opening
-        Case("2q1r1k1/1r4b1/2p3p1/1pBpP1P1/p2P1P1Q/P3R2R/1P5K/8 b - -",
-             -8.0,-4.0), // King attack
-        Case("3r4/P4k2/7p/8/2P1p1Bp/1PKn4/R5P1/8 b - -",
-             -15.0,-8.0),  // advanced passer
         Case("5B2/5p2/8/3b4/p7/P5KN/2nk4/8 b - -",0,3.0), // advanced passer, blocked
         // material imbalance
-        Case("8/6pk/5pb1/7p/Q6P/2r1N3/5PP1/6K1 w - -",9.0,13.0),
-        // material imbalance
         Case("r4rk1/1bqnpp1p/pp1p1Bp1/8/P3P3/2N1pN1P/1PP1BPP1/R4RK1 w - -",-10.0,-4.0),
+        // King attack
+        Case("r2r3k/pp2RQp1/7p/4B3/6q1/3P1N2/PP2K2P/R7 w - -",10.0,Constants::MATE),
         Case("8/8/4bk2/8/8/4K3/4R3/8 w - -",-1.0,1.0), // even endgame
-        Case("8/3BK3/8/7P/8/2b1k3/8/8 w - -",-0.5,0.5) // even endgame
+        Case("8/3BK3/8/7P/8/2b1k3/8/8 w - -",-0.1,0.1), // even endgame
+        Case("8/3k4/7p/3P4/4K3/7P/8/8 b - -",-Constants::MATE,-5.0), // lost endgame
+        Case("8/p7/P2k2p1/7p/4K2P/6P1/5P2/8 b - -",-Constants::MATE,-5.0), // lost endgame
     };
 
-    int i = 0, errs = 0;
+    int i = 1, errs = 0;
     auto check =
         [&errs, &i](score_t eval, double minEval, double maxEval, const std::string &txt) {
             double eval1 = static_cast<double>(eval)/Scoring::PAWN_VALUE;
