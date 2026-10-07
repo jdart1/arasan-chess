@@ -1250,15 +1250,8 @@ static int testMoveGen()
              "Kxd8 Kxc7 Kb7 Bxd8")
     };
 
-    struct MoveKey
-    {
-        MoveKey(const Move &m) :
-            move(m),generated(false)
-            {
-            }
-        Move move;
-        bool generated;
-    };
+    // clear the flags and phase bytes: these are not compared
+    auto moveKey = [] (Move m) -> Move { return m & 0xffffffffffffULL; };
 
     int errs = 0;
     int casenum = 0;
@@ -1270,9 +1263,9 @@ static int testMoveGen()
             ++errs;
         }
         else {
-            std::array<std::vector<MoveKey>,4> expected;
+            std::array<std::set<Move>,4> expected;
 
-            auto parseMoves = [&casenum, &board, &errs] (const std::string &moves, std::vector<MoveKey> &out) {
+            auto parseMoves = [&casenum, &board, &errs, &moveKey] (const std::string &moves, std::set<Move> &out) {
                 std::stringstream s(moves);
                 while (!s.eof()) {
                     std::string movestr;
@@ -1282,7 +1275,7 @@ static int testMoveGen()
                         std::cerr << "testMoveGen: invalid result move, case " << casenum << " (" << movestr << ")" << std::endl;
                         ++errs;
                     } else {
-                        out.push_back(MoveKey(m));
+                        out.insert(moveKey(m));
                     }
                 }
             };
@@ -1290,11 +1283,8 @@ static int testMoveGen()
             for (int i = 0; i < 4; i++) {
                 parseMoves(c.moves[i],expected[i]);
             }
-            auto doMg = [&casenum, &board, &errs] (MoveGenerator &mg, std::vector<MoveKey> &correct, MgType type)
+            auto doMg = [&casenum, &board, &errs, &moveKey] (MoveGenerator &mg, const std::set<Move> &correct, MgType type)
                 {
-                    for (auto &x : correct) {
-                        x.generated = false;
-                    }
                     Move gen;
                     int order = 0;
                     static const std::string ids[4] = { "root", "standard", "qs_nochecks", "qs_checks"
@@ -1332,38 +1322,30 @@ static int testMoveGen()
                             gen = mg.nextMove(order);
                         }
                         if (IsNull(gen)) break;
-                        if (allMoves.find(gen) != allMoves.end()) {
-                            std::cerr << "duplicate move generated, case " << casenum << std::endl;
-                            ++errs;
-                        }
-                        allMoves.insert(gen);
-                        auto it = std::find_if(correct.begin(), correct.end(),[&] (const MoveKey &m) -> int
-                                               {return MovesEqual(gen,m.move);});
-                        if (it == correct.end()) {
-                            std::cerr << "testMoveGen: unexpected result move, " << id << " case " << casenum << " (";
-                            MoveImage(gen,std::cerr);
-                            std::cerr << ")" << std::endl;
-                            ++errs;
-                        } else if (correct[it-correct.begin()].generated) {
+                        if (!allMoves.insert(moveKey(gen)).second) {
                             std::cerr << "testMoveGen: duplicate move: " << id << " case " << casenum << " (";
                             MoveImage(gen,std::cerr);
                             std::cerr << ")" << std::endl;
                             ++errs;
-                        } else {
-                            correct[it-correct.begin()].generated = true;
+                        }
+                        if (correct.find(moveKey(gen)) == correct.end()) {
+                            std::cerr << "testMoveGen: unexpected result move, " << id << " case " << casenum << " (";
+                            MoveImage(gen,std::cerr);
+                            std::cerr << ")" << std::endl;
+                            ++errs;
                         }
                     }
-                    auto err2 = std::find_if(correct.begin(),correct.end(),[](const MoveKey &r) {
-                            return !r.generated;});
-                    if (err2 != correct.end()) {
-                        std::stringstream mvlist;
-                        unsigned err_count = 0;
-                        for (;err2 != correct.end();err2++) {
+                    std::stringstream mvlist;
+                    unsigned err_count = 0;
+                    for (Move m : correct) {
+                        if (allMoves.find(m) == allMoves.end()) {
                             ++errs;
                             mvlist << ' ';
-                            Notation::image(board,err2->move,Notation::OutputFormat::SAN,mvlist);
+                            Notation::image(board,m,Notation::OutputFormat::SAN,mvlist);
                             ++err_count;
                         }
+                    }
+                    if (err_count) {
                         std::cerr << "testMoveGen: error in " << id << " case " << casenum << ": " << err_count << " expected move(s) not generated:" <<
                             mvlist.str() << std::endl;
                     }
