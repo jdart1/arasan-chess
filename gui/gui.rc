@@ -204,8 +204,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 26,0,0,0
- PRODUCTVERSION 26,0,0,0
+ FILEVERSION 26,1,0,0
+ PRODUCTVERSION 26,1,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -221,12 +221,12 @@ BEGIN
         BLOCK "040904b0"
         BEGIN
             VALUE "FileDescription", "Arasan Chess"
-            VALUE "FileVersion", "26.0"
+            VALUE "FileVersion", "26.1"
             VALUE "InternalName", "ARASAN"
             VALUE "LegalCopyright", "Copyright 1994-2025 by Jon Dart"
             VALUE "OriginalFilename", "ARASAN.EXE"
             VALUE "ProductName", "ARASAN"
-            VALUE "ProductVersion", "26.0"
+            VALUE "ProductVersion", "26.1"
         END
     END
     BLOCK "VarFileInfo"
@@ -412,7 +412,7 @@ CAPTION "About Arasan"
 FONT 9, "Arial", 0, 0, 0x0
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,208,7,50,14
-    CTEXT           "Arasan Chess Windows GUI version 26.0\nby Jon Dart",IDC_STATIC,32,24,175,16
+    CTEXT           "Arasan Chess Windows GUI version 26.1\nby Jon Dart",IDC_STATIC,32,24,175,16
     LTEXT           "Copyright 1994-2026 by Jon Dart. All Rights Reserved. See the LICENSES directory in the installation folder for license details.",IDC_STATIC,34,47,173,32
     CONTROL         "http://www.arasanchess.org",IDC_HYPERLINK,"Button",BS_OWNERDRAW | WS_TABSTOP,35,108,176,10
 END
@@ -483,7 +483,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDR_MAINFRAME           "Arasan 26.0\n\nArasan Document\n\n\nArasan.Document\nArasan Document"
+    IDR_MAINFRAME           "Arasan 26.1\n\nArasan Document\n\n\nArasan.Document\nArasan Document"
     IDS_FILE_OPEN_FILTER    "Game Files (*.pgn)|*.pgn|Position Files (*.fen)|*.fen||"
 END
 

@@ -1,8 +1,8 @@
 # Arasan Makefile for use with NMAKE on the Windows platform
 # Copyright 2004-2026 by Jon Dart. All Rights Reserved.
 #
-VERSION=26.0
-LINK_VERSION=26.0
+VERSION=26.1
+LINK_VERSION=26.1
 #
 #TARGET = win32
 TARGET = win64

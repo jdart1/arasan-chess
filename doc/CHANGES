@@ -1,3 +1,13 @@
+Changes in Arasan 26.1 (Oct. 2026):
+ 1) Changes to futility margin calcuation
+ 2) Rework history heuristic and history pruning, retune
+ 3) Add some utility/tool programs: filter_pgn.py, bulletstats
+ 4) LMR changes and tuning with Lakas
+ 5) Fixes/enhancements to selfplay utility
+ 6) Scale eval by material level
+ 7) Stricter FEN parsing and error reporting
+ 8) Retrain network with 3-tier learning/WDL schedule, as in Pawnocchio
+ 
 Changes in Arasan 26.0 (July 2026):
  1) Changes to book move selection logic
  2) Make more parameters tunable, and tune piece values and futilty parameters
