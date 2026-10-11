@@ -159,8 +159,9 @@ CFLAGS = $(CFLAGS) /std:c++17
 CFLAGS = $(CFLAGS) -march=nehalem
 !Else
 !If "$(BUILD_TYPE)" == "avx512"
-# see https://github.com/llvm/llvm-project/issues/87640
-CFLAGS = $(CFLAGS) -mno-gather
+# re no-gather, see https://github.com/llvm/llvm-project/issues/87640
+# and re vector width, see see https://github.com/llvm/llvm-project/issues/102047
+CFLAGS = $(CFLAGS) -mno-gather -mprefer-vector-width=512
 !Endif
 !Endif
 !Ifndef DEBUG

@@ -1,4 +1,4 @@
-# Copyright 2019-2025 by Jon Dart. All Rights Reserved.
+# Copyright 2019-2026 by Jon Dart. All Rights Reserved.
 cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 project(arasan)
 

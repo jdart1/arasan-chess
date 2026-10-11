@@ -1,6 +1,6 @@
 #
 # Gnu Makefile for Arasan
-# Copyright 2004-2025 by Jon Dart. All Rights Reserved.
+# Copyright 2004-2026 by Jon Dart. All Rights Reserved.
 #
 VERSION = 26.1
 
@@ -68,7 +68,8 @@ POPCNT_FLAGS := $(POPCNT_FLAGS) -DSSSE3 -DSSE41 -mssse3 -msse4.1 -msse4.2 -mpopc
 BMI2_FLAGS := $(POPCNT_FLAGS) -DBMI2 -mbmi2
 AVX2_FLAGS := -DAVX2 -mavx2 -mfma
 # re no-gather: see https://github.com/llvm/llvm-project/issues/87640
-AVX512_FLAGS := -DAVX512 -mavx512bw -mno-gather
+#re vector width: see https://github.com/llvm/llvm-project/issues/102047
+AVX512_FLAGS := -DAVX512 -mavx512bw -mno-gather -mprefer-vector-width=512
 else ifeq ("$(ARCH)","arm64")
 NEON_FLAGS := -DSIMD -DNEON
 else ifeq ("$(ARCH)","aarch64")
