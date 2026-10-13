@@ -664,7 +664,7 @@ inline void dotProductnxn(const InputType *input,
         return;
 #endif
 #ifdef AVX512
-        if (chunks<int32_t, 512>(inputSize) >= 1) {
+        if constexpr (chunks<int32_t, 512>(inputSize) >= 1) {
             // wide enough for avx512
             i32dotProductnxn<__m512i, 512, inputSize, roundedInputSize, outputSize,
                              inputDequantifyShift, outputDequantifyShift>(input, weights, biases,
@@ -673,7 +673,7 @@ inline void dotProductnxn(const InputType *input,
         }
 #endif
 #ifdef AVX2
-        if (chunks<int32_t, 256>(inputSize) >= 1) {
+        if constexpr (chunks<int32_t, 256>(inputSize) >= 1) {
             // AVX512 falls back to here if the input is not wide enough
             i32dotProductnxn<__m256i, 256, inputSize, roundedInputSize, outputSize, inputDequantifyShift,
                              outputDequantifyShift>(input, weights, biases, output);
