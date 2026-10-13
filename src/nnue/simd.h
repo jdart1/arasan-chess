@@ -721,7 +721,7 @@ inline void dotProductnx1_i64(const InputType *input,
     output[0] = out;
 #else
 #ifdef AVX512
-    if (chunks<int32_t, 512>(inputSize) >= 1) {
+    if constexpr (chunks<int32_t, 512>(inputSize) >= 1) {
         i32dotProductnx1_i64<__m512i, 512, BiasType, inputSize, roundedInputSize,
                              inputDequantifyShift, outputDequantifyShift>(input, weights, biases,
                                                                           output);
@@ -729,7 +729,7 @@ inline void dotProductnx1_i64(const InputType *input,
     }
 #endif
 #ifdef AVX2
-    if (chunks<int32_t, 256>(inputSize) >= 1) {
+    if constexpr (chunks<int32_t, 256>(inputSize) >= 1) {
         i32dotProductnx1_i64<__m256i, 256, BiasType, inputSize, roundedInputSize,
                              inputDequantifyShift, outputDequantifyShift>(input, weights, biases,
                                                                           output);
