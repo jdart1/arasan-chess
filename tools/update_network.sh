@@ -14,6 +14,9 @@
 #   gui/install/arasan.iss   (Inno Setup Source: line)
 #   gui/install/arasan64.iss (Inno Setup Source: line)
 #
+# It also removes the most recently committed network file from git (git rm) and adds the new
+# one (git add) in the network directory.
+#
 # The current network file name may differ between files, so each file is
 # rewritten by matching the *.nnue token in its known context rather than
 # substituting a single old value globally.
@@ -49,6 +52,17 @@ echo
 
 # A *.nnue file-name token (no path separators).
 NNUE_RE='[A-Za-z0-9._-]*\.nnue'
+
+# Find the most recently committed network file still tracked in network/
+# (this is the one to remove). Newest commits are listed first.
+OLD_NETWORK=
+while IFS= read -r f; do
+    [ -z "$f" ] && continue
+    if git -C "$ROOT" ls-files --error-unmatch "$f" >/dev/null 2>&1; then
+        OLD_NETWORK=$(basename "$f")
+        break
+    fi
+done < <(git -C "$ROOT" log --name-only --format= -- 'network/*.nnue')
 
 # in_place_sed <file> <sed-expression> [<sed-expression> ...]
 # Edits the file in place after verifying it exists.
@@ -93,6 +107,23 @@ for iss in arasan.iss arasan64.iss; do
     in_place_sed "$ROOT/gui/install/$iss" \
         "s|\(network\\\\\)${NNUE_RE}|\1${NEW_NETWORK}|"
 done
+
+# --- Git: remove the most recently committed network file, add the new one ----------------------
+NETDIR="$ROOT/network"
+if [ ! -f "$NETDIR/$NEW_NETWORK" ]; then
+    echo "  WARNING: $NETDIR/$NEW_NETWORK not found, not adding to git" >&2
+else
+    git -C "$ROOT" add "network/$NEW_NETWORK"
+    echo "  git add network/$NEW_NETWORK"
+fi
+if [ -n "$OLD_NETWORK" ] && [ "$OLD_NETWORK" != "$NEW_NETWORK" ]; then
+    if git -C "$ROOT" ls-files --error-unmatch "network/$OLD_NETWORK" >/dev/null 2>&1; then
+        git -C "$ROOT" rm -q -f "network/$OLD_NETWORK"
+        echo "  git rm network/$OLD_NETWORK"
+    else
+        echo "  old network network/$OLD_NETWORK not tracked by git, not removing"
+    fi
+fi
 
 echo
 echo "Done. Review the changes with 'git diff' before committing."
