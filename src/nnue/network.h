@@ -4,7 +4,7 @@
 
 #include "accum.h"
 #include "nnparams.h"
-#include "features/arasanv3.h"
+#include "features/featuretrans.h"
 #include "layers/pairwisemult.h"
 #include "layers/sparselinear.h"
 #include "layers/linear.h"
@@ -37,7 +37,7 @@ class Network {
 
     using OutputType = int32_t;
     using XformerBiasType = int16_t;
-    using FeatureXformer = ArasanV3Feature<uint16_t, int16_t, XformerBiasType, int16_t, FeatureXformerRows,
+    using FeatureXformer = FeatureTransformer<uint16_t, int16_t, XformerBiasType, int16_t, FeatureXformerRows,
         NetworkParams::HIDDEN_WIDTH, NetworkParams::KING_BUCKETS_MAP>;
     using AccumulatorType = FeatureXformer::AccumulatorType;
     using AccumulatorOutputType = int16_t;
@@ -93,11 +93,11 @@ class Network {
         delete outputLayer;
     }
 
-    inline static unsigned getIndex(ColorType kside, Square kp, Piece p, Square sq) {
+    inline static unsigned getPSQIndex(ColorType kside, Square kp, Piece p, Square sq) {
 #ifdef NDEBUG
-        return FeatureXformer::getIndex(kside, kp, p, sq);
+        return FeatureXformer::PSQ::getIndex(kside, kp, p, sq);
 #else
-        auto idx = FeatureXformer::getIndex(kside, kp, p, sq);
+        auto idx = FeatureXformer::PSQ::getIndex(kside, kp, p, sq);
         assert(idx < FeatureXformerRows);
         return idx;
 #endif

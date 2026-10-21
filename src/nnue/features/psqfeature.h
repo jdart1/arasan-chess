@@ -1,6 +1,6 @@
 // Copyright 2020-2026 by Jon Dart. All Rights Reserved.
-#ifndef _ARASANV3_H
-#define _ARASANV3_H
+#ifndef _PSQFEATURE_H
+#define _PSQFEATURE_H
 
 #include "nndefs.h"
 #include "nnparams.h"
@@ -8,19 +8,18 @@
 #include "chess.h"
 #include "util.h"
 
-// Implements the feature transformer for the "Arasan v3" neural network architecture.
+// Implements a set of Piece-Square features, as in Arasan v26.1 and earler.
 // King position is mirrored so that the King is always on files e..h.
-template <typename InputType, typename WeightType, typename BiasType, typename OutputType, size_t inputSize,
+template <typename InputType, typename WeightType, typename BiasType, typename OutputType,
+          typename AccumulatorType, size_t inputSize,
           size_t outputSize, const unsigned kingBucketsMap[64], size_t alignment = DEFAULT_ALIGN>
-class ArasanV3Feature
+class PSQFeature
 {
 public:
 
-    ArasanV3Feature() = default;
+    PSQFeature() = default;
 
-    virtual ~ArasanV3Feature() = default;
-
-    using AccumulatorType = Accumulator<OutputType, outputSize>;
+    virtual ~PSQFeature() = default;
 
     inline static Square relativeSquare(ColorType perspective, Square sq) {
         return sq ^ (static_cast<int>(perspective) * 56);

@@ -56,7 +56,7 @@ size_t nnue::Evaluator::getIndices(ColorType kside, const Board &board, IndexArr
     auto it = out.begin();
     while (bits.iterate(sq)) {
         const Piece &piece = board[sq];
-        *it++ = Network::getIndex(kside, board.kingSquare(kside), piece, sq);
+        *it++ = Network::getPSQIndex(kside, board.kingSquare(kside), piece, sq);
     }
     *it = LAST_INDEX;
 #ifdef NNUE_TRACE
@@ -77,7 +77,7 @@ size_t nnue::Evaluator::getIndices(ColorType kside, const Occupancies &occupanci
                 while (bits.iterate(sq)) {
                     // Note: piece types start at Pawn = 1
                     const Piece piece = MakePiece(static_cast<PieceType>(i + 1), static_cast<ColorType>(j));
-                    *it++ = Network::getIndex(kside, kp, piece, sq);
+                    *it++ = Network::getPSQIndex(kside, kp, piece, sq);
                 }
             }
         }
@@ -100,13 +100,13 @@ void nnue::Evaluator::getChangedIndices(const NodeInfo *node, IndexArray &added,
 #ifdef NNUE_TRACE
             std::cout << "removing" << SquareImage(info.from) << std::endl;
 #endif
-            removed[removed_count++] = Network::getIndex(kside, kp, info.piece, info.from);
+            removed[removed_count++] = Network::getPSQIndex(kside, kp, info.piece, info.from);
         }
         if (info.to != InvalidSquare) {
 #ifdef NNUE_TRACE
             std::cout << "adding" << SquareImage(info.to) << std::endl;
 #endif
-            added[added_count++] = Network::getIndex(kside, kp, info.piece, info.to);
+            added[added_count++] = Network::getPSQIndex(kside, kp, info.piece, info.to);
         }
     }
 }
@@ -180,7 +180,7 @@ void nnue::Evaluator::updateAccum(const nnue::Network &network, const Board &boa
         const DirtyState &ds = n->dirty[0];
         if ((dn == 0) ||
             (n ->ply == 0) ||
-            (TypeOfPiece(ds.piece) == King && Network::FeatureXformer::needsRefresh(c, ds.from, ds.to)) ||
+            (TypeOfPiece(ds.piece) == King && Network::FeatureXformer::PSQ::needsRefresh(c, ds.from, ds.to)) ||
             ((gain -= dn + 1) < 0)) {
             // previous move was null, or was a King move that invalidates the accumulator,
             // or we can't get any gain from incremental update
@@ -239,7 +239,7 @@ void nnue::Evaluator::finnyUpdate(const nnue::Network &network, const Board &boa
                                   NodeInfo *node, ColorType side, nnue::AccumulatorHalf targetHalf) {
 
     const Square kp = node->kingSquare(side);
-    FinnyEntry& cacheEntry = finnyTable[side][nnue::Network::FeatureXformer::getKingBucket(side,kp)][File(kp) > 4];
+    FinnyEntry& cacheEntry = finnyTable[side][nnue::Network::FeatureXformer::PSQ::getKingBucket(side,kp)][File(kp) > 4];
     nnue::Network::AccumulatorType &accum = node->accum;
 
     // get the index diffs between the cache entry and our position
@@ -266,11 +266,11 @@ void nnue::Evaluator::finnyUpdate(const nnue::Network &network, const Board &boa
                 PieceType piece = static_cast<PieceType>(i + 1);
                 Square sq;
                 while (added.iterate(sq)) {
-                    add[added_count++] = Network::getIndex(side, kp, MakePiece(piece, color), sq);
+                    add[added_count++] = Network::getPSQIndex(side, kp, MakePiece(piece, color), sq);
                 }
                 while (removed.iterate(sq)) {
                     remove[removed_count++] =
-                        Network::getIndex(side, kp, MakePiece(piece, color), sq);
+                        Network::getPSQIndex(side, kp, MakePiece(piece, color), sq);
                 }
             }
         }
