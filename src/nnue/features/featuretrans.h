@@ -5,10 +5,12 @@
 #include "accum.h"
 #include "chess.h"
 #include "nndefs.h"
+#include "ppfeature.h"
 #include "psqfeature.h"
+#include "threatfeature.h"
 
-// Wrapper class that contains the feature sets (currently only PSQ; threat and
-// pawn pair features are to be added). Index calculation is feature-specific
+// Wrapper class that contains the feature sets (PSQ, threats, pawn pairs;
+// the latter two are stubs for now). Index calculation is feature-specific
 // and is accessed via the feature classes, for example PSQ::getIndex.
 template <typename InputType, typename WeightType, typename BiasType, typename OutputType, size_t inputSize,
           size_t outputSize, const unsigned kingBucketsMap[64], size_t alignment = DEFAULT_ALIGN>
@@ -59,5 +61,7 @@ public:
 
 private:
     PSQ psq;
+    ThreatFeature<alignment> threats;
+    PawnPairFeature<alignment> pawnPairs;
 };
 #endif
