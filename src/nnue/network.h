@@ -17,8 +17,8 @@
 //
 //   feature transformer -> FT activation -> L1 (sparse int8) -> L2 -> output
 //
-//   FT act: per-perspective CReLU[0,QA] + pairwise-mul -> u8, width L1_IN
-//   L1:     sparse affine, u8 x int8 weights (dpbusd), L1_IN -> L1_SIZE, int32
+//   FT act: per-perspective CReLU[0,QA] + pairwise-mul -> u8, width FT_OUTPUT_SIZE
+//   L1:     sparse affine, u8 x int8 weights (dpbusd), FT_OUTPUT_SIZE -> L1_SIZE, int32
 //           (L1 output is CReLU-clamped to L1_OUT_CLAMP)
 //   L2:     affine, L1_SIZE -> L2_SIZE, int32, no shift, then CReLU clamp to L2_OUT_CLAMP
 //   output: affine, L2_SIZE -> 1, int32 weights with int64 accumulation
@@ -31,21 +31,21 @@ class Network {
 
   public:
 
-    static constexpr size_t FeatureXformerOutputSize = NetworkParams::HIDDEN_WIDTH;
+    static constexpr size_t FeatureXformerOutputSize = NetworkParams::FT_OUTPUT_SIZE;
 
     static constexpr size_t FeatureXformerRows = 12 * NetworkParams::KING_BUCKETS * 64;
 
     using OutputType = int32_t;
     using XformerBiasType = int16_t;
     using FeatureXformer = FeatureTransformer<uint16_t, int16_t, XformerBiasType, int16_t, FeatureXformerRows,
-        NetworkParams::HIDDEN_WIDTH, NetworkParams::KING_BUCKETS_MAP>;
+        NetworkParams::FT_OUTPUT_SIZE, NetworkParams::KING_BUCKETS_MAP>;
     using AccumulatorType = FeatureXformer::AccumulatorType;
     using AccumulatorOutputType = int16_t;
 
     // Feature-transformer activation: per-perspective CReLU[0,QA] + pairwise-mul,
-    // producing a u8 vector (each HIDDEN_WIDTH perspective -> HIDDEN_WIDTH/2 u8).
+    // producing a u8 vector (each FT_OUTPUT_SIZE perspective -> FT_OUTPUT_SIZE/2 u8).
     using FTActivation =
-        PairwiseMult<int16_t, uint8_t, NetworkParams::HIDDEN_WIDTH,
+        PairwiseMult<int16_t, uint8_t, NetworkParams::FT_OUTPUT_SIZE,
                      NetworkParams::NETWORK_QA, NetworkParams::PAIRWISE_SHIFT>;
 
     // L1: sparse affine, u8 input x int8 weights (dpbusd), int32 output, bucketed.
@@ -54,7 +54,7 @@ class Network {
     // they arrive in bucket-major (for bucket: for output: for input) order,
     // which is what the LinearLayer non-transpose reader expects.
     using L1Layer =
-        SparseLinear<uint8_t, int8_t, int32_t, int32_t, NetworkParams::L1_IN,
+        SparseLinear<uint8_t, int8_t, int32_t, int32_t, NetworkParams::FT_OUTPUT_SIZE,
                      NetworkParams::L1_SIZE, NetworkParams::OUTPUT_BUCKETS, 0, 0, false>;
 
     // L2: int32 affine, L1_SIZE -> L2_SIZE, no dequantizing shift (Raphael scheme).
@@ -111,12 +111,12 @@ class Network {
         std::cout << accum << std::endl;
 #endif
         // FT activation: per-perspective CReLU[0,QA] + pairwise-mul -> u8.
-        // Lower accumulator half is the side to move; each HIDDEN_WIDTH-wide
-        // perspective is reduced to HIDDEN_WIDTH/2 u8 values.
-        alignas(nnue::DEFAULT_ALIGN) uint8_t l1In[NetworkParams::L1_IN];
+        // Lower accumulator half is the side to move; each FT_OUTPUT_SIZE-wide
+        // perspective is reduced to FT_OUTPUT_SIZE/2 u8 values.
+        alignas(nnue::DEFAULT_ALIGN) uint8_t l1In[NetworkParams::FT_OUTPUT_SIZE];
         ftActivation.forward(accum.getOutput(), l1In);
-        ftActivation.forward(accum.getOutput() + NetworkParams::HIDDEN_WIDTH,
-                             l1In + NetworkParams::HIDDEN_WIDTH / 2);
+        ftActivation.forward(accum.getOutput() + NetworkParams::FT_OUTPUT_SIZE,
+                             l1In + NetworkParams::FT_OUTPUT_SIZE / 2);
 
         // L1: sparse u8 x int8 affine (dpbusd), int32 output
         alignas(nnue::DEFAULT_ALIGN) int32_t l1Out[NetworkParams::L1_SIZE];

@@ -10,11 +10,12 @@ static constexpr unsigned OUTPUT_BUCKETS = 8;
 
 static constexpr unsigned BUCKET_DIVISOR = (32 + OUTPUT_BUCKETS - 1) / OUTPUT_BUCKETS;
 
-static constexpr unsigned HIDDEN_WIDTH = 1792;
+// width of the feature transformer output (per perspective)
+static constexpr unsigned FT_OUTPUT_SIZE = 1792;
 
 // 3-layer sparse int8 head (Stockfish/Hobbes-style), Raphael-style downstream:
-//   feature transformer (HIDDEN_WIDTH per perspective, 2*HIDDEN_WIDTH total)
-//     -> CReLU[0,NETWORK_QA] + pairwise-mul (per perspective) -> u8, width L1_IN
+//   feature transformer (FT_OUTPUT_SIZE per perspective, 2*FT_OUTPUT_SIZE total)
+//     -> CReLU[0,NETWORK_QA] + pairwise-mul (per perspective) -> u8, width FT_OUTPUT_SIZE
 //     -> L1: sparse affine, u8 x int8 weights (dpbusd), int32, -> L1_SIZE
 //     -> CReLU clamp to L1_OUT_CLAMP
 //     -> L2: affine, int32, L1_SIZE -> L2_SIZE, no shift, CReLU clamp to L2_OUT_CLAMP
@@ -42,9 +43,9 @@ static constexpr int OUTPUT_SCALE = 400;
 static constexpr unsigned PAIRWISE_SHIFT = 7;
 static constexpr unsigned PAIRWISE_QUANT =
     (static_cast<unsigned>(NETWORK_QA) * NETWORK_QA) >> (16 - PAIRWISE_SHIFT); // 127
-// width of the pairwise-mul output and the sparse L1 input: each perspective's
-// HIDDEN_WIDTH outputs are halved by the pairing, two perspectives -> HIDDEN_WIDTH.
-static constexpr unsigned L1_IN = HIDDEN_WIDTH;
+// Note: the pairwise-mul output (the sparse L1 input) is also FT_OUTPUT_SIZE wide:
+// each perspective's FT_OUTPUT_SIZE outputs are halved by the pairing, two
+// perspectives -> FT_OUTPUT_SIZE.
 
 // Integer quantization scales for the head. The sparse L1 layer emits an int32
 // value whose "1.0" activation corresponds to PAIRWISE_QUANT * NETWORK_QB. The

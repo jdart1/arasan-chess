@@ -564,8 +564,8 @@ int testNNUE() {
     errs += testCReLU<int32_t,int32_t,16, 255, 6>(); // should not use SIMD
     errs += testCReLU<int32_t,int32_t,16, 255, 0>(); // should not use SIMD
     errs += testPairwiseMult<int16_t,int8_t,1024>();
-    // v8 sparse head: pairwise-mul of one perspective (2*HIDDEN_WIDTH/2 -> u8)
-    errs += testPairwiseMult<int16_t,uint8_t,nnue::NetworkParams::HIDDEN_WIDTH>();
+    // v8 sparse head: pairwise-mul of one perspective (2*FT_OUTPUT_SIZE/2 -> u8)
+    errs += testPairwiseMult<int16_t,uint8_t,nnue::NetworkParams::FT_OUTPUT_SIZE>();
     errs += testLinearLayer<int8_t, int8_t, int32_t, int32_t,16,1024,2,2>();
     errs += testLinearLayer<int32_t,int32_t,int32_t,int32_t,16,32,0,6>();
     errs += testLinearLayer<int32_t,int32_t,int32_t,int32_t,32,32,6,0>();
@@ -578,9 +578,9 @@ int testNNUE() {
     }
     else {
         errs += testSparseLinear<uint8_t,int8_t,int32_t,int32_t,1024,16,7,0>();
-        // v8 sparse L1: pairwise-mul u8 input (HIDDEN_WIDTH) -> L1_SIZE, no shift
+        // v8 sparse L1: pairwise-mul u8 input (FT_OUTPUT_SIZE) -> L1_SIZE, no shift
         errs += testSparseLinear<uint8_t,int8_t,int32_t,int32_t,
-                                 nnue::NetworkParams::HIDDEN_WIDTH,
+                                 nnue::NetworkParams::FT_OUTPUT_SIZE,
                                  nnue::NetworkParams::L1_SIZE,0,0>();
     }
 
