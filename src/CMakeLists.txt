@@ -57,7 +57,7 @@ endif(SYZYGY_TBS)
 add_compile_definitions(NETWORK=${NETWORK})
 set(NNUE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/nnue)
 include_directories(${NNUE_DIR})
-list(APPEND EXTRA_SRC evaluate.cpp)
+list(APPEND EXTRA_SRC evaluate.cpp nnue/features/threatfeature.cpp)
 
 if(64BIT)
     set(EXE_NAME ${EXE_NAME}-64)
