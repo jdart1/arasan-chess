@@ -9,6 +9,8 @@
 #include <limits>
 #include <random>
 #include <set>
+#include <map>
+#include <array>
 
 #include "board.h"
 #include "boardio.h"
@@ -555,6 +557,121 @@ static int testIntHead() {
     return err;
 }
 
+
+// Attacks of a piece on an empty board, from the Attacks tables
+static Bitboard emptyBoardAttacks(Piece p, Square sq) {
+    const Bitboard empty;
+    switch (TypeOfPiece(p)) {
+    case Pawn:
+        // pawn_attacks[sq][c] is the squares from which a pawn of color c attacks sq,
+        // so by symmetry a White pawn on sq attacks pawn_attacks[sq][Black]
+        return Attacks::pawn_attacks[sq][ColorOfPiece(p) == White ? Black : White];
+    case Knight:
+        return Attacks::knight_attacks[sq];
+    case Bishop:
+        return Attacks::bishopAttacks(sq, empty);
+    case Rook:
+        return Attacks::rookAttacks(sq, empty);
+    case Queen:
+        return Attacks::bishopAttacks(sq, empty) | Attacks::rookAttacks(sq, empty);
+    default:
+        return Attacks::king_attacks[sq];
+    }
+}
+
+// Expected rule for which (attacker, victim) piece type pairs are valid threat features
+static bool threatPairAllowed(PieceType attacker, PieceType victim) {
+    switch (attacker) {
+    case Pawn:
+        return victim == Knight || victim == Rook;
+    case Knight:
+    case Queen:
+        return victim != King && victim != Empty;
+    case Bishop:
+    case Rook:
+        return victim == Pawn || victim == Knight || victim == Bishop || victim == Rook;
+    default:
+        return false;
+    }
+}
+
+static int testThreatFeature() {
+    using TF = nnue::ThreatFeature<>;
+    int errs = 0;
+    const Piece pieces[12] = {WhitePawn, WhiteKnight, WhiteBishop, WhiteRook, WhiteQueen, WhiteKing,
+                              BlackPawn, BlackKnight, BlackBishop, BlackRook, BlackQueen, BlackKing};
+    // king squares with different file mirroring and bucket
+    const Square kings[4] = {4 /* e1 */, 0 /* a1 */, 60 /* e8 */, 56 /* a8 */};
+    for (ColorType side : {White, Black}) {
+        for (Square ksq : kings) {
+            std::map<nnue::IndexType, std::array<int, 4>> seen;
+            for (Piece a : pieces) {
+                for (Square from = 0; from < 64; ++from) {
+                    if (TypeOfPiece(a) == Pawn && (Rank<White>(from) == 1 || Rank<White>(from) == 8)) continue;
+                    Bitboard targets(emptyBoardAttacks(a, from));
+                    Square to;
+                    while (targets.iterate(to)) {
+                        for (Piece v : pieces) {
+                            const nnue::IndexType idx = TF::getIndex(side, a, from, to, v, ksq);
+                            const bool expectValid = threatPairAllowed(TypeOfPiece(a), TypeOfPiece(v));
+                            if (idx == nnue::LAST_INDEX) {
+                                // sentinel is only allowed for excluded pairs and semi-excluded
+                                // (same type) pairs
+                                if (expectValid && TypeOfPiece(a) != TypeOfPiece(v)) {
+                                    ++errs;
+                                    std::cerr << "testThreatFeature: unexpected sentinel" << std::endl;
+                                }
+                                continue;
+                            }
+                            if (!expectValid || idx >= TF::DIMENSIONS) {
+                                ++errs;
+                                std::cerr << "testThreatFeature: bad index " << idx << std::endl;
+                                continue;
+                            }
+                            // different features must have different indices, for the same
+                            // perspective and king square (after mirroring)
+                            const std::array<int, 4> key = {static_cast<int>(a), from, to, static_cast<int>(v)};
+                            if (!seen.insert({idx, key}).second) {
+                                ++errs;
+                                std::cerr << "testThreatFeature: duplicate index " << idx << std::endl;
+                            }
+                            // perspective symmetry: flipping colors and ranks swaps the perspective
+                            const nnue::IndexType idx2 = TF::getIndex(side == White ? Black : White,
+                                                                static_cast<Piece>(a ^ 8), from ^ 56, to ^ 56,
+                                                                static_cast<Piece>(v ^ 8), ksq ^ 56);
+                            if (idx2 != idx) {
+                                ++errs;
+                                std::cerr << "testThreatFeature: perspective mismatch " << idx << " " << idx2 << std::endl;
+                            }
+                        }
+                    }
+                }
+            }
+            // same-type mutual attacks: exactly one of the two directions is a feature
+            for (Piece a : pieces) {
+                const PieceType t = TypeOfPiece(a);
+                if (t == Pawn || t == King) continue;
+                for (Piece v : pieces) {
+                    if (TypeOfPiece(v) != t) continue;
+                    for (Square x = 0; x < 64; ++x) {
+                        Bitboard targets(emptyBoardAttacks(a, x));
+                        Square y;
+                        while (targets.iterate(y)) {
+                            const bool ab = TF::getIndex(side, a, x, y, v, ksq) != nnue::LAST_INDEX;
+                            const bool ba = TF::getIndex(side, v, y, x, a, ksq) != nnue::LAST_INDEX;
+                            if (ab == ba) {
+                                ++errs;
+                                std::cerr << "testThreatFeature: mutual attack not exclusive" << std::endl;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return errs;
+}
+
 int testNNUE() {
 
     int errs = 0;
@@ -585,6 +702,8 @@ int testNNUE() {
     }
 
     errs += testIntHead();
+
+    errs += testThreatFeature();
 
     errs += testWholeNetwork();
 

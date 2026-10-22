@@ -6,6 +6,7 @@
 #include "nnparams.h"
 #include "accum.h"
 #include "chess.h"
+#include "featureutil.h"
 #include "util.h"
 
 // Implements a set of Piece-Square features, as in Arasan v26.1 and earler.
@@ -21,25 +22,16 @@ public:
 
     virtual ~PSQFeature() = default;
 
-    inline static Square relativeSquare(ColorType perspective, Square sq) {
-        return sq ^ (static_cast<int>(perspective) * 56);
-    }
-
+    // king bucket for side and king position
     inline static unsigned getKingBucket(ColorType kside, Square kp) {
-        kp = relativeSquare(kside, kp);
-        return kingBucketsMap[kp];
+        return kingBucketsMap[FeatureUtils::relativeSquare(kside, kp)];
     }
 
     inline static IndexType getIndex(ColorType kside, Square kp /* kside King */, Piece p, Square sq) {
         assert(p != EmptyPiece);
-        if (File(kp) >= chess::EFILE) {
-            // flip file
-            sq ^= 7;
-        }
-        sq = relativeSquare(kside, sq);
         IndexType idx = static_cast<IndexType>(getKingBucket(kside, kp) * 12 * 64 +
                                                pieceTypeMap[kside != ColorOfPiece(p)][p] * 64 +
-                                               sq);
+                                               FeatureUtils::mirroredSquare(kside, kp, sq));
         assert(idx < inputSize);
         return idx;
     }
@@ -145,8 +137,8 @@ public:
 
     static inline bool needsRefresh(ColorType perspective, Square oldKing, Square newKing) {
         return ((File(oldKing) >= chess::EFILE) != (File(newKing) >= chess::EFILE)) ||
-            kingBucketsMap[relativeSquare(perspective, oldKing)] !=
-            kingBucketsMap[relativeSquare(perspective, newKing)];
+            kingBucketsMap[FeatureUtils::relativeSquare(perspective, oldKing)] !=
+            kingBucketsMap[FeatureUtils::relativeSquare(perspective, newKing)];
     }
 
 private:
