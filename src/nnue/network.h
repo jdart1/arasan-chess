@@ -6,7 +6,9 @@
 #include "nnparams.h"
 #include "features/arasanv3.h"
 #include "layers/pairwisemult.h"
+#ifdef SIMD
 #include "layers/sparselinear.h"
+#endif
 #include "layers/linear.h"
 #include "layers/crelu.h"
 #include "util.h"
@@ -53,9 +55,14 @@ class Network {
     // transpose=false: bullet emits these weights with .transpose() applied, so
     // they arrive in bucket-major (for bucket: for output: for input) order,
     // which is what the LinearLayer non-transpose reader expects.
+#ifdef SIMD
     using L1Layer =
         SparseLinear<uint8_t, int8_t, int32_t, int32_t, NetworkParams::L1_IN,
                      NetworkParams::L1_SIZE, NetworkParams::OUTPUT_BUCKETS, 0, 0, false>;
+#else
+    using L1Layer = LinearLayer<uint8_t, int8_t, int32_t, int32_t, NetworkParams::L1_IN,
+                                NetworkParams::L1_SIZE, NetworkParams::OUTPUT_BUCKETS, 0, 0, false>;
+#endif
 
     // L2: int32 affine, L1_SIZE -> L2_SIZE, no dequantizing shift (Raphael scheme).
     using L2Layer =
