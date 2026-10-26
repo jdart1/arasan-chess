@@ -209,6 +209,18 @@ inline std::istream &operator>>(std::istream &s, Network &network) {
     (void)network.l2->read(s);
     if (s.fail()) return s;
     (void)network.outputLayer->read(s);
+    if (s.fail()) return s;
+    // The file should end here, except for padding (the trainer pads the file to a multiple of
+    // 64 bytes). Test that there is not more data than expected; this could be due to a network
+    // file trained for a larger than expected transformer width.
+    char extra[64];
+    s.read(extra, sizeof(extra));
+    if (s.gcount() == static_cast<std::streamsize>(sizeof(extra))) {
+        std::cerr << "Error: network file is larger than expected (wrong network size?)" << std::endl;
+        s.setstate(std::ios::badbit);
+    } else {
+        s.clear(); // reached the end of the file, as expected
+    }
     return s;
 }
 
