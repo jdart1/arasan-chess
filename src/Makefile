@@ -30,7 +30,7 @@ STB=syzygy/src
 UTIL = util
 
 # default network
-NETWORK ?= arasanv8-20261005.nnue
+NETWORK ?= arasanv9-20261023.nnue
 
 # Path to git_archive_all (https://github.com/Kentzo/git-archive-all)
 GIT_ARCHIVE_ALL_PATH ?= /home/jdart/bin/git-archive-all
@@ -300,6 +300,9 @@ $(BUILD)/%.o: %.cpp
 $(BUILD)/%.o: $(UTIL)/%.cpp
 	$(CPP) $(FLAGS) $(OPT) $(TRACE) $(SMPFLAGS) $(NNUE_FLAGS) $(DEBUG) $(CXXFLAGS) -c -o $@ $<
 
+$(BUILD)/%.o: nnue/features/%.cpp
+	$(CPP) $(FLAGS) $(OPT) $(TRACE) $(SMPFLAGS) $(NNUE_FLAGS) $(DEBUG) $(CXXFLAGS) -c -o $@ $<
+
 ifeq ($(PASS),1)
 CPP_PROF_FLAGS := $(PROF_GEN) $(OPT) $(TRACE) $(FLAGS) $(SMPFLAGS) $(NNUE_FLAGS) $(DEBUG) $(CXXFLAGS)
 else
@@ -311,6 +314,9 @@ $(PROFILE)/%.o: %.cpp
 
 $(PROFILE)/%.o: nnue/%.cpp
 	$(CC) $(CPP_PROF_FLAGS) $(PROF_GEN_EXTRA) $(CXXFLAGS) -c -o $@ $<
+
+$(PROFILE)/%.o: nnue/features/%.cpp
+	$(CPP) $(CPP_PROF_FLAGS) $(PROF_GEN_EXTRA) $(CXXFLAGS) -c -o $@ $<
 
 profiled: dirs
 	ln -s -f ../network/*.nnue $(PROFILE)
@@ -347,7 +353,7 @@ movearr.cpp notation.cpp options.cpp bitprobe.cpp \
 bookread.cpp bookwrit.cpp \
 search.cpp searchc.cpp learn.cpp \
 movegen.cpp hash.cpp calctime.cpp eco.cpp legal.cpp \
-stats.cpp threadp.cpp threadc.cpp evaluate.cpp
+stats.cpp threadp.cpp threadc.cpp evaluate.cpp ppfeature.cpp
 
 UTIL_SOURCES = globals.cpp  \
 board.cpp boardio.cpp material.cpp \
@@ -358,7 +364,7 @@ movearr.cpp notation.cpp options.cpp bitprobe.cpp \
 bookread.cpp bookwrit.cpp \
 search.cpp searchc.cpp learn.cpp \
 movegen.cpp hash.cpp calctime.cpp eco.cpp \
-legal.cpp stats.cpp threadp.cpp threadc.cpp evaluate.cpp
+legal.cpp stats.cpp threadp.cpp threadc.cpp evaluate.cpp ppfeature.cpp
 
 UNIT_SOURCES = unit.cpp nnuetest.cpp binformat.cpp \
 globals.cpp board.cpp boardio.cpp material.cpp \
@@ -369,7 +375,7 @@ movearr.cpp notation.cpp options.cpp bitprobe.cpp \
 bookread.cpp bookwrit.cpp \
 search.cpp searchc.cpp learn.cpp \
 movegen.cpp hash.cpp calctime.cpp eco.cpp legal.cpp \
-stats.cpp threadp.cpp threadc.cpp evaluate.cpp
+stats.cpp threadp.cpp threadc.cpp evaluate.cpp ppfeature.cpp
 
 MAKEBOOK_SOURCES = makebook.cpp $(UTIL_SOURCES)
 

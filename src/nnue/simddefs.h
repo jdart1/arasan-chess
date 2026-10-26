@@ -165,6 +165,11 @@ template <typename T> static inline T vec_add16(T, const T *);
 template <typename T> static inline T vec_add32(T, const T *);
 template <typename T> static inline T vec_add32(T, T);
 template <typename T> static inline T vec_sub16(T, const T *);
+// Add/subtract 8-bit values, sign-extended to 16 bits, to/from 16-bit lanes. The pointer
+// is to as many 8-bit values as there are 16-bit lanes in the vector, and must be aligned
+// to that many bytes.
+template <typename T> static inline T vec_add16_i8(T, const int8_t *);
+template <typename T> static inline T vec_sub16_i8(T, const int8_t *);
 template <typename T> static inline T vec_sub32(T, const T *);
 template <typename T> static inline T vec_clamp16(T x, T maxValues);
 template <typename T> static inline T vec_clamp32(T x, T maxValues);
@@ -214,6 +219,12 @@ template <> inline __m512i vec_add32<__m512i>(__m512i x, __m512i y) { return _mm
 template <> inline __m512i vec_sub16<__m512i>(__m512i x, const __m512i *y) {
     return _mm512_sub_epi16(x, vec_load(y));
 }
+template <> inline __m512i vec_add16_i8<__m512i>(__m512i x, const int8_t *y) {
+    return _mm512_add_epi16(x, _mm512_cvtepi8_epi16(_mm256_load_si256(reinterpret_cast<const __m256i *>(y))));
+}
+template <> inline __m512i vec_sub16_i8<__m512i>(__m512i x, const int8_t *y) {
+    return _mm512_sub_epi16(x, _mm512_cvtepi8_epi16(_mm256_load_si256(reinterpret_cast<const __m256i *>(y))));
+}
 template <> inline __m512i vec_sub32<__m512i>(__m512i x, const __m512i *y) {
     return _mm512_sub_epi32(x, vec_load(y));
 }
@@ -259,6 +270,12 @@ template <> __m256i vec_add16<__m256i>(__m256i x, const __m256i *y) {
 }
 template <> __m256i vec_add32<__m256i>(__m256i x, const __m256i *y) {
     return _mm256_add_epi32(x, vec_load(y));
+}
+template <> __m256i vec_add16_i8<__m256i>(__m256i x, const int8_t *y) {
+    return _mm256_add_epi16(x, _mm256_cvtepi8_epi16(_mm_load_si128(reinterpret_cast<const __m128i *>(y))));
+}
+template <> __m256i vec_sub16_i8<__m256i>(__m256i x, const int8_t *y) {
+    return _mm256_sub_epi16(x, _mm256_cvtepi8_epi16(_mm_load_si128(reinterpret_cast<const __m128i *>(y))));
 }
 template <> __m256i vec_add32<__m256i>(__m256i x, __m256i y) { return _mm256_add_epi32(x, y); }
 template <> __m256i vec_sub16<__m256i>(__m256i x, const __m256i *y) {
@@ -337,6 +354,42 @@ template <> __m128i vec_add32<__m128i>(__m128i x, __m128i y) { return _mm_add_ep
 template <> __m128i vec_sub16<__m128i>(__m128i x, const __m128i *y) {
     return _mm_sub_epi16(x, vec_load(y));
 }
+// sign-extend the 8 bytes at y to 8 16-bit values
+static inline __m128i vec_load_i8_to_i16(const int8_t *y) {
+    const __m128i v = _mm_loadl_epi64(reinterpret_cast<const __m128i *>(y));
+#ifdef SSE41
+    return _mm_cvtepi8_epi16(v);
+#else
+    return _mm_unpacklo_epi8(v, _mm_cmpgt_epi8(zero128, v));
+#endif
+}
+template <> __m128i vec_add16_i8<__m128i>(__m128i x, const int8_t *y) {
+    return _mm_add_epi16(x, vec_load_i8_to_i16(y));
+}
+template <> __m128i vec_sub16_i8<__m128i>(__m128i x, const int8_t *y) {
+    return _mm_sub_epi16(x, vec_load_i8_to_i16(y));
+}
+#if defined(SSSE3)
+// Add (or subtract) the sums of two rows of 8-bit values, sign-extended to 16 bits, to two
+// vectors of 16-bit lanes. y0 and y1 point to 16 aligned bytes: the first 8 bytes are for acc0
+// and the second 8 for acc1. Interleaving the bytes of the two rows and then multiplying by 1
+// and adding adjacent pairs (maddubs) yields the sums with one instruction per vector,
+// instead of a sign extension for each row.
+static inline void vec_add16_i8_pair(__m128i &acc0, __m128i &acc1, const int8_t *y0, const int8_t *y1) {
+    const __m128i a = _mm_load_si128(reinterpret_cast<const __m128i *>(y0));
+    const __m128i b = _mm_load_si128(reinterpret_cast<const __m128i *>(y1));
+    const __m128i ones8 = _mm_set1_epi8(1);
+    acc0 = _mm_add_epi16(acc0, _mm_maddubs_epi16(ones8, _mm_unpacklo_epi8(a, b)));
+    acc1 = _mm_add_epi16(acc1, _mm_maddubs_epi16(ones8, _mm_unpackhi_epi8(a, b)));
+}
+static inline void vec_sub16_i8_pair(__m128i &acc0, __m128i &acc1, const int8_t *y0, const int8_t *y1) {
+    const __m128i a = _mm_load_si128(reinterpret_cast<const __m128i *>(y0));
+    const __m128i b = _mm_load_si128(reinterpret_cast<const __m128i *>(y1));
+    const __m128i ones8 = _mm_set1_epi8(1);
+    acc0 = _mm_sub_epi16(acc0, _mm_maddubs_epi16(ones8, _mm_unpacklo_epi8(a, b)));
+    acc1 = _mm_sub_epi16(acc1, _mm_maddubs_epi16(ones8, _mm_unpackhi_epi8(a, b)));
+}
+#endif
 template <> __m128i vec_sub32<__m128i>(__m128i x, const __m128i *y) {
     return _mm_sub_epi32(x, vec_load(y));
 }

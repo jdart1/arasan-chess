@@ -1,53 +1,44 @@
 // Copyright 2020-2026 by Jon Dart. All Rights Reserved.
-#ifndef _ARASANV3_H
-#define _ARASANV3_H
+#ifndef _PSQFEATURE_H
+#define _PSQFEATURE_H
 
 #include "nndefs.h"
 #include "nnparams.h"
 #include "accum.h"
 #include "chess.h"
+#include "featureutil.h"
 #include "util.h"
 
-// Implements the feature transformer for the "Arasan v3" neural network architecture.
+// Implements a set of Piece-Square features, as in Arasan v26.1 and earler.
 // King position is mirrored so that the King is always on files e..h.
-template <typename InputType, typename WeightType, typename BiasType, typename OutputType, size_t inputSize,
+template <typename InputType, typename WeightType, typename BiasType, typename OutputType,
+          typename AccumulatorType, size_t inputSize,
           size_t outputSize, const unsigned kingBucketsMap[64], size_t alignment = DEFAULT_ALIGN>
-class ArasanV3Feature
+class PSQFeature
 {
 public:
 
-    ArasanV3Feature() = default;
+    PSQFeature() = default;
 
-    virtual ~ArasanV3Feature() = default;
+    virtual ~PSQFeature() = default;
 
-    using AccumulatorType = Accumulator<OutputType, outputSize>;
-
-    inline static Square relativeSquare(ColorType perspective, Square sq) {
-        return sq ^ (static_cast<int>(perspective) * 56);
-    }
-
+    // king bucket for side and king position
     inline static unsigned getKingBucket(ColorType kside, Square kp) {
-        kp = relativeSquare(kside, kp);
-        return kingBucketsMap[kp];
+        return kingBucketsMap[FeatureUtils::relativeSquare(kside, kp)];
     }
 
     inline static IndexType getIndex(ColorType kside, Square kp /* kside King */, Piece p, Square sq) {
         assert(p != EmptyPiece);
-        if (File(kp) >= chess::EFILE) {
-            // flip file
-            sq ^= 7;
-        }
-        sq = relativeSquare(kside, sq);
         IndexType idx = static_cast<IndexType>(getKingBucket(kside, kp) * 12 * 64 +
                                                pieceTypeMap[kside != ColorOfPiece(p)][p] * 64 +
-                                               sq);
+                                               FeatureUtils::mirroredSquare(kside, kp, sq));
         assert(idx < inputSize);
         return idx;
     }
 
     // Full update: propagate data through the layer, updating the specified half of the
     // accumulator (side to move goes in lower half).
-    void updateAccum(const IndexArray &indices, AccumulatorHalf half,
+    void updateAccum(const PSQIndexArray &indices, AccumulatorHalf half,
                      AccumulatorType &output) const noexcept {
 #ifdef SIMD
         simd::fullUpdate<OutputType, WeightType, BiasType, inputSize, outputSize>(
@@ -71,7 +62,7 @@ public:
     // Perform an incremental update
     void updateAccum(const AccumulatorType &source, AccumulatorHalf sourceHalf,
                      AccumulatorType &target, AccumulatorHalf targetHalf,
-                     const IndexArray &added, size_t added_count, const IndexArray &removed,
+                     const PSQIndexArray &added, size_t added_count, const PSQIndexArray &removed,
                      size_t removed_count) const noexcept {
 #ifdef SIMD
         simd::update<OutputType,WeightType,inputSize,outputSize>(source.getOutput(sourceHalf),target.data(targetHalf),_weights,
@@ -85,7 +76,7 @@ public:
     }
 
     // Perform an incremental update
-    void updateAccum(const IndexArray &added, const IndexArray &removed,
+    void updateAccum(const PSQIndexArray &added, const PSQIndexArray &removed,
                      size_t added_count, size_t removed_count,
                      AccumulatorHalf half, AccumulatorType &output) const noexcept {
         for (size_t i = 0; i < added_count; i++) {
@@ -146,8 +137,8 @@ public:
 
     static inline bool needsRefresh(ColorType perspective, Square oldKing, Square newKing) {
         return ((File(oldKing) >= chess::EFILE) != (File(newKing) >= chess::EFILE)) ||
-            kingBucketsMap[relativeSquare(perspective, oldKing)] !=
-            kingBucketsMap[relativeSquare(perspective, newKing)];
+            kingBucketsMap[FeatureUtils::relativeSquare(perspective, oldKing)] !=
+            kingBucketsMap[FeatureUtils::relativeSquare(perspective, newKing)];
     }
 
 private:

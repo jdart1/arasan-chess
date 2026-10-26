@@ -169,6 +169,43 @@ fullUpdateLoopNeon(AccumType *target, const WeightType (*weights)[inputSize][out
 
 #else
 
+// Add (or subtract) rows of 8-bit weights, widened to 16 bits, to the registers holding a
+// tile of the accumulator. "offset" is the index of the first register of the tile, in units
+// of registers of the accumulator.
+template <bool add, typename vec_type, size_t regCount, size_t regWidth, typename WeightType,
+          size_t inputSize, size_t outputSize>
+FORCEINLINE void applyWidenedRows(vec_type (&regs)[regCount],
+                                  const WeightType (&weights)[inputSize][outputSize],
+                                  const unsigned *indices, size_t count, size_t offset) {
+    // number of weights per register: one per 16-bit lane
+    constexpr size_t lanes = regWidth / 16;
+    size_t i = 0;
+#if defined(SSSE3)
+    // With 128-bit registers (and SSSE3, which has maddubs), process two rows at a time
+    if constexpr (regWidth == 128 && regCount % 2 == 0) {
+        for (; i + 1 < count; i += 2) {
+            const int8_t *w0 = reinterpret_cast<const int8_t *>(weights[indices[i]]) + offset * lanes;
+            const int8_t *w1 = reinterpret_cast<const int8_t *>(weights[indices[i + 1]]) + offset * lanes;
+            for (size_t j = 0; j < regCount; j += 2) {
+                if constexpr (add)
+                    vec_add16_i8_pair(regs[j], regs[j + 1], w0 + j * lanes, w1 + j * lanes);
+                else
+                    vec_sub16_i8_pair(regs[j], regs[j + 1], w0 + j * lanes, w1 + j * lanes);
+            }
+        }
+    }
+#endif
+    for (; i < count; ++i) {
+        const int8_t *w = reinterpret_cast<const int8_t *>(weights[indices[i]]) + offset * lanes;
+        for (size_t j = 0; j < regCount; ++j) {
+            if constexpr (add)
+                regs[j] = vec_add16_i8<vec_type>(regs[j], w + j * lanes);
+            else
+                regs[j] = vec_sub16_i8<vec_type>(regs[j], w + j * lanes);
+        }
+    }
+}
+
 template <typename vec_type, typename AccumType, typename WeightType,
           size_t inputSize /* features */, size_t outputSize /* accumulator size */,
           size_t regCount, size_t regWidth, size_t iterations, size_t bytes>
@@ -180,6 +217,11 @@ inline void updateLoop(const AccumType *source, AccumType *target,
     static_assert(outputSize * sizeof(AccumType) * 8 % regWidth == 0,
                   "accumulator size is not multiple of SIMD register width");
     static_assert(bytes == 2 || bytes == 4);
+    // If the weights are narrower than the accumulator values (8 bits versus 16), they are
+    // widened as they are added to the accumulator.
+    constexpr bool widen = sizeof(WeightType) < sizeof(AccumType);
+    static_assert(!widen || (sizeof(WeightType) == 1 && bytes == 2),
+                  "only widening of 8-bit weights to 16 bits is supported");
     vec_type *outp = reinterpret_cast<vec_type *>(target);
     const vec_type *inp = reinterpret_cast<const vec_type *>(source);
     alignas(VEC_ALIGN) vec_type regs[regCount];
@@ -189,16 +231,21 @@ inline void updateLoop(const AccumType *source, AccumType *target,
             regs[i] = vec_load(inp + offset + i);
         }
         // perform updates in registers
-        for (size_t i = 0; i < added_count; ++i) {
-            const vec_type *w = reinterpret_cast<const vec_type *>(weights[added[i]]);
-            for (size_t j = 0; j < regCount; ++j) {
-                regs[j] = vec_add<bytes>(regs[j], w + offset + j);
+        if constexpr (widen) {
+            applyWidenedRows<true, vec_type, regCount, regWidth>(regs, weights, added, added_count, offset);
+            applyWidenedRows<false, vec_type, regCount, regWidth>(regs, weights, removed, removed_count, offset);
+        } else {
+            for (size_t i = 0; i < added_count; ++i) {
+                const vec_type *w = reinterpret_cast<const vec_type *>(weights[added[i]]);
+                for (size_t j = 0; j < regCount; ++j) {
+                    regs[j] = vec_add<bytes>(regs[j], w + offset + j);
+                }
             }
-        }
-        for (size_t i = 0; i < removed_count; ++i) {
-            const vec_type *w = reinterpret_cast<const vec_type *>(weights[removed[i]]);
-            for (size_t j = 0; j < regCount; ++j) {
-                regs[j] = vec_sub<bytes>(regs[j], w + offset + j);
+            for (size_t i = 0; i < removed_count; ++i) {
+                const vec_type *w = reinterpret_cast<const vec_type *>(weights[removed[i]]);
+                for (size_t j = 0; j < regCount; ++j) {
+                    regs[j] = vec_sub<bytes>(regs[j], w + offset + j);
+                }
             }
         }
         // store results to memory
@@ -375,10 +422,18 @@ void update(const AccumType *source, AccumType *target,
     // https://github.com/official-stockfish/nnue-pytorch/blob/master/docs/nnue.md
     // outputSize is the size of an accumulator half
     static_assert(sizeof(AccumType) == 2 || sizeof(AccumType) == 4, "unsupported accumulator type");
-    static_assert(sizeof(AccumType) == sizeof(WeightType),
-                  "AccumType different from WeightType not currently supported");
+    // 8-bit weights can be used with a 16-bit accumulator: they are widened as they are
+    // added to the accumulator.
+    static_assert(sizeof(AccumType) == sizeof(WeightType) ||
+                      (sizeof(AccumType) == 2 && sizeof(WeightType) == 1),
+                  "AccumType/WeightType combination not supported");
     size_t offset = 0;
 #ifdef NEON
+    // TBD: widening is not yet supported for NEON. It could use vaddw_s8/vsubw_s8 (and
+    // vaddw_high_s8/vsubw_high_s8 on aarch64), which widen and add in one instruction, as in
+    // Stockfish.
+    static_assert(sizeof(AccumType) == sizeof(WeightType),
+                  "AccumType different from WeightType not currently supported for NEON");
     static_assert(outputSize * sizeof(AccumType) * 8 >= simdWidth,
                   "insufficient accumulator width");
     static_assert(outputSize * sizeof(AccumType) * 8 % simdWidth == 0,

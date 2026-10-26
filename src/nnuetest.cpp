@@ -258,44 +258,45 @@ static int testOptimizedLinear() {
     return err;
 }
 
-static int testIndices(const Board &board, std::set<nnue::IndexType> &w_expected,
-                       std::set<nnue::IndexType> &b_expected) {
-    nnue::IndexArray wIndices, bIndices;
-    auto wCount = nnue::Evaluator::getIndices(White, board, wIndices);
-    auto bCount = nnue::Evaluator::getIndices(Black, board, bIndices);
-
+template <typename arrayType>
+static int indexCompare(const arrayType &indices,
+                        size_t count,
+                        std::set<nnue::IndexType> expected,
+                        const std::string &text) {
     int errs = 0;
-    for (auto it = wIndices.begin(); it != wIndices.begin() + wCount; it++) {
-        if (w_expected.find(*it) == w_expected.end()) {
+    for (auto it = indices.begin(); it != indices.begin() + count; it++) {
+        if (expected.find(*it) == expected.end()) {
             ++errs;
-            std::cerr << "error: white index " << *it << " not expected" << std::endl;
+            std::cerr << "error: " << text << " index " << *it << " not expected" << std::endl;
         } else
-            w_expected.erase(*it);
+            expected.erase(*it);
     }
-    for (auto it = bIndices.begin(); it != bIndices.begin() + bCount; it++) {
-        if (b_expected.find(*it) == b_expected.end()) {
-            ++errs;
-            std::cerr << "error: black index " << *it << " not expected" << std::endl;
-        } else
-            b_expected.erase(*it);
-    }
-    if (!w_expected.empty()) {
+    if (!expected.empty()) {
         ++errs;
-        std::cerr << "error: not all expected White indices found, missing " << std::endl;
-        for (auto i : w_expected) {
-            std::cerr << i << ' ';
-        }
-        std::cerr << std::endl;
-    }
-    if (!b_expected.empty()) {
-        ++errs;
-        std::cerr << "error: not all expected Black indices found, missing " << std::endl;
-        for (auto i : b_expected) {
+        std::cerr << "error: not all expected " << text << " indices found, missing " << std::endl;
+        for (auto i : expected) {
             std::cerr << i << ' ';
         }
         std::cerr << std::endl;
     }
     return errs;
+}
+
+static int testPSQIndices(const Board &board, ColorType color, const std::set<nnue::IndexType> &expected) {
+    nnue::PSQIndexArray indices;
+    auto count = nnue::Evaluator::getIndices(color, board, indices);
+    std::string text(ColorImage(color));
+    text += " PSQ";
+    return indexCompare<nnue::PSQIndexArray>(indices,count,expected,text);
+}
+
+static int testPawnPairIndices(const Board &board, ColorType color, const std::set<nnue::IndexType> &expected) {
+    nnue::PPIndexArray indices;
+    const size_t count = nnue::Network::FeatureXformer::PawnPair::getActivePairs(
+            color, board.kingSquare(color), board.pawn_bits, indices);
+    std::string text(ColorImage(color));
+    text += " PawnPair";
+    return indexCompare<nnue::PPIndexArray>(indices,count,expected,text);
 }
 
 // test the calcNnzData support function used by the SparseLinear class
@@ -383,34 +384,41 @@ static int testWholeNetwork() {
     }
     Board start(board);
 
-    std::set<nnue::IndexType> w_expected{964,  962,  1089, 782,  1035, 789,  916,  850,
-                                         1297, 1168, 799,  862,  924,  1241, 1199, 1195,
-                                         1334, 1461, 1202, 1201, 1407, 1531, 1400};
-    std::set<nnue::IndexType> b_expected{2940, 2938, 3065, 2742, 2995, 2733, 2860, 2794,
-                                         2473, 2344, 2727, 2790, 2852, 2401, 2327, 2323,
-                                         2446, 2573, 2314, 2313, 2503, 2627, 2496};
+    errs += testPSQIndices(board, White,
+                           {964, 962,  1089, 782,  1035, 789,  916,  850,  1297, 1168, 799, 862,
+                            924, 1241, 1199, 1195, 1334, 1461, 1202, 1201, 1407, 1531, 1400});
+    errs += testPSQIndices(board, Black,
+                           {2940, 2938, 3065, 2742, 2995, 2733, 2860, 2794, 2473, 2344, 2727, 2790,
+                            2852, 2401, 2327, 2323, 2446, 2573, 2314, 2313, 2503, 2627, 2496});
+    errs += testPawnPairIndices(board, White, {84, 259, 3747, 3764, 3972, 4088, 4094});
+    errs += testPawnPairIndices(board, Black, {2, 57, 497, 3096, 4386, 4450, 4456});
 
-    errs += testIndices(board, w_expected, b_expected);
-
-    if (errs) return errs;
+    if (errs)
+        return errs;
 
     struct Case {
         std::string fen;
         std::vector<std::string> moves;
         Case(const std::string &f, const std::vector<std::string> &m) : fen(f) {
-           std::copy(m.begin(), m.end(), std::back_inserter(moves));
+            std::copy(m.begin(), m.end(), std::back_inserter(moves));
         }
         Case() = default;
     };
 
-    std::array<Case,7> cases = {
+    std::array<Case,9> cases = {
         Case("r2q1rk1/pb1nbp1p/1pp1pp2/8/2BPN2P/5N2/PPP1QPP1/2KR3R w - -",{"Ne5","fxe5"}),
         Case("r3k2r/1bq2pp1/4p3/p7/3B2n1/1NPB1Nbp/1P2Q3/3R1RK1 b kq -",{"Bxf3","Rxf3"}),
         Case("r3k2r/1bq2pp1/4p3/p7/3B2n1/1NPB1Nbp/1P2Q3/3R1RK1 b kq -",{"Bxf3","Rxf3","O-O"}),
         Case("8/2Pk3q/3N4/5P2/2K5/6n1/8/8 w - -",{"c8=Q"}),
         Case("8/2Pk3q/3N4/5P2/2K5/6n1/8/8 w - -",{"c8=Q","Ke7","Qc7+"}),
         Case("r1b1k1nr/1pqp1p1p/p1n1p3/2b3pP/3NP1P1/2N5/PPP2P2/R1BQKB1R w KQkq g6",{"hxg6"}),
-        Case("4k2r/p1r2p1p/4pp2/1b1p4/8/2P1B3/PP3PPP/R3K2R w KQk -",{"O-O-O"})
+        Case("4k2r/p1r2p1p/4pp2/1b1p4/8/2P1B3/PP3PPP/R3K2R w KQk -",{"O-O-O"}),
+        // several plies with pawn moves and captures
+        Case("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -",
+             {"e4","d5","exd5","Qxd5","Nc3","Qa5","d4","e6"}),
+        // king moves that cross between files a-d and e-h, with pawn changes
+        Case("4k3/pp3ppp/2p5/3p4/3P4/2P5/PP3PPP/4K3 w - -",
+             {"Kd2","Kd7","Kd3","Ke6","c4","dxc4+","Kxc4"})
     };
 
     NodeInfo *node = new Search::NodeStack;
@@ -555,6 +563,50 @@ static int testIntHead() {
     return err;
 }
 
+
+#ifdef SIMD
+// Test the incremental accumulator update with 8-bit weights widened to 16 bits against a
+// scalar calculation
+template <size_t outputSize>
+static int testWideningUpdate() {
+    constexpr size_t rows = 200;
+    constexpr size_t maxIndices = 40;
+    alignas(nnue::DEFAULT_ALIGN) static int8_t weights[rows][outputSize];
+    alignas(nnue::DEFAULT_ALIGN) int16_t source[outputSize];
+    alignas(nnue::DEFAULT_ALIGN) int16_t target[outputSize];
+    alignas(nnue::DEFAULT_ALIGN) int16_t inPlace[outputSize];
+    static std::mt19937 rng(7);
+    int errs = 0;
+    fill_random(&weights[0][0], rows * outputSize, -127, 127);
+    for (int iter = 0; iter < 50; ++iter) {
+        fill_random(source, outputSize, -5000, 5000);
+        unsigned added[maxIndices], removed[maxIndices];
+        std::uniform_int_distribution<unsigned> countDist(0, maxIndices);
+        std::uniform_int_distribution<unsigned> rowDist(0, rows - 1);
+        const size_t addedCount = countDist(rng), removedCount = countDist(rng);
+        for (size_t i = 0; i < addedCount; ++i) added[i] = rowDist(rng);
+        for (size_t i = 0; i < removedCount; ++i) removed[i] = rowDist(rng);
+        simd::update<int16_t, int8_t, rows, outputSize>(source, target, weights, added, addedCount,
+                                                         removed, removedCount);
+        std::memcpy(inPlace, source, sizeof(source));
+        simd::update<int16_t, int8_t, rows, outputSize>(inPlace, inPlace, weights, added, addedCount,
+                                                         removed, removedCount);
+        for (size_t j = 0; j < outputSize; ++j) {
+            int expected = source[j];
+            for (size_t i = 0; i < addedCount; ++i) expected += weights[added[i]][j];
+            for (size_t i = 0; i < removedCount; ++i) expected -= weights[removed[i]][j];
+            if (target[j] != expected || inPlace[j] != expected) {
+                ++errs;
+                std::cerr << "testWideningUpdate failed (size " << outputSize << ") at " << j << ": got "
+                          << target[j] << " " << inPlace[j] << " expected " << expected << std::endl;
+                return errs;
+            }
+        }
+    }
+    return errs;
+}
+#endif
+
 int testNNUE() {
 
     int errs = 0;
@@ -564,8 +616,8 @@ int testNNUE() {
     errs += testCReLU<int32_t,int32_t,16, 255, 6>(); // should not use SIMD
     errs += testCReLU<int32_t,int32_t,16, 255, 0>(); // should not use SIMD
     errs += testPairwiseMult<int16_t,int8_t,1024>();
-    // v8 sparse head: pairwise-mul of one perspective (2*HIDDEN_WIDTH/2 -> u8)
-    errs += testPairwiseMult<int16_t,uint8_t,nnue::NetworkParams::HIDDEN_WIDTH>();
+    // v8 sparse head: pairwise-mul of one perspective (2*FT_OUTPUT_SIZE/2 -> u8)
+    errs += testPairwiseMult<int16_t,uint8_t,nnue::NetworkParams::FT_OUTPUT_SIZE>();
     errs += testLinearLayer<int8_t, int8_t, int32_t, int32_t,16,1024,2,2>();
     errs += testLinearLayer<int32_t,int32_t,int32_t,int32_t,16,32,0,6>();
     errs += testLinearLayer<int32_t,int32_t,int32_t,int32_t,32,32,6,0>();
@@ -578,13 +630,18 @@ int testNNUE() {
     }
     else {
         errs += testSparseLinear<uint8_t,int8_t,int32_t,int32_t,1024,16,7,0>();
-        // v8 sparse L1: pairwise-mul u8 input (HIDDEN_WIDTH) -> L1_SIZE, no shift
+        // v8 sparse L1: pairwise-mul u8 input (FT_OUTPUT_SIZE) -> L1_SIZE, no shift
         errs += testSparseLinear<uint8_t,int8_t,int32_t,int32_t,
-                                 nnue::NetworkParams::HIDDEN_WIDTH,
+                                 nnue::NetworkParams::FT_OUTPUT_SIZE,
                                  nnue::NetworkParams::L1_SIZE,0,0>();
     }
 
     errs += testIntHead();
+
+#ifdef SIMD
+    errs += testWideningUpdate<nnue::NetworkParams::FT_OUTPUT_SIZE>();
+    errs += testWideningUpdate<256>();
+#endif
 
     errs += testWholeNetwork();
 

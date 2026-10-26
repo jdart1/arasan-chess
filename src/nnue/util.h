@@ -6,6 +6,10 @@
 #include "../stdendian.h"
 #include <cstdint>
 
+#include "chess.h"
+
+// helpers for serialization/deserialization:
+
 static inline int16_t to_little_endian16(int16_t input) {
 #if BYTE_ORDER == LITTLE_ENDIAN
     return input;

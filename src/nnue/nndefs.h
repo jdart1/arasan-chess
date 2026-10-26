@@ -8,13 +8,23 @@ static constexpr size_t DEFAULT_ALIGN = 64;
 static constexpr size_t DEFAULT_ALIGN = 32;
 #endif
 
-static constexpr size_t MAX_INDICES = 34; // 16 pieces per side plus room for end of list marker
+// maximum number of PSQ features: 16 pieces per side plus room for end of list marker
+static constexpr size_t MAX_PSQ_INDICES = 34;
+
+// maximum number of pawn pair features: up to 16 pawns, so 16*15/2 pairs, plus room for
+// end of list marker
+static constexpr size_t MAX_PP_INDICES = 16 * 15 / 2 + 1;
 
 using IndexType = unsigned;
 
 static constexpr IndexType LAST_INDEX = 1000000;
 
-using IndexArray = std::array<IndexType,MAX_INDICES>;
+template <size_t size>
+using IndexArray = std::array<IndexType,size>;
+
+using PSQIndexArray = IndexArray<MAX_PSQ_INDICES>;
+
+using PPIndexArray = IndexArray<MAX_PP_INDICES>;
 
 #endif
 

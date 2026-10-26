@@ -4,7 +4,7 @@
 
 #include "accum.h"
 #include "nnparams.h"
-#include "features/arasanv3.h"
+#include "features/featuretrans.h"
 #include "layers/pairwisemult.h"
 #ifdef SIMD
 #include "layers/sparselinear.h"
@@ -19,8 +19,8 @@
 //
 //   feature transformer -> FT activation -> L1 (sparse int8) -> L2 -> output
 //
-//   FT act: per-perspective CReLU[0,QA] + pairwise-mul -> u8, width L1_IN
-//   L1:     sparse affine, u8 x int8 weights (dpbusd), L1_IN -> L1_SIZE, int32
+//   FT act: per-perspective CReLU[0,QA] + pairwise-mul -> u8, width FT_OUTPUT_SIZE
+//   L1:     sparse affine, u8 x int8 weights (dpbusd), FT_OUTPUT_SIZE -> L1_SIZE, int32
 //           (L1 output is CReLU-clamped to L1_OUT_CLAMP)
 //   L2:     affine, L1_SIZE -> L2_SIZE, int32, no shift, then CReLU clamp to L2_OUT_CLAMP
 //   output: affine, L2_SIZE -> 1, int32 weights with int64 accumulation
@@ -33,21 +33,21 @@ class Network {
 
   public:
 
-    static constexpr size_t FeatureXformerOutputSize = NetworkParams::HIDDEN_WIDTH;
+    static constexpr size_t FeatureXformerOutputSize = NetworkParams::FT_OUTPUT_SIZE;
 
     static constexpr size_t FeatureXformerRows = 12 * NetworkParams::KING_BUCKETS * 64;
 
     using OutputType = int32_t;
     using XformerBiasType = int16_t;
-    using FeatureXformer = ArasanV3Feature<uint16_t, int16_t, XformerBiasType, int16_t, FeatureXformerRows,
-        NetworkParams::HIDDEN_WIDTH, NetworkParams::KING_BUCKETS_MAP>;
+    using FeatureXformer = FeatureTransformer<uint16_t, int16_t, XformerBiasType, int16_t, FeatureXformerRows,
+        NetworkParams::FT_OUTPUT_SIZE, NetworkParams::KING_BUCKETS_MAP>;
     using AccumulatorType = FeatureXformer::AccumulatorType;
     using AccumulatorOutputType = int16_t;
 
     // Feature-transformer activation: per-perspective CReLU[0,QA] + pairwise-mul,
-    // producing a u8 vector (each HIDDEN_WIDTH perspective -> HIDDEN_WIDTH/2 u8).
+    // producing a u8 vector (each FT_OUTPUT_SIZE perspective -> FT_OUTPUT_SIZE/2 u8).
     using FTActivation =
-        PairwiseMult<int16_t, uint8_t, NetworkParams::HIDDEN_WIDTH,
+        PairwiseMult<int16_t, uint8_t, NetworkParams::FT_OUTPUT_SIZE,
                      NetworkParams::NETWORK_QA, NetworkParams::PAIRWISE_SHIFT>;
 
     // L1: sparse affine, u8 input x int8 weights (dpbusd), int32 output, bucketed.
@@ -57,10 +57,11 @@ class Network {
     // which is what the LinearLayer non-transpose reader expects.
 #ifdef SIMD
     using L1Layer =
-        SparseLinear<uint8_t, int8_t, int32_t, int32_t, NetworkParams::L1_IN,
+        SparseLinear<uint8_t, int8_t, int32_t, int32_t, NetworkParams::FT_OUTPUT_SIZE,
                      NetworkParams::L1_SIZE, NetworkParams::OUTPUT_BUCKETS, 0, 0, false>;
 #else
-    using L1Layer = LinearLayer<uint8_t, int8_t, int32_t, int32_t, NetworkParams::L1_IN,
+
+    using L1Layer = LinearLayer<uint8_t, int8_t, int32_t, int32_t, NetworkParams::FT_OUTPUT_SIZE,
                                 NetworkParams::L1_SIZE, NetworkParams::OUTPUT_BUCKETS, 0, 0, false>;
 #endif
 
@@ -100,11 +101,11 @@ class Network {
         delete outputLayer;
     }
 
-    inline static unsigned getIndex(ColorType kside, Square kp, Piece p, Square sq) {
+    inline static unsigned getPSQIndex(ColorType kside, Square kp, Piece p, Square sq) {
 #ifdef NDEBUG
-        return FeatureXformer::getIndex(kside, kp, p, sq);
+        return FeatureXformer::PSQ::getIndex(kside, kp, p, sq);
 #else
-        auto idx = FeatureXformer::getIndex(kside, kp, p, sq);
+        auto idx = FeatureXformer::PSQ::getIndex(kside, kp, p, sq);
         assert(idx < FeatureXformerRows);
         return idx;
 #endif
@@ -118,12 +119,12 @@ class Network {
         std::cout << accum << std::endl;
 #endif
         // FT activation: per-perspective CReLU[0,QA] + pairwise-mul -> u8.
-        // Lower accumulator half is the side to move; each HIDDEN_WIDTH-wide
-        // perspective is reduced to HIDDEN_WIDTH/2 u8 values.
-        alignas(nnue::DEFAULT_ALIGN) uint8_t l1In[NetworkParams::L1_IN];
+        // Lower accumulator half is the side to move; each FT_OUTPUT_SIZE-wide
+        // perspective is reduced to FT_OUTPUT_SIZE/2 u8 values.
+        alignas(nnue::DEFAULT_ALIGN) uint8_t l1In[NetworkParams::FT_OUTPUT_SIZE];
         ftActivation.forward(accum.getOutput(), l1In);
-        ftActivation.forward(accum.getOutput() + NetworkParams::HIDDEN_WIDTH,
-                             l1In + NetworkParams::HIDDEN_WIDTH / 2);
+        ftActivation.forward(accum.getOutput() + NetworkParams::FT_OUTPUT_SIZE,
+                             l1In + NetworkParams::FT_OUTPUT_SIZE / 2);
 
         // L1: sparse u8 x int8 affine (dpbusd), int32 output
         alignas(nnue::DEFAULT_ALIGN) int32_t l1Out[NetworkParams::L1_SIZE];
@@ -156,8 +157,8 @@ class Network {
 
     // Perform an incremental update
     void updateAccum(const AccumulatorType &source, AccumulatorHalf sourceHalf,
-                     AccumulatorType &target, AccumulatorHalf targetHalf, const IndexArray &added,
-                     size_t added_count, const IndexArray &removed,
+                     AccumulatorType &target, AccumulatorHalf targetHalf, const PSQIndexArray &added,
+                     size_t added_count, const PSQIndexArray &removed,
                      size_t removed_count) const noexcept {
         transformer->updateAccum(source, sourceHalf, target, targetHalf, added, added_count,
                                  removed, removed_count);
@@ -165,9 +166,16 @@ class Network {
 
     // Propagate data through the layer, updating the specified half of the
     // accumulator (side to move goes in lower half).
-    void updateAccum(const IndexArray &indices, AccumulatorHalf half,
+    void updateAccum(const PSQIndexArray &indices, AccumulatorHalf half,
                      AccumulatorType &output) const noexcept {
         transformer->updateAccum(indices, half, output);
+    }
+
+    // Update half of the accumulator in place with pawn pair features
+    void updatePawnPairs(AccumulatorType &accum, AccumulatorHalf half, const PPIndexArray &added,
+                         size_t addedCount, const PPIndexArray &removed,
+                         size_t removedCount) const noexcept {
+        transformer->updatePawnPairs(accum, half, added, addedCount, removed, removedCount);
     }
 
     uint32_t getVersion() const noexcept {
