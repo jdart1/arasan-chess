@@ -1,4 +1,4 @@
-// Copyright 2025 by Jon Dart. All Rights Reserved.
+// Copyright 2026 by Jon Dart. All Rights Reserved.
 // Unit test code for NNUE layers
 
 #include "nnue/nnue.h"
@@ -31,6 +31,15 @@ static void fill_random(T* arr, size_t n, int minValue, int maxValue) {
     for (size_t i = 0; i < n; ++i) {
         arr[i] = dist(rng);
     }
+}
+
+// Report a failed test: prints a message if there were errors. Returns the number of errors, so
+// it can be used in the return statement of a test function (with __func__ as the name).
+static int testResult(int errs, const char *name) {
+    if (errs) {
+        std::cerr << "NNUE test " << name << " failed" << std::endl;
+    }
+    return errs;
 }
 
 // Helper to compare outputs
@@ -68,7 +77,7 @@ static int testCReLU() {
         std::cerr << "CReLU test with size " << inputSize << " and parameters " << clamp << ", " << shift << " failed" << std::endl;
     }
 
-    return err;
+    return testResult(err, __func__);
 }
 
 template<typename InputType, typename OutputType, size_t inputSize>
@@ -96,7 +105,7 @@ static int testPairwiseMult() {
         std::cerr << "PairwiseMult test failed" << std::endl;
     }
 
-    return err;
+    return testResult(err, __func__);
 }
 
 template<typename InputType, typename WeightType, typename BiasType, typename OutputType, size_t inputSize,
@@ -135,7 +144,7 @@ static int testLinearLayer() {
                   << sizeof(InputType) << " failed." << std::endl;
     }
 
-    return err;
+    return testResult(err, __func__);
 }
 
 // Exercises the output-layer SIMD path (int32 inputs/weights, int64
@@ -182,7 +191,7 @@ static int testOutputLayerInt64() {
     if (err) {
         std::cerr << "OutputLayer int64 SIMD path failed." << std::endl;
     }
-    return err;
+    return testResult(err, __func__);
 }
 
 template<typename InputType, typename WeightType, typename BiasType, typename OutputType, size_t inputSize,
@@ -228,7 +237,7 @@ static int testSparseLinear() {
                   << sizeof(InputType) << " failed." << std::endl;
     }
 
-    return err;
+    return testResult(err, __func__);
 }
 
 template<typename InputType, typename WeightType, typename BiasType, typename OutputType, size_t inputSize,
@@ -255,7 +264,7 @@ static int testOptimizedLinear() {
                   << sizeof(InputType) << " failed." << std::endl;
     }
 
-    return err;
+    return testResult(err, __func__);
 }
 
 template <typename arrayType>
@@ -287,7 +296,7 @@ static int testPSQIndices(const Board &board, ColorType color, const std::set<nn
     auto count = nnue::Evaluator::getIndices(color, board, indices);
     std::string text(ColorImage(color));
     text += " PSQ";
-    return indexCompare<nnue::PSQIndexArray>(indices,count,expected,text);
+    return testResult(indexCompare<nnue::PSQIndexArray>(indices,count,expected,text), __func__);
 }
 
 static int testPawnPairIndices(const Board &board, ColorType color, const std::set<nnue::IndexType> &expected) {
@@ -296,7 +305,7 @@ static int testPawnPairIndices(const Board &board, ColorType color, const std::s
             color, board.kingSquare(color), board.pawn_bits, indices);
     std::string text(ColorImage(color));
     text += " PawnPair";
-    return indexCompare<nnue::PPIndexArray>(indices,count,expected,text);
+    return testResult(indexCompare<nnue::PPIndexArray>(indices,count,expected,text), __func__);
 }
 
 // test the calcNnzData support function used by the SparseLinear class
@@ -369,10 +378,10 @@ static int testNnz() {
         std::cerr << std::endl;
         ++errs;
     }
-    return errs;
+    return testResult(errs, __func__);
 }
 
-static int testWholeNetwork() {
+static int testFeatureIndices() {
     int errs = 0;
 
     const char *fen = "r3k2r/1bq2pp1/p3p3/8/PN1B2n1/2PB1Nbp/1P2Q3/3R1RK1 b kq -";
@@ -380,7 +389,7 @@ static int testWholeNetwork() {
     Board board;
     if (!BoardIO::readFEN(board, fen)) {
         std::cerr << "error in FEN: " << fen << std::endl;
-        return 1;
+        return testResult(1, __func__);
     }
     Board start(board);
 
@@ -393,8 +402,11 @@ static int testWholeNetwork() {
     errs += testPawnPairIndices(board, White, {84, 259, 3747, 3764, 3972, 4088, 4094});
     errs += testPawnPairIndices(board, Black, {2, 57, 497, 3096, 4386, 4450, 4456});
 
-    if (errs)
-        return errs;
+   return testResult(errs, __func__);
+}
+
+static int testIncrementalUpdate() {
+    int errs = 0;
 
     struct Case {
         std::string fen;
@@ -423,10 +435,11 @@ static int testWholeNetwork() {
 
     NodeInfo *node = new Search::NodeStack;
     int i = 0;
+    Board board;
     for (Case c : cases) {
         if (!BoardIO::readFEN(board, c.fen)) {
-            std::cout << "error in FEN: " << fen << std::endl;
-            return 1;
+            std::cout << "error in FEN: " << c.fen << std::endl;
+            return testResult(1, __func__);
         }
         Scoring s;
         s.clear();
@@ -445,7 +458,7 @@ static int testWholeNetwork() {
                                      moveStr, true);
             if (IsNull(m)) {
                 std::cout << "could not parse move " << moveStr << std::endl;
-                return 1;
+                return testResult(1, __func__);
             }
             target->last_move = m;
             board.doMove(m,target);
@@ -460,7 +473,7 @@ static int testWholeNetwork() {
         }
         ++i;
     }
-    board = start;
+    board.reset();
     Scoring s;
     s.clear();
     // test after null move
@@ -483,16 +496,14 @@ static int testWholeNetwork() {
     errs += endScore != s.evalu8NNUE(board);
     if (errs-tmp) std::cerr << "error in testNNUE - null move" << std::endl;
     delete [] node;
-    return errs;
+    return testResult(errs, __func__);
 }
 
 
-// Validate the full int32 head pipeline (Raphael-style quantization): L1-output
-// CReLU clamp -> int32 L2 affine (no shift) -> CReLU clamp -> int32/int64 output
-// affine -> final OUTPUT_SCALE/OUTPUT_DIVISOR scaling. Self-contained: builds the
-// head layers with synthetic weights and compares against an independent scalar
-// reference, so it does not depend on a loaded network file.
-static int testIntHead() {
+// Validate the full network pipeline against an independent scalar reference.
+// Uses internally generated data, so it does not depend on a loaded
+// network file.
+static int testWholeNetworkSIMDvsScalar() {
     int err = 0;
     constexpr size_t IS1 = nnue::NetworkParams::L1_SIZE; // L2 input width
     constexpr size_t IS2 = nnue::NetworkParams::L2_SIZE; // output input width
@@ -560,7 +571,7 @@ static int testIntHead() {
         ++err;
         std::cerr << "testIntHead failed: got " << score << " expected " << refScore << std::endl;
     }
-    return err;
+    return testResult(err, __func__);
 }
 
 
@@ -599,11 +610,11 @@ static int testWideningUpdate() {
                 ++errs;
                 std::cerr << "testWideningUpdate failed (size " << outputSize << ") at " << j << ": got "
                           << target[j] << " " << inPlace[j] << " expected " << expected << std::endl;
-                return errs;
+                return testResult(errs, __func__);
             }
         }
     }
-    return errs;
+    return testResult(errs, __func__);
 }
 #endif
 
@@ -636,14 +647,21 @@ int testNNUE() {
                                  nnue::NetworkParams::L1_SIZE,0,0>();
     }
 
-    errs += testIntHead();
-
 #ifdef SIMD
     errs += testWideningUpdate<nnue::NetworkParams::FT_OUTPUT_SIZE>();
     errs += testWideningUpdate<256>();
 #endif
 
-    errs += testWholeNetwork();
+    tmp = errs;
+    errs += testFeatureIndices();
+    errs += testIncrementalUpdate();
+
+    if (errs - tmp > 0) {
+        std::cerr << "feature tests failed, skipping whole network test" << std::endl;
+        return errs;
+    }
+
+    errs += testWholeNetworkSIMDvsScalar();
 
     return errs;
 }
