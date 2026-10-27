@@ -1,4 +1,4 @@
-// Copyright 2024-2025 by Jon Dart. All Rights Reserved
+// Copyright 2024-2026 by Jon Dart. All Rights Reserved
 #ifndef _NETWORK_PARAMS
 #define _NETWORK_PARAMS
 

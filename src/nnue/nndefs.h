@@ -1,4 +1,4 @@
-// Copyright 2021-2022, 2024, 2025 by Jon Dart. All Rights Reserved.
+// Copyright 2021-2022, 2024-2026 by Jon Dart. All Rights Reserved.
 #ifndef _NNUE_NNDEFS_H
 #define _NNUE_NNDEFS_H
 

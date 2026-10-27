@@ -1,4 +1,4 @@
-// Copyright 2021-2025 by Jon Dart. All Rights Reserved.
+// Copyright 2021-2026 by Jon Dart. All Rights Reserved.
 
 #include "nnue.h"
 #include "evaluate.h"
