@@ -93,6 +93,35 @@ template <size_t size, typename DataType> FORCEINLINE void vec_copy(const DataTy
 
 #ifdef NEON
 
+// Add (or subtract) rows of 8-bit weights, widened to 16 bits, to the registers holding a tile of
+// the accumulator. "offset" is the index of the first register of the tile, in units of
+// registers of the accumulator.
+template <bool add, typename vec_type, typename operations, size_t regCount, typename WeightType,
+          size_t inputSize, size_t outputSize>
+FORCEINLINE void applyWidenedRowsNeon(vec_type (&regs)[regCount],
+                                      const WeightType (&weights)[inputSize][outputSize],
+                                      const unsigned *indices, size_t count, size_t offset) {
+    // number of weights per register: one per 16-bit lane
+    constexpr size_t lanes = simdWidth / 16;
+    for (size_t i = 0; i < count; ++i) {
+        const int8_t *w = reinterpret_cast<const int8_t *>(weights[indices[i]]) + offset * lanes;
+        size_t j = 0;
+        // two registers at a time, with one 128-bit load
+        for (; j + 1 < regCount; j += 2) {
+            if constexpr (add)
+                operations::addWiden2(regs[j], regs[j + 1], w + j * lanes);
+            else
+                operations::subWiden2(regs[j], regs[j + 1], w + j * lanes);
+        }
+        if (j < regCount) {
+            if constexpr (add)
+                regs[j] = operations::addWiden(regs[j], w + j * lanes);
+            else
+                regs[j] = operations::subWiden(regs[j], w + j * lanes);
+        }
+    }
+}
+
 template <typename vec_type, typename AccumType, typename WeightType, size_t inputSize /* features */,
           size_t outputSize /* accumulator size */, size_t regCount, size_t regWidth,
           size_t iterations, typename operations>
@@ -101,6 +130,9 @@ inline void updateLoopNeon(const AccumType *source, AccumType *target,
                            const unsigned *added, size_t added_count, const unsigned *removed,
                            size_t removed_count, size_t &offset) {
     constexpr size_t indexMultiplier = simdWidth / (8 * sizeof(AccumType));
+    constexpr bool widen = sizeof(WeightType) < sizeof(AccumType);
+    static_assert(!widen || (sizeof(WeightType) == 1 && sizeof(AccumType) == 2),
+                  "only widening of 8-bit weights to 16 bits is supported");
     alignas(VEC_ALIGN) vec_type regs[regCount];
     for (size_t iter = 0; iter < iterations; ++iter, offset += regCount) {
         // load source into registers
@@ -108,18 +140,26 @@ inline void updateLoopNeon(const AccumType *source, AccumType *target,
             regs[i] = operations::load(source + indexMultiplier * (offset + i));
         }
         // perform updates in registers
-        for (size_t i = 0; i < added_count; ++i) {
-            const auto *w = weights[added[i]];
-            for (size_t j = 0; j < regCount; ++j) {
-                regs[j] =
-                    operations::add(regs[j], operations::load(w + indexMultiplier * (offset + j)));
+        if constexpr (widen) {
+            // 8-bit weights are widened to 16 bits as they are added
+            applyWidenedRowsNeon<true, vec_type, operations, regCount>(regs, weights, added,
+                                                                       added_count, offset);
+            applyWidenedRowsNeon<false, vec_type, operations, regCount>(regs, weights, removed,
+                                                                        removed_count, offset);
+        } else {
+            for (size_t i = 0; i < added_count; ++i) {
+                const auto *w = weights[added[i]];
+                for (size_t j = 0; j < regCount; ++j) {
+                    regs[j] = operations::add(
+                        regs[j], operations::load(w + indexMultiplier * (offset + j)));
+                }
             }
-        }
-        for (size_t i = 0; i < removed_count; ++i) {
-            const auto *w = weights[removed[i]];
-            for (size_t j = 0; j < regCount; ++j) {
-                regs[j] =
-                    operations::sub(regs[j], operations::load(w + indexMultiplier * (offset + j)));
+            for (size_t i = 0; i < removed_count; ++i) {
+                const auto *w = weights[removed[i]];
+                for (size_t j = 0; j < regCount; ++j) {
+                    regs[j] = operations::sub(
+                        regs[j], operations::load(w + indexMultiplier * (offset + j)));
+                }
             }
         }
         // store results to memory
@@ -429,11 +469,6 @@ void update(const AccumType *source, AccumType *target,
                   "AccumType/WeightType combination not supported");
     size_t offset = 0;
 #ifdef NEON
-    // TBD: widening is not yet supported for NEON. It could use vaddw_s8/vsubw_s8 (and
-    // vaddw_high_s8/vsubw_high_s8 on aarch64), which widen and add in one instruction, as in
-    // Stockfish.
-    static_assert(sizeof(AccumType) == sizeof(WeightType),
-                  "AccumType different from WeightType not currently supported for NEON");
     static_assert(outputSize * sizeof(AccumType) * 8 >= simdWidth,
                   "insufficient accumulator width");
     static_assert(outputSize * sizeof(AccumType) * 8 % simdWidth == 0,

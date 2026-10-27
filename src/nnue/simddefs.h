@@ -477,6 +477,26 @@ struct SimdOperationsNeon {
        else
            return vdupq_n_s32(0);
     }
+    // Add/subtract 8-bit values, sign-extended to 16 bits (vaddw_s8 and vsubw_s8 widen and add
+    // in one instruction), to/from two vectors of 16-bit lanes. y points to 16 values: the first 8
+    // are for x0 and the second 8 for x1. Only for 16-bit accumulators.
+    static inline void addWiden2(vec_type &x0, vec_type &x1, const int8_t *y) {
+       const int8x16_t w = vld1q_s8(y);
+       x0 = vaddw_s8(x0, vget_low_s8(w));
+       x1 = vaddw_s8(x1, vget_high_s8(w));
+    }
+    static inline void subWiden2(vec_type &x0, vec_type &x1, const int8_t *y) {
+       const int8x16_t w = vld1q_s8(y);
+       x0 = vsubw_s8(x0, vget_low_s8(w));
+       x1 = vsubw_s8(x1, vget_high_s8(w));
+    }
+    // as above, for one vector: y points to 8 values
+    static inline vec_type addWiden(vec_type x, const int8_t *y) {
+       return vaddw_s8(x, vld1_s8(y));
+    }
+    static inline vec_type subWiden(vec_type x, const int8_t *y) {
+       return vsubw_s8(x, vld1_s8(y));
+    }
 };
 
 #else // x86

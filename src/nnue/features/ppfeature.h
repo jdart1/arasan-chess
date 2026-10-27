@@ -112,7 +112,7 @@ public:
     void updateAccum(AccumulatorType &accum, AccumulatorHalf half, const PPIndexArray &added,
                      size_t addedCount, const PPIndexArray &removed,
                      size_t removedCount) const noexcept {
-#if defined(SIMD) && !defined(NEON)
+#ifdef SIMD
         simd::update<OutputType, WeightType, DIMENSIONS, outputSize>(
             accum.getOutput(half), accum.data(half), _weights, added.data(), addedCount,
             removed.data(), removedCount);
