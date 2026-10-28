@@ -1,9 +1,7 @@
 // Arasan network trainer, version 9: version 8 architecture plus pawn pair inputs.
 //
 // NOTE: this script is written for the "bullet_trainer" model API (ModelDefinition,
-// ModelInputs, ...) used by bullet's examples/advanced/main.rs, which it follows closely. It
-// has not been compiled or run: the pair input code and the saved format need to be checked
-// against the engine (see the index check described below) before a long training run.
+// ModelInputs, ...) used by bullet's examples/advanced/main.rs, which it follows closely.
 //
 // Inputs: two sparse inputs per perspective,
 //   - "psqt": the king-bucketed, horizontally mirrored piece-square inputs (768 x 9)
@@ -16,7 +14,7 @@
 // The pair weights are separate from the piece-square weights so they can be clipped to the
 // int8 range the engine stores them in, while the piece-square weights are int16.
 //
-// Architecture (as version 8):
+// Architecture:
 //   feature transformer (psqt + pp -> L1, per perspective)       [psqt, bias int16; pp int8]
 //     -> CReLU[0,1] + pairwise-mul (per perspective)             -> u8, width L1
 //     -> L1 head:  L1 -> L2_NEURONS                              [int8 weights, int32 bias]
@@ -41,17 +39,6 @@
 //   l2b: QP*QB*QC     = 8128*64      = 520192
 //   l3b: QP*QB*QC*QC  = 520192*64    = 33292288   (== engine OUTPUT_DIVISOR)
 //
-// Saved file order (what the engine reads): header, piece-square weights (int16, one row of L1
-// values per input), feature transformer biases (int16), pair weights (int8, one row of L1
-// values per pair), then the head layers.
-//
-// To check the pair indices against the engine, print the active pair indices for some
-// positions from both programs and compare them:
-//   trainer: cargo run --release --example arasanv9 -- --dump-pairs [FEN ...]  (or FENs on stdin)
-//   engine:  network/engine_pair_indices.py ENGINE FENFILE   (ENGINE built with NNUE_TRACE)
-// Both print, for each FEN, the FEN and the sorted "white ..." and "black ..." index lists, so
-// the outputs can be compared with diff. A set of test FENs is in pair_index_test_fens.txt.
-
 use bullet_lib::{
     game::{
         formats::{
