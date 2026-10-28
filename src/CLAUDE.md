@@ -29,6 +29,7 @@
 - By default, test changes using the avx2 build. But when making changes that use SIMD (notably the NNUE code), test changes on this platform for avx2, avx2-bmi2, modern, and default (no BUILD_TYPE specified) builds. But do not use neon on this platform: also avx512 executables can be built, but cannot be run.
 - To run a SPRT test (actual games): 1) "make clean && make BUILD_TYPE=avx2 -j profiled" in the src directory; 2) execute "scatter ../bin/arasanx-64-avx2"; 3) execute ./sprt in the tools subdirectory 4) monitor results with "python3 -u monitor.py </dev/null >&monitor.log & tail -f monitor.log" in the tools subdirectory. Test will automatically stop when a sigifificant result is obtained. To terminate it early, execute the "stoo-all" script (in the path). Very bad results (<30% score) is cause for termination after a few hundred games.
 - If adding a significant new feature, first write a unit test for it in unit.cpp or (for NNUE related code) nnuetest.cpp.
+- In general, unit tests are not expected to be comprehensive: focus on sanity checks, key conditional paths, and edge cases.
 
 ## Performance testing
 - Runtime performance is very important. Do not introduce changes that cause regression in performance.
@@ -36,7 +37,7 @@
 - However, NPS is not the definitive measure of performance: SPRT testing is.
 
 w## Instructions for Claude
-- Include only the src directory and the nnue ubdirectory in scope, unless told otherwise. Code in the syzygy subdirectory belongs to a separate project, and should not be modified.
+- Include only the src directory and the nnue subdirectory in scope, unless told otherwise. Code in the syzygy subdirectory belongs to a separate project, and should not be modified.
 - Do not make or suggest changes outside the scope of the assigned task.
 - Do not make or suggest non-functional changes to the code.
 - Be systematic. Focus on one specific aspect of a problem at a time.
