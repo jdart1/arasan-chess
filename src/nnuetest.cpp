@@ -1,4 +1,4 @@
-// Copyright 2025 by Jon Dart. All Rights Reserved.
+// Copyright 2026 by Jon Dart. All Rights Reserved.
 // Unit test code for NNUE layers
 
 #include "nnue/nnue.h"
@@ -33,6 +33,15 @@ static void fill_random(T* arr, size_t n, int minValue, int maxValue) {
     for (size_t i = 0; i < n; ++i) {
         arr[i] = dist(rng);
     }
+}
+
+// Report a failed test: prints a message if there were errors. Returns the number of errors, so
+// it can be used in the return statement of a test function (with __func__ as the name).
+static int testResult(int errs, const char *name) {
+    if (errs) {
+        std::cerr << "NNUE test " << name << " failed" << std::endl;
+    }
+    return errs;
 }
 
 // Helper to compare outputs
@@ -70,7 +79,7 @@ static int testCReLU() {
         std::cerr << "CReLU test with size " << inputSize << " and parameters " << clamp << ", " << shift << " failed" << std::endl;
     }
 
-    return err;
+    return testResult(err, __func__);
 }
 
 template<typename InputType, typename OutputType, size_t inputSize>
@@ -98,7 +107,7 @@ static int testPairwiseMult() {
         std::cerr << "PairwiseMult test failed" << std::endl;
     }
 
-    return err;
+    return testResult(err, __func__);
 }
 
 template<typename InputType, typename WeightType, typename BiasType, typename OutputType, size_t inputSize,
@@ -137,7 +146,7 @@ static int testLinearLayer() {
                   << sizeof(InputType) << " failed." << std::endl;
     }
 
-    return err;
+    return testResult(err, __func__);
 }
 
 // Exercises the output-layer SIMD path (int32 inputs/weights, int64
@@ -184,7 +193,7 @@ static int testOutputLayerInt64() {
     if (err) {
         std::cerr << "OutputLayer int64 SIMD path failed." << std::endl;
     }
-    return err;
+    return testResult(err, __func__);
 }
 
 template<typename InputType, typename WeightType, typename BiasType, typename OutputType, size_t inputSize,
@@ -230,7 +239,7 @@ static int testSparseLinear() {
                   << sizeof(InputType) << " failed." << std::endl;
     }
 
-    return err;
+    return testResult(err, __func__);
 }
 
 template<typename InputType, typename WeightType, typename BiasType, typename OutputType, size_t inputSize,
@@ -257,47 +266,48 @@ static int testOptimizedLinear() {
                   << sizeof(InputType) << " failed." << std::endl;
     }
 
-    return err;
+    return testResult(err, __func__);
 }
 
-static int testIndices(const Board &board, std::set<nnue::IndexType> &w_expected,
-                       std::set<nnue::IndexType> &b_expected) {
-    nnue::IndexArray wIndices, bIndices;
-    auto wCount = nnue::Evaluator::getIndices(White, board, wIndices);
-    auto bCount = nnue::Evaluator::getIndices(Black, board, bIndices);
-
+template <typename arrayType>
+static int indexCompare(const arrayType &indices,
+                        size_t count,
+                        std::set<nnue::IndexType> expected,
+                        const std::string &text) {
     int errs = 0;
-    for (auto it = wIndices.begin(); it != wIndices.begin() + wCount; it++) {
-        if (w_expected.find(*it) == w_expected.end()) {
+    for (auto it = indices.begin(); it != indices.begin() + count; it++) {
+        if (expected.find(*it) == expected.end()) {
             ++errs;
-            std::cerr << "error: white index " << *it << " not expected" << std::endl;
+            std::cerr << "error: " << text << " index " << *it << " not expected" << std::endl;
         } else
-            w_expected.erase(*it);
+            expected.erase(*it);
     }
-    for (auto it = bIndices.begin(); it != bIndices.begin() + bCount; it++) {
-        if (b_expected.find(*it) == b_expected.end()) {
-            ++errs;
-            std::cerr << "error: black index " << *it << " not expected" << std::endl;
-        } else
-            b_expected.erase(*it);
-    }
-    if (!w_expected.empty()) {
+    if (!expected.empty()) {
         ++errs;
-        std::cerr << "error: not all expected White indices found, missing " << std::endl;
-        for (auto i : w_expected) {
-            std::cerr << i << ' ';
-        }
-        std::cerr << std::endl;
-    }
-    if (!b_expected.empty()) {
-        ++errs;
-        std::cerr << "error: not all expected Black indices found, missing " << std::endl;
-        for (auto i : b_expected) {
+        std::cerr << "error: not all expected " << text << " indices found, missing " << std::endl;
+        for (auto i : expected) {
             std::cerr << i << ' ';
         }
         std::cerr << std::endl;
     }
     return errs;
+}
+
+static int testPSQIndices(const Board &board, ColorType color, const std::set<nnue::IndexType> &expected) {
+    nnue::PSQIndexArray indices;
+    auto count = nnue::Evaluator::getIndices(color, board, indices);
+    std::string text(ColorImage(color));
+    text += " PSQ";
+    return testResult(indexCompare<nnue::PSQIndexArray>(indices,count,expected,text), __func__);
+}
+
+static int testPawnPairIndices(const Board &board, ColorType color, const std::set<nnue::IndexType> &expected) {
+    nnue::PPIndexArray indices;
+    const size_t count = nnue::Network::FeatureXformer::PawnPair::getActivePairs(
+            color, board.kingSquare(color), board.pawn_bits, indices);
+    std::string text(ColorImage(color));
+    text += " PawnPair";
+    return testResult(indexCompare<nnue::PPIndexArray>(indices,count,expected,text), __func__);
 }
 
 // test the calcNnzData support function used by the SparseLinear class
@@ -370,10 +380,10 @@ static int testNnz() {
         std::cerr << std::endl;
         ++errs;
     }
-    return errs;
+    return testResult(errs, __func__);
 }
 
-static int testWholeNetwork() {
+static int testFeatureIndices() {
     int errs = 0;
 
     const char *fen = "r3k2r/1bq2pp1/p3p3/8/PN1B2n1/2PB1Nbp/1P2Q3/3R1RK1 b kq -";
@@ -381,46 +391,57 @@ static int testWholeNetwork() {
     Board board;
     if (!BoardIO::readFEN(board, fen)) {
         std::cerr << "error in FEN: " << fen << std::endl;
-        return 1;
+        return testResult(1, __func__);
     }
     Board start(board);
 
-    std::set<nnue::IndexType> w_expected{964,  962,  1089, 782,  1035, 789,  916,  850,
-                                         1297, 1168, 799,  862,  924,  1241, 1199, 1195,
-                                         1334, 1461, 1202, 1201, 1407, 1531, 1400};
-    std::set<nnue::IndexType> b_expected{2940, 2938, 3065, 2742, 2995, 2733, 2860, 2794,
-                                         2473, 2344, 2727, 2790, 2852, 2401, 2327, 2323,
-                                         2446, 2573, 2314, 2313, 2503, 2627, 2496};
+    errs += testPSQIndices(board, White,
+                           {964, 962,  1089, 782,  1035, 789,  916,  850,  1297, 1168, 799, 862,
+                            924, 1241, 1199, 1195, 1334, 1461, 1202, 1201, 1407, 1531, 1400});
+    errs += testPSQIndices(board, Black,
+                           {2940, 2938, 3065, 2742, 2995, 2733, 2860, 2794, 2473, 2344, 2727, 2790,
+                            2852, 2401, 2327, 2323, 2446, 2573, 2314, 2313, 2503, 2627, 2496});
+    errs += testPawnPairIndices(board, White, {84, 259, 3747, 3764, 3972, 4088, 4094});
+    errs += testPawnPairIndices(board, Black, {2, 57, 497, 3096, 4386, 4450, 4456});
 
-    errs += testIndices(board, w_expected, b_expected);
+   return testResult(errs, __func__);
+}
 
-    if (errs) return errs;
+static int testIncrementalUpdate() {
+    int errs = 0;
 
     struct Case {
         std::string fen;
         std::vector<std::string> moves;
         Case(const std::string &f, const std::vector<std::string> &m) : fen(f) {
-           std::copy(m.begin(), m.end(), std::back_inserter(moves));
+            std::copy(m.begin(), m.end(), std::back_inserter(moves));
         }
         Case() = default;
     };
 
-    std::array<Case,7> cases = {
+    std::array<Case,9> cases = {
         Case("r2q1rk1/pb1nbp1p/1pp1pp2/8/2BPN2P/5N2/PPP1QPP1/2KR3R w - -",{"Ne5","fxe5"}),
         Case("r3k2r/1bq2pp1/4p3/p7/3B2n1/1NPB1Nbp/1P2Q3/3R1RK1 b kq -",{"Bxf3","Rxf3"}),
         Case("r3k2r/1bq2pp1/4p3/p7/3B2n1/1NPB1Nbp/1P2Q3/3R1RK1 b kq -",{"Bxf3","Rxf3","O-O"}),
         Case("8/2Pk3q/3N4/5P2/2K5/6n1/8/8 w - -",{"c8=Q"}),
         Case("8/2Pk3q/3N4/5P2/2K5/6n1/8/8 w - -",{"c8=Q","Ke7","Qc7+"}),
         Case("r1b1k1nr/1pqp1p1p/p1n1p3/2b3pP/3NP1P1/2N5/PPP2P2/R1BQKB1R w KQkq g6",{"hxg6"}),
-        Case("4k2r/p1r2p1p/4pp2/1b1p4/8/2P1B3/PP3PPP/R3K2R w KQk -",{"O-O-O"})
+        Case("4k2r/p1r2p1p/4pp2/1b1p4/8/2P1B3/PP3PPP/R3K2R w KQk -",{"O-O-O"}),
+        // several plies with pawn moves and captures
+        Case("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -",
+             {"e4","d5","exd5","Qxd5","Nc3","Qa5","d4","e6"}),
+        // king moves that cross between files a-d and e-h, with pawn changes
+        Case("4k3/pp3ppp/2p5/3p4/3P4/2P5/PP3PPP/4K3 w - -",
+             {"Kd2","Kd7","Kd3","Ke6","c4","dxc4+","Kxc4"})
     };
 
     NodeInfo *node = new Search::NodeStack;
     int i = 0;
+    Board board;
     for (Case c : cases) {
         if (!BoardIO::readFEN(board, c.fen)) {
-            std::cout << "error in FEN: " << fen << std::endl;
-            return 1;
+            std::cout << "error in FEN: " << c.fen << std::endl;
+            return testResult(1, __func__);
         }
         Scoring s;
         s.clear();
@@ -439,7 +460,7 @@ static int testWholeNetwork() {
                                      moveStr, true);
             if (IsNull(m)) {
                 std::cout << "could not parse move " << moveStr << std::endl;
-                return 1;
+                return testResult(1, __func__);
             }
             target->last_move = m;
             board.doMove(m,target);
@@ -454,7 +475,7 @@ static int testWholeNetwork() {
         }
         ++i;
     }
-    board = start;
+    board.reset();
     Scoring s;
     s.clear();
     // test after null move
@@ -477,16 +498,14 @@ static int testWholeNetwork() {
     errs += endScore != s.evalu8NNUE(board);
     if (errs-tmp) std::cerr << "error in testNNUE - null move" << std::endl;
     delete [] node;
-    return errs;
+    return testResult(errs, __func__);
 }
 
 
-// Validate the full int32 head pipeline (Raphael-style quantization): L1-output
-// CReLU clamp -> int32 L2 affine (no shift) -> CReLU clamp -> int32/int64 output
-// affine -> final OUTPUT_SCALE/OUTPUT_DIVISOR scaling. Self-contained: builds the
-// head layers with synthetic weights and compares against an independent scalar
-// reference, so it does not depend on a loaded network file.
-static int testIntHead() {
+// Validate the full network pipeline against an independent scalar reference.
+// Uses internally generated data, so it does not depend on a loaded
+// network file.
+static int testWholeNetworkSIMDvsScalar() {
     int err = 0;
     constexpr size_t IS1 = nnue::NetworkParams::L1_SIZE; // L2 input width
     constexpr size_t IS2 = nnue::NetworkParams::L2_SIZE; // output input width
@@ -554,123 +573,52 @@ static int testIntHead() {
         ++err;
         std::cerr << "testIntHead failed: got " << score << " expected " << refScore << std::endl;
     }
-    return err;
+    return testResult(err, __func__);
 }
 
 
-// Attacks of a piece on an empty board, from the Attacks tables
-static Bitboard emptyBoardAttacks(Piece p, Square sq) {
-    const Bitboard empty;
-    switch (TypeOfPiece(p)) {
-    case Pawn:
-        // pawn_attacks[sq][c] is the squares from which a pawn of color c attacks sq,
-        // so by symmetry a White pawn on sq attacks pawn_attacks[sq][Black]
-        return Attacks::pawn_attacks[sq][ColorOfPiece(p) == White ? Black : White];
-    case Knight:
-        return Attacks::knight_attacks[sq];
-    case Bishop:
-        return Attacks::bishopAttacks(sq, empty);
-    case Rook:
-        return Attacks::rookAttacks(sq, empty);
-    case Queen:
-        return Attacks::bishopAttacks(sq, empty) | Attacks::rookAttacks(sq, empty);
-    default:
-        return Attacks::king_attacks[sq];
-    }
-}
-
-// Expected rule for which (attacker, victim) piece type pairs are valid threat features
-static bool threatPairAllowed(PieceType attacker, PieceType victim) {
-    switch (attacker) {
-    case Pawn:
-        return victim == Knight || victim == Rook;
-    case Knight:
-    case Queen:
-        return victim != King && victim != Empty;
-    case Bishop:
-    case Rook:
-        return victim == Pawn || victim == Knight || victim == Bishop || victim == Rook;
-    default:
-        return false;
-    }
-}
-
-static int testThreatFeature() {
-    using TF = nnue::ThreatFeature<>;
+#ifdef SIMD
+// Test the incremental accumulator update with 8-bit weights widened to 16 bits against a
+// scalar calculation
+template <size_t outputSize>
+static int testWideningUpdate() {
+    constexpr size_t rows = 200;
+    constexpr size_t maxIndices = 40;
+    alignas(nnue::DEFAULT_ALIGN) static int8_t weights[rows][outputSize];
+    alignas(nnue::DEFAULT_ALIGN) int16_t source[outputSize];
+    alignas(nnue::DEFAULT_ALIGN) int16_t target[outputSize];
+    alignas(nnue::DEFAULT_ALIGN) int16_t inPlace[outputSize];
+    static std::mt19937 rng(7);
     int errs = 0;
-    const Piece pieces[12] = {WhitePawn, WhiteKnight, WhiteBishop, WhiteRook, WhiteQueen, WhiteKing,
-                              BlackPawn, BlackKnight, BlackBishop, BlackRook, BlackQueen, BlackKing};
-    // king squares with different file mirroring and bucket
-    const Square kings[4] = {4 /* e1 */, 0 /* a1 */, 60 /* e8 */, 56 /* a8 */};
-    for (ColorType side : {White, Black}) {
-        for (Square ksq : kings) {
-            std::map<nnue::IndexType, std::array<int, 4>> seen;
-            for (Piece a : pieces) {
-                for (Square from = 0; from < 64; ++from) {
-                    if (TypeOfPiece(a) == Pawn && (Rank<White>(from) == 1 || Rank<White>(from) == 8)) continue;
-                    Bitboard targets(emptyBoardAttacks(a, from));
-                    Square to;
-                    while (targets.iterate(to)) {
-                        for (Piece v : pieces) {
-                            const nnue::IndexType idx = TF::getIndex(side, a, from, to, v, ksq);
-                            const bool expectValid = threatPairAllowed(TypeOfPiece(a), TypeOfPiece(v));
-                            if (idx == nnue::LAST_INDEX) {
-                                // sentinel is only allowed for excluded pairs and semi-excluded
-                                // (same type) pairs
-                                if (expectValid && TypeOfPiece(a) != TypeOfPiece(v)) {
-                                    ++errs;
-                                    std::cerr << "testThreatFeature: unexpected sentinel" << std::endl;
-                                }
-                                continue;
-                            }
-                            if (!expectValid || idx >= TF::DIMENSIONS) {
-                                ++errs;
-                                std::cerr << "testThreatFeature: bad index " << idx << std::endl;
-                                continue;
-                            }
-                            // different features must have different indices, for the same
-                            // perspective and king square (after mirroring)
-                            const std::array<int, 4> key = {static_cast<int>(a), from, to, static_cast<int>(v)};
-                            if (!seen.insert({idx, key}).second) {
-                                ++errs;
-                                std::cerr << "testThreatFeature: duplicate index " << idx << std::endl;
-                            }
-                            // perspective symmetry: flipping colors and ranks swaps the perspective
-                            const nnue::IndexType idx2 = TF::getIndex(side == White ? Black : White,
-                                                                static_cast<Piece>(a ^ 8), from ^ 56, to ^ 56,
-                                                                static_cast<Piece>(v ^ 8), ksq ^ 56);
-                            if (idx2 != idx) {
-                                ++errs;
-                                std::cerr << "testThreatFeature: perspective mismatch " << idx << " " << idx2 << std::endl;
-                            }
-                        }
-                    }
-                }
-            }
-            // same-type mutual attacks: exactly one of the two directions is a feature
-            for (Piece a : pieces) {
-                const PieceType t = TypeOfPiece(a);
-                if (t == Pawn || t == King) continue;
-                for (Piece v : pieces) {
-                    if (TypeOfPiece(v) != t) continue;
-                    for (Square x = 0; x < 64; ++x) {
-                        Bitboard targets(emptyBoardAttacks(a, x));
-                        Square y;
-                        while (targets.iterate(y)) {
-                            const bool ab = TF::getIndex(side, a, x, y, v, ksq) != nnue::LAST_INDEX;
-                            const bool ba = TF::getIndex(side, v, y, x, a, ksq) != nnue::LAST_INDEX;
-                            if (ab == ba) {
-                                ++errs;
-                                std::cerr << "testThreatFeature: mutual attack not exclusive" << std::endl;
-                            }
-                        }
-                    }
-                }
+    fill_random(&weights[0][0], rows * outputSize, -127, 127);
+    for (int iter = 0; iter < 50; ++iter) {
+        fill_random(source, outputSize, -5000, 5000);
+        unsigned added[maxIndices], removed[maxIndices];
+        std::uniform_int_distribution<unsigned> countDist(0, maxIndices);
+        std::uniform_int_distribution<unsigned> rowDist(0, rows - 1);
+        const size_t addedCount = countDist(rng), removedCount = countDist(rng);
+        for (size_t i = 0; i < addedCount; ++i) added[i] = rowDist(rng);
+        for (size_t i = 0; i < removedCount; ++i) removed[i] = rowDist(rng);
+        simd::update<int16_t, int8_t, rows, outputSize>(source, target, weights, added, addedCount,
+                                                         removed, removedCount);
+        std::memcpy(inPlace, source, sizeof(source));
+        simd::update<int16_t, int8_t, rows, outputSize>(inPlace, inPlace, weights, added, addedCount,
+                                                         removed, removedCount);
+        for (size_t j = 0; j < outputSize; ++j) {
+            int expected = source[j];
+            for (size_t i = 0; i < addedCount; ++i) expected += weights[added[i]][j];
+            for (size_t i = 0; i < removedCount; ++i) expected -= weights[removed[i]][j];
+            if (target[j] != expected || inPlace[j] != expected) {
+                ++errs;
+                std::cerr << "testWideningUpdate failed (size " << outputSize << ") at " << j << ": got "
+                          << target[j] << " " << inPlace[j] << " expected " << expected << std::endl;
+                return testResult(errs, __func__);
             }
         }
     }
-    return errs;
+    return testResult(errs, __func__);
 }
+#endif
 
 int testNNUE() {
 
@@ -701,11 +649,22 @@ int testNNUE() {
                                  nnue::NetworkParams::L1_SIZE,0,0>();
     }
 
-    errs += testIntHead();
+#ifdef SIMD
+    errs += testWideningUpdate<nnue::NetworkParams::FT_OUTPUT_SIZE>();
+    errs += testWideningUpdate<256>();
+#endif
 
+    tmp = errs;
+    errs += testFeatureIndices();
     errs += testThreatFeature();
 
-    errs += testWholeNetwork();
+    if (errs - tmp > 0) {
+        std::cerr << "feature tests failed, skipping whole network test" << std::endl;
+        return errs;
+    }
+
+    errs += testWholeNetworkSIMDvsScalar();
+    errs += testIncrementalUpdate();
 
     return errs;
 }

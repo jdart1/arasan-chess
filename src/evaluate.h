@@ -49,21 +49,25 @@ class Evaluator {
         return NetworkParams::getOutputBucket(board.men());
     }
 
-    static size_t getIndices(ColorType kside, const Board &board, IndexArray &out);
+    static size_t getIndices(ColorType kside, const Board &board, PSQIndexArray &out);
 
-    static size_t getIndices(ColorType kside, const Occupancies &occupancies, IndexArray &out);
+    static size_t getIndices(ColorType kside, const Occupancies &occupancies, PSQIndexArray &out);
 
 private:
     // full evaluation of accumulator, update into 3rd argument
     void updateAccum(const Network &network, const Board &board, Network::AccumulatorType &accum);
 
     // Full evaluation of 1/2 of the accumulator for a specified color (c)
-    void updateAccum(const Network &network, const IndexArray &indices, ColorType c,
+    void updateAccum(const Network &network, const PSQIndexArray &indices, ColorType c,
                      ColorType sideToMove, Network::AccumulatorType &accum) {
         AccumulatorHalf targetHalf = Network::AccumulatorType::getHalf(c, sideToMove);
         network.updateAccum(indices, targetHalf, accum);
         accum.setState(targetHalf, AccumulatorState::Computed);
     }
+
+    // Add all pawn pair features of the position to half of an accumulator
+    void addPawnPairs(const Network &network, const Board &board, ColorType c,
+                      AccumulatorHalf half, Network::AccumulatorType &accum);
 
     // Incremental update of 1/2 of accumulator for the specified color
     void updateAccumIncremental(const Network &network, const NodeInfo *source, NodeInfo *target,
@@ -71,11 +75,11 @@ private:
 
     // compute changes indices based on the DirtyState of the current node
     template <ColorType kside>
-    void getChangedIndices(const NodeInfo *node, IndexArray &added, IndexArray &removed,
+    void getChangedIndices(const NodeInfo *node, PSQIndexArray &added, PSQIndexArray &removed,
                            size_t &added_count, size_t &removed_count);
 
-    void getIndexDiffs(const NodeInfo *source, NodeInfo *target, ColorType c, IndexArray &added,
-                       IndexArray &removed, size_t &added_count, size_t &removed_count);
+    void getIndexDiffs(const NodeInfo *source, NodeInfo *target, ColorType c, PSQIndexArray &added,
+                       PSQIndexArray &removed, size_t &added_count, size_t &removed_count);
 
     // Update the corresponding cache entry and from that, the specified node's accumulator half
     void finnyUpdate(const Network &network, const Board &board,

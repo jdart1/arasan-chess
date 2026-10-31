@@ -38,7 +38,7 @@ public:
 
     // Full update: propagate data through the layer, updating the specified half of the
     // accumulator (side to move goes in lower half).
-    void updateAccum(const IndexArray &indices, AccumulatorHalf half,
+    void updateAccum(const PSQIndexArray &indices, AccumulatorHalf half,
                      AccumulatorType &output) const noexcept {
 #ifdef SIMD
         simd::fullUpdate<OutputType, WeightType, BiasType, inputSize, outputSize>(
@@ -62,7 +62,7 @@ public:
     // Perform an incremental update
     void updateAccum(const AccumulatorType &source, AccumulatorHalf sourceHalf,
                      AccumulatorType &target, AccumulatorHalf targetHalf,
-                     const IndexArray &added, size_t added_count, const IndexArray &removed,
+                     const PSQIndexArray &added, size_t added_count, const PSQIndexArray &removed,
                      size_t removed_count) const noexcept {
 #ifdef SIMD
         simd::update<OutputType,WeightType,inputSize,outputSize>(source.getOutput(sourceHalf),target.data(targetHalf),_weights,
@@ -76,7 +76,7 @@ public:
     }
 
     // Perform an incremental update
-    void updateAccum(const IndexArray &added, const IndexArray &removed,
+    void updateAccum(const PSQIndexArray &added, const PSQIndexArray &removed,
                      size_t added_count, size_t removed_count,
                      AccumulatorHalf half, AccumulatorType &output) const noexcept {
         for (size_t i = 0; i < added_count; i++) {

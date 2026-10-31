@@ -30,7 +30,7 @@ STB=syzygy/src
 UTIL = util
 
 # default network
-NETWORK ?= arasanv8-20261005.nnue
+NETWORK ?= arasanv9-20261023.nnue
 
 # Path to git_archive_all (https://github.com/Kentzo/git-archive-all)
 GIT_ARCHIVE_ALL_PATH ?= /home/jdart/bin/git-archive-all
@@ -353,7 +353,7 @@ movearr.cpp notation.cpp options.cpp bitprobe.cpp \
 bookread.cpp bookwrit.cpp \
 search.cpp searchc.cpp learn.cpp \
 movegen.cpp hash.cpp calctime.cpp eco.cpp legal.cpp \
-stats.cpp threadp.cpp threadc.cpp evaluate.cpp threatfeature.cpp
+stats.cpp threadp.cpp threadc.cpp evaluate.cpp threatfeature.cpp ppfeature.cpp
 
 UTIL_SOURCES = globals.cpp  \
 board.cpp boardio.cpp material.cpp \
@@ -364,7 +364,7 @@ movearr.cpp notation.cpp options.cpp bitprobe.cpp \
 bookread.cpp bookwrit.cpp \
 search.cpp searchc.cpp learn.cpp \
 movegen.cpp hash.cpp calctime.cpp eco.cpp \
-legal.cpp stats.cpp threadp.cpp threadc.cpp evaluate.cpp threatfeature.cpp
+legal.cpp stats.cpp threadp.cpp threadc.cpp evaluate.cpp threatfeature.cpp ppfeature.cpp
 
 UNIT_SOURCES = unit.cpp nnuetest.cpp binformat.cpp \
 globals.cpp board.cpp boardio.cpp material.cpp \
@@ -375,7 +375,7 @@ movearr.cpp notation.cpp options.cpp bitprobe.cpp \
 bookread.cpp bookwrit.cpp \
 search.cpp searchc.cpp learn.cpp \
 movegen.cpp hash.cpp calctime.cpp eco.cpp legal.cpp \
-stats.cpp threadp.cpp threadc.cpp evaluate.cpp threatfeature.cpp
+stats.cpp threadp.cpp threadc.cpp evaluate.cpp threatfeature.cpp ppfeature.cpp
 
 MAKEBOOK_SOURCES = makebook.cpp $(UTIL_SOURCES)
 

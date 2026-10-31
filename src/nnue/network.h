@@ -6,7 +6,9 @@
 #include "nnparams.h"
 #include "features/featuretrans.h"
 #include "layers/pairwisemult.h"
+#ifdef SIMD
 #include "layers/sparselinear.h"
+#endif
 #include "layers/linear.h"
 #include "layers/crelu.h"
 #include "util.h"
@@ -53,9 +55,15 @@ class Network {
     // transpose=false: bullet emits these weights with .transpose() applied, so
     // they arrive in bucket-major (for bucket: for output: for input) order,
     // which is what the LinearLayer non-transpose reader expects.
+#ifdef SIMD
     using L1Layer =
         SparseLinear<uint8_t, int8_t, int32_t, int32_t, NetworkParams::FT_OUTPUT_SIZE,
                      NetworkParams::L1_SIZE, NetworkParams::OUTPUT_BUCKETS, 0, 0, false>;
+#else
+
+    using L1Layer = LinearLayer<uint8_t, int8_t, int32_t, int32_t, NetworkParams::FT_OUTPUT_SIZE,
+                                NetworkParams::L1_SIZE, NetworkParams::OUTPUT_BUCKETS, 0, 0, false>;
+#endif
 
     // L2: int32 affine, L1_SIZE -> L2_SIZE, no dequantizing shift (Raphael scheme).
     using L2Layer =
@@ -149,8 +157,8 @@ class Network {
 
     // Perform an incremental update
     void updateAccum(const AccumulatorType &source, AccumulatorHalf sourceHalf,
-                     AccumulatorType &target, AccumulatorHalf targetHalf, const IndexArray &added,
-                     size_t added_count, const IndexArray &removed,
+                     AccumulatorType &target, AccumulatorHalf targetHalf, const PSQIndexArray &added,
+                     size_t added_count, const PSQIndexArray &removed,
                      size_t removed_count) const noexcept {
         transformer->updateAccum(source, sourceHalf, target, targetHalf, added, added_count,
                                  removed, removed_count);
@@ -158,9 +166,16 @@ class Network {
 
     // Propagate data through the layer, updating the specified half of the
     // accumulator (side to move goes in lower half).
-    void updateAccum(const IndexArray &indices, AccumulatorHalf half,
+    void updateAccum(const PSQIndexArray &indices, AccumulatorHalf half,
                      AccumulatorType &output) const noexcept {
         transformer->updateAccum(indices, half, output);
+    }
+
+    // Update half of the accumulator in place with pawn pair features
+    void updatePawnPairs(AccumulatorType &accum, AccumulatorHalf half, const PPIndexArray &added,
+                         size_t addedCount, const PPIndexArray &removed,
+                         size_t removedCount) const noexcept {
+        transformer->updatePawnPairs(accum, half, added, addedCount, removed, removedCount);
     }
 
     uint32_t getVersion() const noexcept {
@@ -202,6 +217,18 @@ inline std::istream &operator>>(std::istream &s, Network &network) {
     (void)network.l2->read(s);
     if (s.fail()) return s;
     (void)network.outputLayer->read(s);
+    if (s.fail()) return s;
+    // The file should end here, except for padding (the trainer pads the file to a multiple of
+    // 64 bytes). Test that there is not more data than expected; this could be due to a network
+    // file trained for a larger than expected transformer width.
+    char extra[64];
+    s.read(extra, sizeof(extra));
+    if (s.gcount() == static_cast<std::streamsize>(sizeof(extra))) {
+        std::cerr << "Error: network file is larger than expected (wrong network size?)" << std::endl;
+        s.setstate(std::ios::badbit);
+    } else {
+        s.clear(); // reached the end of the file, as expected
+    }
     return s;
 }
 

@@ -90,7 +90,7 @@ SOURCE_ARCHIVE = release\arasan_source$(VERSION).zip
 !If "$(PLATFORM)"=="XP"
 CFLAGS=$(CFLAGS) /D_USING_V110_SDK71_ /DNTDDI_VERSION=0x05010300 /D_WIN32_WINNT=0x0501
 !Endif
-NETWORK = arasanv8-20261005.nnue
+NETWORK = arasanv9-20261023.nnue
 NNUE_FLAGS=/Innue -DNETWORK=$(NETWORK)
 
 !Ifdef ARASAN_VERSION
@@ -220,8 +220,8 @@ $(BUILD)\tbprobe.obj: $(STB)\tbprobe.c
 $(PROFILE)\tbprobe.obj: $(STB)\tbprobe.c
 	$(CC) $(STB_PROFILE_FLAGS) $(OPT) $(DEBUG) /c /Fo$@ $(STB)\tbprobe.c
 !Endif
-NNUE_OBJS = $(BUILD)\evaluate.obj $(BUILD)\threatfeature.obj
-NNUE_PROFILE_OBJS = $(PROFILE)\evaluate.obj $(PROFILE)\threatfeature.obj
+NNUE_OBJS = $(BUILD)\evaluate.obj $(BUILD)\threatfeature.obj $(BUILD)\ppfeature.obj
+NNUE_PROFILE_OBJS = $(PROFILE)\evaluate.obj $(PROFILE)\threatfeature.obj $(PROFILE)\ppfeature.obj
 
 ARASANX_OBJS = $(BUILD)\arasanx.obj $(BUILD)\tester.obj \
 $(BUILD)\protocol.obj $(BUILD)\input.obj \
