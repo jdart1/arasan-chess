@@ -121,13 +121,12 @@ class Attacks
 #endif
    }
 
-   FORCEINLINE static const Bitboard queenAttacks(Square sq,
-	  				       const Bitboard &occupied) {
-     return (rookAttacks(sq,occupied) & bishopAttacks(sq,occupied));
+   FORCEINLINE static const Bitboard queenAttacks(Square sq, const Bitboard &occupied) {
+       return (rookAttacks(sq, occupied) | bishopAttacks(sq, occupied));
    }
 
-     // Initialize the bitmaps.  Call before using this class.
-     static void init();
+   // Initialize the bitmaps.  Call before using this class.
+   static void init();
 
  private:
 #if !defined(BMI2) || !defined(_64BIT)

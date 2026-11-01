@@ -322,8 +322,7 @@ public:
    const Bitboard bishopAttacks(Square sq, ColorType c) const;
 
    FORCEINLINE const Bitboard queenAttacks(Square sq) const {
-     return Attacks::rookAttacks(sq, allOccupied) |
-         Attacks::bishopAttacks(sq, allOccupied);
+     return Attacks::queenAttacks(sq, allOccupied);
    }
 
    FORCEINLINE Bitboard fileAttacks(Square sq) const {

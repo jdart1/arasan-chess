@@ -34,6 +34,137 @@
 
 using namespace chess;
 
+struct AttackCase {
+    Square sq;
+    PieceType type;
+    ColorType color;
+    std::initializer_list<Square> attacked;
+};
+
+// Check attacks on enemy pieces (no x-rays) for each piece listed, for a position.
+static int testAttacksPosition(const char *fenStr, std::initializer_list<AttackCase> cases) {
+    Board board;
+    if (!BoardIO::readFEN(board, fenStr)) {
+        std::cerr << "testAttacks: error in FEN: " << fenStr << std::endl;
+        return 1;
+    }
+    const Bitboard occupied(board.allOccupied);
+
+    int errs = 0;
+    for (const AttackCase &c : cases) {
+        if (TypeOfPiece(board[c.sq]) != c.type || PieceColor(board[c.sq]) != c.color) {
+            std::cerr << "testAttacks: unexpected piece on square " << c.sq << std::endl;
+            ++errs;
+            continue;
+        }
+        Bitboard expected;
+        for (Square sq : c.attacked) {
+            expected.set(sq);
+        }
+        Bitboard actual;
+        switch (c.type) {
+        case Pawn:
+            // pawn_attacks[sq][color] holds squares attacked by a pawn of the opposite color
+            actual = Attacks::pawn_attacks[c.sq][OppositeColor(c.color)];
+            break;
+        case Knight:
+            actual = Attacks::knight_attacks[c.sq];
+            break;
+        case Bishop:
+            actual = Attacks::bishopAttacks(c.sq, occupied);
+            break;
+        case Rook:
+            actual = Attacks::rookAttacks(c.sq, occupied);
+            break;
+        case Queen:
+            actual = Attacks::queenAttacks(c.sq, occupied);
+            break;
+        case King:
+            actual = Attacks::king_attacks[c.sq];
+            break;
+        default:
+            break;
+        }
+        actual &= board.occupied[OppositeColor(c.color)];
+        if (actual != expected) {
+            std::cerr << "testAttacks: mismatch for " << (c.color == White ? "white" : "black")
+                      << " piece type " << c.type << " on square " << c.sq << std::endl;
+            ++errs;
+        }
+    }
+    return errs;
+}
+
+
+static int testAttacks() {
+    int errs = 0;
+    // Expected attacked enemy-occupied squares for every piece, White then Black.
+    errs += testAttacksPosition("r1br2k1/1p2q1b1/1npNpppp/p3P3/P1pPN3/8/1P2BPPP/R2Q1RK1 w - -", {
+        {A1, Rook, White, {}},
+        {D1, Queen, White, {}},
+        {F1, Rook, White, {}},
+        {G1, King, White, {}},
+        {B2, Pawn, White, {}},
+        {E2, Bishop, White, {C4}},
+        {F2, Pawn, White, {}},
+        {G2, Pawn, White, {}},
+        {H2, Pawn, White, {}},
+        {A4, Pawn, White, {}},
+        {D4, Pawn, White, {}},
+        {E4, Knight, White, {F6}},
+        {E5, Pawn, White, {F6}},
+        {D6, Knight, White, {C4, B7, C8}},
+
+        {C4, Pawn, Black, {}},
+        {A5, Pawn, Black, {}},
+        {B6, Knight, Black, {A4}},
+        {C6, Pawn, Black, {}},
+        {E6, Pawn, Black, {}},
+        {F6, Pawn, Black, {E5}},
+        {G6, Pawn, Black, {}},
+        {H6, Pawn, Black, {}},
+        {B7, Pawn, Black, {}},
+        {E7, Queen, Black, {D6}},
+        {G7, Bishop, Black, {}},
+        {A8, Rook, Black, {}},
+        {C8, Bishop, Black, {}},
+        {D8, Rook, Black, {D6}},
+        {G8, King, Black, {}}
+    });
+    errs += testAttacksPosition("1rr3k1/pp2ppbp/3pbnp1/q7/3BP1PP/2N2P2/PPPQB3/1K1R3R b - -", {
+        {B1, King, White, {}},
+        {D1, Rook, White, {}},
+        {H1, Rook, White, {}},
+        {A2, Pawn, White, {}},
+        {B2, Pawn, White, {}},
+        {C2, Pawn, White, {}},
+        {D2, Queen, White, {}},
+        {E2, Bishop, White, {}},
+        {C3, Knight, White, {}},
+        {F3, Pawn, White, {}},
+        {D4, Bishop, White, {F6, A7}},
+        {E4, Pawn, White, {}},
+        {G4, Pawn, White, {}},
+        {H4, Pawn, White, {}},
+
+        {A5, Queen, Black, {A2, C3}},
+        {D6, Pawn, Black, {}},
+        {E6, Bishop, Black, {A2, G4}},
+        {F6, Knight, Black, {E4, G4}},
+        {G6, Pawn, Black, {}},
+        {A7, Pawn, Black, {}},
+        {B7, Pawn, Black, {}},
+        {E7, Pawn, Black, {}},
+        {F7, Pawn, Black, {}},
+        {G7, Bishop, Black, {}},
+        {H7, Pawn, Black, {}},
+        {B8, Rook, Black, {}},
+        {C8, Rook, Black, {C3}},
+        {G8, King, Black, {}}
+    });
+    return errs;
+}
+
 static int testIsPinned() {
 
     struct IsPinnedData {
@@ -1844,6 +1975,7 @@ static int doUnit() {
    int errs = 0;
    errs += testWouldAttack();
    errs += testNotation();
+   errs += testAttacks();
    errs += testIsPinned();
    errs += testGetPinned();
    errs += testSee();
