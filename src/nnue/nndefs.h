@@ -15,6 +15,10 @@ static constexpr size_t MAX_PSQ_INDICES = 34;
 // end of list marker
 static constexpr size_t MAX_PP_INDICES = 16 * 15 / 2 + 1;
 
+// maximum number of threat features: at most 30 non-king pieces, each of which attacks at
+// most 8 non-king pieces, plus room for end of list marker
+static constexpr size_t MAX_THREAT_INDICES = 30 * 8 + 1;
+
 using IndexType = unsigned;
 
 static constexpr IndexType LAST_INDEX = 1000000;
@@ -25,6 +29,8 @@ using IndexArray = std::array<IndexType,size>;
 using PSQIndexArray = IndexArray<MAX_PSQ_INDICES>;
 
 using PPIndexArray = IndexArray<MAX_PP_INDICES>;
+
+using ThreatIndexArray = IndexArray<MAX_THREAT_INDICES>;
 
 #endif
 

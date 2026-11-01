@@ -383,6 +383,14 @@ static int testNnz() {
     return testResult(errs, __func__);
 }
 
+static int testThreatIndices(const Board &board, ColorType color, const std::set<nnue::IndexType> &expected) {
+    nnue::ThreatIndexArray indices;
+    const size_t count = nnue::Network::FeatureXformer::Threat::getActiveThreats(color, board, indices);
+    std::string text(ColorImage(color));
+    text += " Threat";
+    return testResult(indexCompare<nnue::ThreatIndexArray>(indices,count,expected,text), __func__);
+}
+
 static int testFeatureIndices() {
     int errs = 0;
 
@@ -403,42 +411,129 @@ static int testFeatureIndices() {
                             2852, 2401, 2327, 2323, 2446, 2573, 2314, 2313, 2503, 2627, 2496});
     errs += testPawnPairIndices(board, White, {84, 259, 3747, 3764, 3972, 4088, 4094});
     errs += testPawnPairIndices(board, Black, {2, 57, 497, 3096, 4386, 4450, 4456});
+    errs += testThreatIndices(board, White,
+                            {24, 1087, 1168, 2179, 3941, 6107, 6186, 9108,
+                             10032, 10922, 15587, 17045, 18503, 19947, 19949, 22878,
+                             34650, 36334, 38016, 42450, 42551, 46473, 53764, 56664,
+                             56679});
+    errs += testThreatIndices(board, Black,
+                            {3807, 5485, 6610, 8187, 8282, 15630, 18545, 18555,
+                             22924, 30138, 30451, 32805, 32825, 33921, 34000, 36168,
+                             43377, 44301, 45201, 46425, 53721, 55169, 56627, 58091,
+                             58093});
 
    return testResult(errs, __func__);
+}
+
+struct Case {
+    std::string fen;
+    std::vector<std::string> moves;
+    Case(const std::string &f, const std::vector<std::string> &m) : fen(f) {
+        std::copy(m.begin(), m.end(), std::back_inserter(moves));
+    }
+    Case() = default;
+};
+
+static const std::array<Case,9> incrementalCases = {
+    Case("r2q1rk1/pb1nbp1p/1pp1pp2/8/2BPN2P/5N2/PPP1QPP1/2KR3R w - -",{"Ne5","fxe5"}),
+    Case("r3k2r/1bq2pp1/4p3/p7/3B2n1/1NPB1Nbp/1P2Q3/3R1RK1 b kq -",{"Bxf3","Rxf3"}),
+    Case("r3k2r/1bq2pp1/4p3/p7/3B2n1/1NPB1Nbp/1P2Q3/3R1RK1 b kq -",{"Bxf3","Rxf3","O-O"}),
+    Case("8/2Pk3q/3N4/5P2/2K5/6n1/8/8 w - -",{"c8=Q"}),
+    Case("8/2Pk3q/3N4/5P2/2K5/6n1/8/8 w - -",{"c8=Q","Ke7","Qc7+"}),
+    Case("r1b1k1nr/1pqp1p1p/p1n1p3/2b3pP/3NP1P1/2N5/PPP2P2/R1BQKB1R w KQkq g6",{"hxg6"}),
+    Case("4k2r/p1r2p1p/4pp2/1b1p4/8/2P1B3/PP3PPP/R3K2R w KQk -",{"O-O-O"}),
+    // several plies with pawn moves and captures
+    Case("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -",
+         {"e4","d5","exd5","Qxd5","Nc3","Qa5","d4","e6"}),
+    // king moves that cross between files a-d and e-h, with pawn changes
+    Case("4k3/pp3ppp/2p5/3p4/3P4/2P5/PP3PPP/4K3 w - -",
+         {"Kd2","Kd7","Kd3","Ke6","c4","dxc4+","Kxc4"})
+};
+
+// Check that threat feature deltas between the start and each later position of a case
+// equal the difference between the full feature sets
+static int testThreatDeltas() {
+    using TF = nnue::ThreatFeature<>;
+    using Snapshot = std::array<Bitboard, N_PIECES * N_COLORS>; // layout of Occupancies
+    int errs = 0;
+    auto snap = [](const Board &b) {
+        Snapshot s;
+        const Bitboard *src = &b.pawn_bits[0];
+        std::copy(src, src + s.size(), s.begin());
+        return s;
+    };
+    auto occ = [](const Snapshot &s) -> const Occupancies & {
+        return *reinterpret_cast<const Occupancies *>(s.data());
+    };
+    auto fullSet = [&](ColorType side, const Board &b, const Snapshot &s) {
+        nnue::ThreatIndexArray a;
+        const size_t n = TF::getActiveThreats(side, b.kingSquare(side), occ(s), a);
+        return std::set<nnue::IndexType>(a.begin(), a.begin() + n);
+    };
+    int i = 0;
+    for (const Case &c : incrementalCases) {
+        Board board;
+        if (!BoardIO::readFEN(board, c.fen)) {
+            std::cerr << "error in FEN: " << c.fen << std::endl;
+            return testResult(1, __func__);
+        }
+        const Snapshot start = snap(board);
+        const Square startKing[2] = {board.kingSquare(White), board.kingSquare(Black)};
+        const Board startBoard(board);
+        for (const auto &moveStr : c.moves) {
+            const Move m = Notation::value(board, board.sideToMove(), Notation::InputFormat::SAN,
+                                           moveStr, true);
+            if (IsNull(m)) {
+                std::cerr << "could not parse move " << moveStr << std::endl;
+                return testResult(1, __func__);
+            }
+            board.doMove(m);
+            const Snapshot cur = snap(board);
+            for (ColorType side : colors) {
+                const Square ksq = board.kingSquare(side);
+                // a king move across the board changes all features: caller refreshes
+                if ((File(startKing[side]) >= chess::EFILE) != (File(ksq) >= chess::EFILE)) {
+                    continue;
+                }
+                nnue::ThreatIndexArray added, removed;
+                size_t addedCount, removedCount;
+                TF::getThreatDeltas(side, ksq, occ(start), occ(cur), added, addedCount, removed,
+                                    removedCount);
+                const auto oldSet = fullSet(side, startBoard, start);
+                const auto curSet = fullSet(side, board, cur);
+                std::set<nnue::IndexType> expAdded, expRemoved;
+                std::set_difference(curSet.begin(), curSet.end(), oldSet.begin(), oldSet.end(),
+                                    std::inserter(expAdded, expAdded.begin()));
+                std::set_difference(oldSet.begin(), oldSet.end(), curSet.begin(), curSet.end(),
+                                    std::inserter(expRemoved, expRemoved.begin()));
+                const std::set<nnue::IndexType> gotAdded(added.begin(), added.begin() + addedCount);
+                const std::set<nnue::IndexType> gotRemoved(removed.begin(),
+                                                           removed.begin() + removedCount);
+                // sets also catch duplicates, via the size comparison
+                if (gotAdded != expAdded || gotRemoved != expRemoved ||
+                    gotAdded.size() != addedCount || gotRemoved.size() != removedCount ||
+                    added[addedCount] != nnue::LAST_INDEX ||
+                    removed[removedCount] != nnue::LAST_INDEX) {
+                    ++errs;
+                    std::cerr << "testThreatDeltas: error in case " << i << ", move " << moveStr
+                              << ", " << ColorImage(side) << ": added " << addedCount
+                              << " (expected " << expAdded.size() << "), removed " << removedCount
+                              << " (expected " << expRemoved.size() << ")" << std::endl;
+                }
+            }
+        }
+        ++i;
+    }
+    return testResult(errs, __func__);
 }
 
 static int testIncrementalUpdate() {
     int errs = 0;
 
-    struct Case {
-        std::string fen;
-        std::vector<std::string> moves;
-        Case(const std::string &f, const std::vector<std::string> &m) : fen(f) {
-            std::copy(m.begin(), m.end(), std::back_inserter(moves));
-        }
-        Case() = default;
-    };
-
-    std::array<Case,9> cases = {
-        Case("r2q1rk1/pb1nbp1p/1pp1pp2/8/2BPN2P/5N2/PPP1QPP1/2KR3R w - -",{"Ne5","fxe5"}),
-        Case("r3k2r/1bq2pp1/4p3/p7/3B2n1/1NPB1Nbp/1P2Q3/3R1RK1 b kq -",{"Bxf3","Rxf3"}),
-        Case("r3k2r/1bq2pp1/4p3/p7/3B2n1/1NPB1Nbp/1P2Q3/3R1RK1 b kq -",{"Bxf3","Rxf3","O-O"}),
-        Case("8/2Pk3q/3N4/5P2/2K5/6n1/8/8 w - -",{"c8=Q"}),
-        Case("8/2Pk3q/3N4/5P2/2K5/6n1/8/8 w - -",{"c8=Q","Ke7","Qc7+"}),
-        Case("r1b1k1nr/1pqp1p1p/p1n1p3/2b3pP/3NP1P1/2N5/PPP2P2/R1BQKB1R w KQkq g6",{"hxg6"}),
-        Case("4k2r/p1r2p1p/4pp2/1b1p4/8/2P1B3/PP3PPP/R3K2R w KQk -",{"O-O-O"}),
-        // several plies with pawn moves and captures
-        Case("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -",
-             {"e4","d5","exd5","Qxd5","Nc3","Qa5","d4","e6"}),
-        // king moves that cross between files a-d and e-h, with pawn changes
-        Case("4k3/pp3ppp/2p5/3p4/3P4/2P5/PP3PPP/4K3 w - -",
-             {"Kd2","Kd7","Kd3","Ke6","c4","dxc4+","Kxc4"})
-    };
-
     NodeInfo *node = new Search::NodeStack;
     int i = 0;
     Board board;
-    for (Case c : cases) {
+    for (const Case &c : incrementalCases) {
         if (!BoardIO::readFEN(board, c.fen)) {
             std::cout << "error in FEN: " << c.fen << std::endl;
             return testResult(1, __func__);
@@ -620,6 +715,121 @@ static int testWideningUpdate() {
 }
 #endif
 
+
+// Attacks of a piece on an empty board, from the Attacks tables
+static Bitboard emptyBoardAttacks(Piece p, Square sq) {
+    const Bitboard empty;
+    switch (TypeOfPiece(p)) {
+    case Pawn:
+        // pawn_attacks[sq][c] is the squares from which a pawn of color c attacks sq,
+        // so by symmetry a White pawn on sq attacks pawn_attacks[sq][Black]
+        return Attacks::pawn_attacks[sq][ColorOfPiece(p) == White ? Black : White];
+    case Knight:
+        return Attacks::knight_attacks[sq];
+    case Bishop:
+        return Attacks::bishopAttacks(sq, empty);
+    case Rook:
+        return Attacks::rookAttacks(sq, empty);
+    case Queen:
+        return Attacks::bishopAttacks(sq, empty) | Attacks::rookAttacks(sq, empty);
+    default:
+        return Attacks::king_attacks[sq];
+    }
+}
+
+// Expected rule for which (attacker, victim) piece type pairs are valid threat features
+static bool threatPairAllowed(PieceType attacker, PieceType victim) {
+    switch (attacker) {
+    case Pawn:
+        return victim == Knight || victim == Rook;
+    case Knight:
+    case Queen:
+        return victim != King && victim != Empty;
+    case Bishop:
+    case Rook:
+        return victim == Pawn || victim == Knight || victim == Bishop || victim == Rook;
+    default:
+        return false;
+    }
+}
+
+static int testThreatFeature() {
+    using TF = nnue::ThreatFeature<>;
+    int errs = 0;
+    const Piece pieces[12] = {WhitePawn, WhiteKnight, WhiteBishop, WhiteRook, WhiteQueen, WhiteKing,
+                              BlackPawn, BlackKnight, BlackBishop, BlackRook, BlackQueen, BlackKing};
+    // king squares with different file mirroring and bucket
+    const Square kings[4] = {4 /* e1 */, 0 /* a1 */, 60 /* e8 */, 56 /* a8 */};
+    for (ColorType side : {White, Black}) {
+        for (Square ksq : kings) {
+            std::map<nnue::IndexType, std::array<int, 4>> seen;
+            for (Piece a : pieces) {
+                for (Square from = 0; from < 64; ++from) {
+                    if (TypeOfPiece(a) == Pawn && (Rank<White>(from) == 1 || Rank<White>(from) == 8)) continue;
+                    Bitboard targets(emptyBoardAttacks(a, from));
+                    Square to;
+                    while (targets.iterate(to)) {
+                        for (Piece v : pieces) {
+                            const nnue::IndexType idx = TF::getIndex(side, a, from, to, v, ksq);
+                            const bool expectValid = threatPairAllowed(TypeOfPiece(a), TypeOfPiece(v));
+                            if (idx == nnue::LAST_INDEX) {
+                                // sentinel is only allowed for excluded pairs and semi-excluded
+                                // (same type) pairs
+                                if (expectValid && TypeOfPiece(a) != TypeOfPiece(v)) {
+                                    ++errs;
+                                    std::cerr << "testThreatFeature: unexpected sentinel" << std::endl;
+                                }
+                                continue;
+                            }
+                            if (!expectValid || idx >= TF::DIMENSIONS) {
+                                ++errs;
+                                std::cerr << "testThreatFeature: bad index " << idx << std::endl;
+                                continue;
+                            }
+                            // different features must have different indices, for the same
+                            // perspective and king square (after mirroring)
+                            const std::array<int, 4> key = {static_cast<int>(a), from, to, static_cast<int>(v)};
+                            if (!seen.insert({idx, key}).second) {
+                                ++errs;
+                                std::cerr << "testThreatFeature: duplicate index " << idx << std::endl;
+                            }
+                            // perspective symmetry: flipping colors and ranks swaps the perspective
+                            const nnue::IndexType idx2 = TF::getIndex(side == White ? Black : White,
+                                                                static_cast<Piece>(a ^ 8), from ^ 56, to ^ 56,
+                                                                static_cast<Piece>(v ^ 8), ksq ^ 56);
+                            if (idx2 != idx) {
+                                ++errs;
+                                std::cerr << "testThreatFeature: perspective mismatch " << idx << " " << idx2 << std::endl;
+                            }
+                        }
+                    }
+                }
+            }
+            // same-type mutual attacks: exactly one of the two directions is a feature
+            for (Piece a : pieces) {
+                const PieceType t = TypeOfPiece(a);
+                if (t == Pawn || t == King) continue;
+                for (Piece v : pieces) {
+                    if (TypeOfPiece(v) != t) continue;
+                    for (Square x = 0; x < 64; ++x) {
+                        Bitboard targets(emptyBoardAttacks(a, x));
+                        Square y;
+                        while (targets.iterate(y)) {
+                            const bool ab = TF::getIndex(side, a, x, y, v, ksq) != nnue::LAST_INDEX;
+                            const bool ba = TF::getIndex(side, v, y, x, a, ksq) != nnue::LAST_INDEX;
+                            if (ab == ba) {
+                                ++errs;
+                                std::cerr << "testThreatFeature: mutual attack not exclusive" << std::endl;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return errs;
+}
+
 int testNNUE() {
 
     int errs = 0;
@@ -657,6 +867,8 @@ int testNNUE() {
     tmp = errs;
     errs += testFeatureIndices();
     errs += testThreatFeature();
+
+    errs += testThreatDeltas();
 
     if (errs - tmp > 0) {
         std::cerr << "feature tests failed, skipping whole network test" << std::endl;

@@ -2,10 +2,13 @@
 #ifndef _THREATFEATURE_H
 #define _THREATFEATURE_H
 
+#include <algorithm>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
 
+#include "attacks.h"
+#include "board.h"
 #include "chess.h"
 #include "featureutil.h"
 #include "nndefs.h"
@@ -90,6 +93,144 @@ public:
         const IndexType idx = base + ThreatTables::TABLES.lut2[(a & 7) - 1][f][t];
         assert(idx < DIMENSIONS);
         return idx;
+    }
+
+    // Get all active features for a position, for the point of view of side. The list is
+    // terminated with LAST_INDEX. Returns the number of features.
+    static size_t getActiveThreats(ColorType side, Square ksq, const Occupancies &occ,
+                                   ThreatIndexArray &out) {
+        size_t count = 0;
+        collect(side, ksq, occ, Bitboard(~uint64_t(0)), [&](IndexType idx) {
+            assert(count < out.size() - 1);
+            out[count++] = idx;
+        });
+        out[count] = LAST_INDEX;
+        return count;
+    }
+
+    static size_t getActiveThreats(ColorType side, const Board &board, ThreatIndexArray &out) {
+        // the Board piece bitboards have the layout of Occupancies
+        return getActiveThreats(side, board.kingSquare(side),
+                                *reinterpret_cast<const Occupancies *>(&board.pawn_bits[0]), out);
+    }
+
+    // Get the changes in active features between two positions, however many moves apart.
+    // Features in the old position but not the new one are put in "removed", those in the
+    // new position but not the old one in "added": the lists have no feature in common, so
+    // they are the smallest possible update. Both lists are sorted and terminated with
+    // LAST_INDEX. ksq is the king square of side in the new position. It is used only for
+    // its file, so the old king square must be on the same side of the board (a-d or e-h):
+    // otherwise all features change and the caller should use getActiveThreats instead.
+    //
+    // Only the attackers that could have changed are examined: pieces on a square whose
+    // contents changed, and pieces whose attacks include such a square (sliders gain or
+    // lose attacks through squares that are vacated or occupied).
+    static void getThreatDeltas(ColorType side, Square ksq, const Occupancies &oldOcc,
+                                const Occupancies &newOcc, ThreatIndexArray &added, size_t &addedCount,
+                                ThreatIndexArray &removed, size_t &removedCount) {
+        addedCount = removedCount = 0;
+        uint64_t changed = 0;
+        for (unsigned i = 0; i < N_PIECES; ++i) {
+            for (ColorType c : colors) {
+                changed |= static_cast<uint64_t>(oldOcc[i][c]) ^ static_cast<uint64_t>(newOcc[i][c]);
+            }
+        }
+        if (changed == 0) {
+            added[0] = removed[0] = LAST_INDEX;
+            return;
+        }
+        const Bitboard changedSquares(changed);
+        const Bitboard attackers(affectedAttackers(oldOcc, changedSquares) |
+                                 affectedAttackers(newOcc, changedSquares));
+        collect(side, ksq, oldOcc, attackers, [&](IndexType idx) {
+            assert(removedCount < removed.size() - 1);
+            removed[removedCount++] = idx;
+        });
+        collect(side, ksq, newOcc, attackers, [&](IndexType idx) {
+            assert(addedCount < added.size() - 1);
+            added[addedCount++] = idx;
+        });
+        // cancel features that are in both lists
+        std::sort(removed.begin(), removed.begin() + removedCount);
+        std::sort(added.begin(), added.begin() + addedCount);
+        size_t i = 0, j = 0, r = 0, a = 0;
+        while (i < removedCount && j < addedCount) {
+            if (removed[i] == added[j]) {
+                ++i;
+                ++j;
+            } else if (removed[i] < added[j]) {
+                removed[r++] = removed[i++];
+            } else {
+                added[a++] = added[j++];
+            }
+        }
+        while (i < removedCount) removed[r++] = removed[i++];
+        while (j < addedCount) added[a++] = added[j++];
+        removedCount = r;
+        addedCount = a;
+        removed[removedCount] = added[addedCount] = LAST_INDEX;
+    }
+
+private:
+    static Bitboard allPieces(const Occupancies &occ) {
+        uint64_t all = 0;
+        for (unsigned i = 0; i < N_PIECES; ++i) {
+            all |= static_cast<uint64_t>(occ[i][White]) | static_cast<uint64_t>(occ[i][Black]);
+        }
+        return Bitboard(all);
+    }
+
+    // Squares of the non-king pieces that are on, or attack, a square in "changed"
+    static Bitboard affectedAttackers(const Occupancies &occ, const Bitboard &changed) {
+        const Bitboard all(allPieces(occ));
+        Bitboard result;
+        for (ColorType c : colors) {
+            for (int t = Pawn; t <= Queen; ++t) {
+                Bitboard pieces(occ[t - 1][c]);
+                Square sq;
+                while (pieces.iterate(sq)) {
+                    if (changed.isSet(sq) ||
+                        !Bitboard(Attacks::pieceAttacks(static_cast<PieceType>(t), c, sq, all) & changed)
+                             .isClear()) {
+                        result.set(sq);
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    // Call out(index) for each feature in the position whose attacker is on a square in
+    // "attackers". Kings are never attackers or victims.
+    template <typename Output>
+    static void collect(ColorType side, Square ksq, const Occupancies &occ,
+                        const Bitboard &attackers, Output &&out) {
+        const Bitboard all(allPieces(occ));
+        for (ColorType c : colors) {
+            for (int t = Pawn; t <= Queen; ++t) {
+                const PieceType type = static_cast<PieceType>(t);
+                const Piece attacker = MakePiece(type, c);
+                Bitboard pieces(occ[t - 1][c] & attackers);
+                Square from;
+                while (pieces.iterate(from)) {
+                    const Bitboard targets(Attacks::pieceAttacks(type, c, from, all));
+                    for (ColorType vc : colors) {
+                        for (int vt = Pawn; vt <= Queen; ++vt) {
+                            Bitboard victims(targets & occ[vt - 1][vc]);
+                            Square to;
+                            while (victims.iterate(to)) {
+                                const IndexType idx =
+                                    getIndex(side, attacker, from, to,
+                                             MakePiece(static_cast<PieceType>(vt), vc), ksq);
+                                if (idx != LAST_INDEX) {
+                                    out(idx);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 };
 

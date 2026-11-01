@@ -26,6 +26,8 @@ public:
     // pair feature weights are 8-bit
     using PawnPair = PawnPairFeature<int8_t, OutputType, AccumulatorType, outputSize, alignment>;
 
+    using Threat = ThreatFeature<alignment>;
+
     FeatureTransformer() = default;
 
     virtual ~FeatureTransformer() = default;
@@ -78,6 +80,6 @@ public:
 private:
     PSQ psq;
     PawnPair pawnPairs;
-    ThreatFeature<alignment> threats;
+    Threat threats;
 };
 #endif
