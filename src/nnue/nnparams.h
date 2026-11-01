@@ -11,7 +11,7 @@ static constexpr unsigned OUTPUT_BUCKETS = 8;
 static constexpr unsigned BUCKET_DIVISOR = (32 + OUTPUT_BUCKETS - 1) / OUTPUT_BUCKETS;
 
 // width of the feature transformer output (per perspective)
-static constexpr unsigned FT_OUTPUT_SIZE = 1536;
+static constexpr unsigned FT_OUTPUT_SIZE = 1024;
 
 // 3-layer sparse int8 head (Stockfish/Hobbes-style), Raphael-style downstream:
 //   feature transformer (FT_OUTPUT_SIZE per perspective, 2*FT_OUTPUT_SIZE total)

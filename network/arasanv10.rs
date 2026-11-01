@@ -82,7 +82,7 @@ const DATA_PATH: &str = "/data3/bullet/apr-may2026/dec25-may26-shuffled-interlea
 // "/data3/bullet/aug2026/dec25-aug26-shuffled-interleaved.bullet"
 
 const NUM_OUTPUT_BUCKETS: usize = 8;
-const L1: usize = 1536; // feature transformer width (per perspective)
+const L1: usize = 1024; // feature transformer width (per perspective)
 const L2_NEURONS: usize = 16; // sparse L1 head output width (engine L1_SIZE)
 const L3_NEURONS: usize = 32; // second head layer width (engine L2_SIZE)
 
