@@ -154,6 +154,15 @@ void nnue::Evaluator::addPawnPairs(const Network &network, const Board &board, C
     network.updatePawnPairs(accum, half, pairs, count, none, 0);
 }
 
+#ifdef THREATS
+void nnue::Evaluator::addThreats(const Network &network, const Board &board, ColorType c,
+                                 AccumulatorHalf half, Network::AccumulatorType &accum) {
+    ThreatIndexArray threats, none;
+    const size_t count = Network::FeatureXformer::Threat::getActiveThreats(c, board, threats);
+    network.updateThreats(accum, half, threats, count, none, 0);
+}
+#endif
+
 // Incremental update of 1/2 of accumulator for the specified color
 void nnue::Evaluator::updateAccumIncremental(const Network &network, const NodeInfo *source,
                                              NodeInfo *target, const ColorType c) {
@@ -168,12 +177,12 @@ void nnue::Evaluator::updateAccumIncremental(const Network &network, const NodeI
     // from the pawn bitboards of the two nodes, however many plies apart they are. Nothing
     // to do if the pawns are the same. Pair indices depend on whether the king is on files
     // e-h, but if that changed we would be refreshing, not updating incrementally.
-    if (source->pawns[White] != target->pawns[White] ||
-        source->pawns[Black] != target->pawns[Black]) {
+    if (source->occupancies[0][White] != target->occupancies[0][White] ||
+        source->occupancies[0][Black] != target->occupancies[0][Black]) {
         PPIndexArray pairsAdded, pairsRemoved;
         size_t pairsAddedCount, pairsRemovedCount;
-        Network::FeatureXformer::PawnPair::getPairDeltas(c, target->kingSquare(c), source->pawns,
-                                                         target->pawns, pairsAdded, pairsAddedCount,
+        Network::FeatureXformer::PawnPair::getPairDeltas(c, target->kingSquare(c), source->occupancies[0],
+                                                         target->occupancies[0], pairsAdded, pairsAddedCount,
                                                          pairsRemoved, pairsRemovedCount);
 #ifdef NNUE_TRACE
         std::cout << "pawn pair diffs: added" << std::endl;
@@ -184,6 +193,19 @@ void nnue::Evaluator::updateAccumIncremental(const Network &network, const NodeI
         network.updatePawnPairs(target->accum, targetHalf, pairsAdded, pairsAddedCount,
                                 pairsRemoved, pairsRemovedCount);
     }
+#ifdef THREATS
+    // Update threat features. As for pawn pairs, changes are computed from the positions
+    // of the two nodes. The king is on the same side of the board in both (else we would
+    // be refreshing), so the threat indices are consistent.
+    ThreatIndexArray threatsAdded, threatsRemoved;
+    size_t threatsAddedCount, threatsRemovedCount;
+    Network::FeatureXformer::Threat::getThreatDeltas(c, target->kingSquare(c), source->occupancies,
+                                                     target->occupancies, threatsAdded,
+                                                     threatsAddedCount, threatsRemoved,
+                                                     threatsRemovedCount);
+    network.updateThreats(target->accum, targetHalf, threatsAdded, threatsAddedCount,
+                          threatsRemoved, threatsRemovedCount);
+#endif
     target->accum.setState(targetHalf, AccumulatorState::Computed);
 #ifdef NNUE_TRACE
     std::cout << "incremental evaluate" << std::endl;
@@ -195,9 +217,8 @@ void nnue::Evaluator::updateAccumIncremental(const Network &network, const NodeI
 void nnue::Evaluator::updateAccum(const nnue::Network &network, const Board &board, NodeInfo *node,
                                   const ColorType c) {
     assert(node);
-    // record the pawns, for use in later incremental updates
-    node->pawns[White] = board.pawn_bits[White];
-    node->pawns[Black] = board.pawn_bits[Black];
+    // record the piece bitboards, for use in later incremental updates
+    bulkCopy<N_COLORS * N_PIECES>(&board.pawn_bits[0], &node->occupancies[0][0]);
     AccumulatorHalf targetHalf = Network::AccumulatorType::getHalf(node->stm, c);
     if (node->accum.getState(targetHalf) == AccumulatorState::Computed) {
         // nothing to do: can happen if we revist a node because we widened the search window
@@ -245,8 +266,11 @@ void nnue::Evaluator::updateAccum(const nnue::Network &network, const Board &boa
         PSQIndexArray indices;
         getIndices(c, board, indices);
         network.updateAccum(indices, targetHalf, node->accum);
-        // the accumulator now has only the piece-square features: add pawn pairs
+        // the accumulator now has only the piece-square features: add pawn pairs and threats
         addPawnPairs(network, board, c, targetHalf, node->accum);
+#ifdef THREATS
+        addThreats(network, board, c, targetHalf, node->accum);
+#endif
 #endif
     }
     node->accum.setState(targetHalf, AccumulatorState::Computed);
@@ -278,6 +302,9 @@ void nnue::Evaluator::updateAccum(const nnue::Network &network, const Board &boa
         AccumulatorHalf targetHalf = Network::AccumulatorType::getHalf(board.sideToMove(), color);
         network.updateAccum(indices, targetHalf, accum);
         addPawnPairs(network, board, color, targetHalf, accum);
+#ifdef THREATS
+        addThreats(network, board, color, targetHalf, accum);
+#endif
         accum.setState(targetHalf, AccumulatorState::Computed);
     }
 }
@@ -353,6 +380,19 @@ void nnue::Evaluator::finnyUpdate(const nnue::Network &network, const Board &boa
         network.updatePawnPairs(cacheEntry.acc, AccumulatorHalf::Lower, pairsAdded, pairsAddedCount,
                                 pairsRemoved, pairsRemovedCount);
     }
+#ifdef THREATS
+    // The cache entry also includes threat features, again consistent with the king's side
+    // of the board.
+    {
+        ThreatIndexArray threatsAdded, threatsRemoved;
+        size_t threatsAddedCount, threatsRemovedCount;
+        Network::FeatureXformer::Threat::getThreatDeltas(side, kp, cacheEntry.occupancies, boardOcc,
+                                                         threatsAdded, threatsAddedCount,
+                                                         threatsRemoved, threatsRemovedCount);
+        network.updateThreats(cacheEntry.acc, AccumulatorHalf::Lower, threatsAdded, threatsAddedCount,
+                              threatsRemoved, threatsRemovedCount);
+    }
+#endif
     // update occupancy data in the cache to match the computed accumulator
     // cacheEntry.occupancies = node->occupancies;
     bulkCopy<N_COLORS * N_PIECES>(reinterpret_cast<const Bitboard *>(&boardOcc),

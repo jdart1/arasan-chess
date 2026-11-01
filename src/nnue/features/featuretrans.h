@@ -69,6 +69,14 @@ public:
         return pawnPairs.read(s);
     }
 
+#ifdef THREATS
+    // Update half of the accumulator with threat features. Threat weights are not
+    // implemented yet, so this does nothing.
+    void updateThreats(AccumulatorType &, AccumulatorHalf, const ThreatIndexArray &, size_t,
+                       const ThreatIndexArray &, size_t) const noexcept {
+    }
+#endif
+
     PawnPair &getPawnPairs() noexcept {
         return pawnPairs;
     }

@@ -178,6 +178,15 @@ class Network {
         transformer->updatePawnPairs(accum, half, added, addedCount, removed, removedCount);
     }
 
+#ifdef THREATS
+    // Update half of the accumulator in place with threat features
+    void updateThreats(AccumulatorType &accum, AccumulatorHalf half, const ThreatIndexArray &added,
+                       size_t addedCount, const ThreatIndexArray &removed,
+                       size_t removedCount) const noexcept {
+        transformer->updateThreats(accum, half, added, addedCount, removed, removedCount);
+    }
+#endif
+
     uint32_t getVersion() const noexcept {
         return version;
     }

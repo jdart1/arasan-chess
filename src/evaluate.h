@@ -69,6 +69,12 @@ private:
     void addPawnPairs(const Network &network, const Board &board, ColorType c,
                       AccumulatorHalf half, Network::AccumulatorType &accum);
 
+#ifdef THREATS
+    // Add all threat features of the position to half of an accumulator
+    void addThreats(const Network &network, const Board &board, ColorType c, AccumulatorHalf half,
+                    Network::AccumulatorType &accum);
+#endif
+
     // Incremental update of 1/2 of accumulator for the specified color
     void updateAccumIncremental(const Network &network, const NodeInfo *source, NodeInfo *target,
                                 const ColorType c);

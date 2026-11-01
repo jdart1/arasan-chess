@@ -79,11 +79,11 @@ struct NodeInfo {
     unsigned dirty_num;
     ColorType stm;
     Square kingPos[2];
-    // Pawn bitboards (indexed by color) of this node's position. Recorded when the node's
-    // NNUE accumulator is updated, so that a later incremental update can compute the
-    // changes in pawn pair features relative to this node (boards of ancestor nodes are
-    // not kept).
-    Bitboard pawns[2];
+    // Piece bitboards (indexed by piece type - 1, then color) of this node's position.
+    // Recorded when the node's NNUE accumulator is updated, so that a later incremental
+    // update can compute the changes in pawn pair and threat features relative to this
+    // node (boards of ancestor nodes are not kept).
+    alignas(nnue::DEFAULT_ALIGN) Occupancies occupancies;
 
     bool PV() const noexcept {
         return nodeType == PvNode || beta > alpha + 1;
