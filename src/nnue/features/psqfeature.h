@@ -36,56 +36,26 @@ public:
         return idx;
     }
 
-    // Full update: propagate data through the layer, updating the specified half of the
-    // accumulator (side to move goes in lower half).
-    void updateAccum(const PSQIndexArray &indices, AccumulatorHalf half,
+#ifdef SIMD
+    // Rows to add and subtract for an accumulator update (see simd::updateRows)
+    auto rowUpdate(const PSQIndexArray &added, size_t addedCount, const PSQIndexArray &removed,
+                   size_t removedCount) const noexcept {
+        return simd::makeRowUpdate(_weights, added.data(), addedCount, removed.data(),
+                                   removedCount);
+    }
+#else
+    // Add and subtract rows of weights to half of the accumulator
+    void updateAccum(const PSQIndexArray &added, size_t addedCount, const PSQIndexArray &removed,
+                     size_t removedCount, AccumulatorHalf half,
                      AccumulatorType &output) const noexcept {
-#ifdef SIMD
-        simd::fullUpdate<OutputType, WeightType, BiasType, inputSize, outputSize>(
-            output.data(half), &_weights, &_biases, indices.data());
-#else
-        output.init_half(half, this->_biases);
-        for (auto it = indices.begin(); it != indices.end() && *it != LAST_INDEX; ++it) {
-            /*
-#ifdef NNUE_TRACE
-            std::cout << "index " << *it << " adding weights ";
-            for (size_t i = 0; i < 20; ++i)
-                std::cout << this->_weights[*it][i] << ' ';
-            std::cout << "to side " << (half == AccumulatorHalf::Lower ? 0 : 1) << std::endl;
-#endif
-            */
-            output.add_half(half, this->_weights[*it]);
-        }
-#endif
-    }
-
-    // Perform an incremental update
-    void updateAccum(const AccumulatorType &source, AccumulatorHalf sourceHalf,
-                     AccumulatorType &target, AccumulatorHalf targetHalf,
-                     const PSQIndexArray &added, size_t added_count, const PSQIndexArray &removed,
-                     size_t removed_count) const noexcept {
-#ifdef SIMD
-        simd::update<OutputType,WeightType,inputSize,outputSize>(source.getOutput(sourceHalf),target.data(targetHalf),_weights,
-                                                                 added.data(), added_count, removed.data(), removed_count);
-#else
-        if (&target != &source) {
-            target.copy_half(targetHalf,source,sourceHalf);
-        }
-        updateAccum(added,removed,added_count,removed_count,targetHalf,target);
-#endif
-    }
-
-    // Perform an incremental update
-    void updateAccum(const PSQIndexArray &added, const PSQIndexArray &removed,
-                     size_t added_count, size_t removed_count,
-                     AccumulatorHalf half, AccumulatorType &output) const noexcept {
-        for (size_t i = 0; i < added_count; i++) {
+        for (size_t i = 0; i < addedCount; i++) {
             output.add_half(half, this->_weights[added[i]]);
         }
-        for (size_t i = 0; i < removed_count; i++) {
+        for (size_t i = 0; i < removedCount; i++) {
             output.sub_half(half, this->_weights[removed[i]]);
         }
     }
+#endif
 
     // read weights from a stream
     virtual std::istream &read(std::istream &s) {

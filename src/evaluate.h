@@ -57,23 +57,8 @@ private:
     // full evaluation of accumulator, update into 3rd argument
     void updateAccum(const Network &network, const Board &board, Network::AccumulatorType &accum);
 
-    // Full evaluation of 1/2 of the accumulator for a specified color (c)
-    void updateAccum(const Network &network, const PSQIndexArray &indices, ColorType c,
-                     ColorType sideToMove, Network::AccumulatorType &accum) {
-        AccumulatorHalf targetHalf = Network::AccumulatorType::getHalf(c, sideToMove);
-        network.updateAccum(indices, targetHalf, accum);
-        accum.setState(targetHalf, AccumulatorState::Computed);
-    }
-
-    // Add all pawn pair features of the position to half of an accumulator
-    void addPawnPairs(const Network &network, const Board &board, ColorType c,
-                      AccumulatorHalf half, Network::AccumulatorType &accum);
-
-#ifdef THREATS
-    // Add all threat features of the position to half of an accumulator
-    void addThreats(const Network &network, const Board &board, ColorType c, AccumulatorHalf half,
-                    Network::AccumulatorType &accum);
-#endif
+    // Get all features of the position for one perspective (as "added" features)
+    static void getFeatures(const Board &board, ColorType c, FeatureChanges &features);
 
     // Incremental update of 1/2 of accumulator for the specified color
     void updateAccumIncremental(const Network &network, const NodeInfo *source, NodeInfo *target,

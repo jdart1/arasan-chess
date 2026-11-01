@@ -32,34 +32,31 @@ public:
 
     virtual ~FeatureTransformer() = default;
 
-    // Full update: propagate data through the layer, updating the specified half of the
-    // accumulator (side to move goes in lower half).
-    void updateAccum(const PSQIndexArray &indices, AccumulatorHalf half,
+    // Full update: compute the specified half of the accumulator (side to move goes in lower
+    // half) from the biases and the "added" features.
+    void updateAccum(const FeatureChanges &changes, AccumulatorHalf half,
                      AccumulatorType &output) const noexcept {
-        psq.updateAccum(indices, half, output);
+#ifdef SIMD
+        updateRows(reinterpret_cast<const OutputType *>(psq.getBiases()), output.data(half), changes);
+#else
+        output.init_half(half, psq.getBiases());
+        updateRows(changes, half, output);
+#endif
     }
 
-    // Perform an incremental update
+    // Perform an incremental update, in one pass over the accumulator. The source and
+    // target can be the same.
     void updateAccum(const AccumulatorType &source, AccumulatorHalf sourceHalf,
                      AccumulatorType &target, AccumulatorHalf targetHalf,
-                     const PSQIndexArray &added, size_t added_count, const PSQIndexArray &removed,
-                     size_t removed_count) const noexcept {
-        psq.updateAccum(source, sourceHalf, target, targetHalf, added, added_count, removed,
-                        removed_count);
-    }
-
-    // Perform an incremental update in place
-    void updateAccum(const PSQIndexArray &added, const PSQIndexArray &removed,
-                     size_t added_count, size_t removed_count,
-                     AccumulatorHalf half, AccumulatorType &output) const noexcept {
-        psq.updateAccum(added, removed, added_count, removed_count, half, output);
-    }
-
-    // Update half of the accumulator with pawn pair features
-    void updatePawnPairs(AccumulatorType &accum, AccumulatorHalf half, const PPIndexArray &added,
-                         size_t addedCount, const PPIndexArray &removed,
-                         size_t removedCount) const noexcept {
-        pawnPairs.updateAccum(accum, half, added, addedCount, removed, removedCount);
+                     const FeatureChanges &changes) const noexcept {
+#ifdef SIMD
+        updateRows(source.getOutput(sourceHalf), target.data(targetHalf), changes);
+#else
+        if (&target != &source) {
+            target.copy_half(targetHalf, source, sourceHalf);
+        }
+        updateRows(changes, targetHalf, target);
+#endif
     }
 
     // read weights from a stream
@@ -68,14 +65,6 @@ public:
         psq.read(s);
         return pawnPairs.read(s);
     }
-
-#ifdef THREATS
-    // Update half of the accumulator with threat features. Threat weights are not
-    // implemented yet, so this does nothing.
-    void updateThreats(AccumulatorType &, AccumulatorHalf, const ThreatIndexArray &, size_t,
-                       const ThreatIndexArray &, size_t) const noexcept {
-    }
-#endif
 
     PawnPair &getPawnPairs() noexcept {
         return pawnPairs;
@@ -86,6 +75,25 @@ public:
     }
 
 private:
+#ifdef SIMD
+    // apply the changes in one pass over the accumulator
+    void updateRows(const OutputType *source, OutputType *target,
+                    const FeatureChanges &c) const noexcept {
+        simd::updateRows<OutputType, outputSize>(
+            source, target,
+            psq.rowUpdate(c.psqAdded, c.psqAddedCount, c.psqRemoved, c.psqRemovedCount),
+            pawnPairs.rowUpdate(c.ppAdded, c.ppAddedCount, c.ppRemoved, c.ppRemovedCount));
+    }
+#else
+    // apply the changes to the accumulator
+    void updateRows(const FeatureChanges &c, AccumulatorHalf half,
+                    AccumulatorType &accum) const noexcept {
+        psq.updateAccum(c.psqAdded, c.psqAddedCount, c.psqRemoved, c.psqRemovedCount, half, accum);
+        pawnPairs.updateAccum(accum, half, c.ppAdded, c.ppAddedCount, c.ppRemoved,
+                              c.ppRemovedCount);
+    }
+#endif
+
     PSQ psq;
     PawnPair pawnPairs;
     Threat threats;

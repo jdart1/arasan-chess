@@ -713,6 +713,70 @@ static int testWideningUpdate() {
     }
     return testResult(errs, __func__);
 }
+
+// Test updating an accumulator in one pass with three sets of rows (16-bit weights and two
+// sets of 8-bit weights), as for the piece-square, pair and threat features
+template <size_t outputSize>
+static int testFusedUpdate() {
+    constexpr size_t rows1 = 100, rows2 = 120, rows3 = 150;
+    constexpr size_t maxIndices = 30;
+    alignas(nnue::DEFAULT_ALIGN) static int16_t weights1[rows1][outputSize];
+    alignas(nnue::DEFAULT_ALIGN) static int8_t weights2[rows2][outputSize];
+    alignas(nnue::DEFAULT_ALIGN) static int8_t weights3[rows3][outputSize];
+    alignas(nnue::DEFAULT_ALIGN) int16_t source[outputSize];
+    alignas(nnue::DEFAULT_ALIGN) int16_t target[outputSize];
+    alignas(nnue::DEFAULT_ALIGN) int16_t inPlace[outputSize];
+    static std::mt19937 rng(11);
+    int errs = 0;
+    fill_random(&weights1[0][0], rows1 * outputSize, -3000, 3000);
+    fill_random(&weights2[0][0], rows2 * outputSize, -127, 127);
+    fill_random(&weights3[0][0], rows3 * outputSize, -127, 127);
+    struct Indices {
+        unsigned added[maxIndices], removed[maxIndices];
+        size_t addedCount, removedCount;
+        void fill(size_t rows) {
+            std::uniform_int_distribution<unsigned> countDist(0, maxIndices);
+            std::uniform_int_distribution<unsigned> rowDist(0, static_cast<unsigned>(rows - 1));
+            addedCount = countDist(rng);
+            removedCount = countDist(rng);
+            for (size_t i = 0; i < addedCount; ++i) added[i] = rowDist(rng);
+            for (size_t i = 0; i < removedCount; ++i) removed[i] = rowDist(rng);
+        }
+    };
+    for (int iter = 0; iter < 50; ++iter) {
+        fill_random(source, outputSize, -5000, 5000);
+        Indices i1, i2, i3;
+        i1.fill(rows1);
+        i2.fill(rows2);
+        i3.fill(rows3);
+        // include cases with empty sets
+        if (iter % 5 == 1) i2.addedCount = i2.removedCount = 0;
+        if (iter % 5 == 2) i3.addedCount = i3.removedCount = 0;
+        auto u1 = simd::makeRowUpdate(weights1, i1.added, i1.addedCount, i1.removed, i1.removedCount);
+        auto u2 = simd::makeRowUpdate(weights2, i2.added, i2.addedCount, i2.removed, i2.removedCount);
+        auto u3 = simd::makeRowUpdate(weights3, i3.added, i3.addedCount, i3.removed, i3.removedCount);
+        simd::updateRows<int16_t, outputSize>(source, target, u1, u2, u3);
+        std::memcpy(inPlace, source, sizeof(source));
+        simd::updateRows<int16_t, outputSize>(inPlace, inPlace, u1, u2, u3);
+        for (size_t j = 0; j < outputSize; ++j) {
+            int expected = source[j];
+            for (size_t i = 0; i < i1.addedCount; ++i) expected += weights1[i1.added[i]][j];
+            for (size_t i = 0; i < i1.removedCount; ++i) expected -= weights1[i1.removed[i]][j];
+            for (size_t i = 0; i < i2.addedCount; ++i) expected += weights2[i2.added[i]][j];
+            for (size_t i = 0; i < i2.removedCount; ++i) expected -= weights2[i2.removed[i]][j];
+            for (size_t i = 0; i < i3.addedCount; ++i) expected += weights3[i3.added[i]][j];
+            for (size_t i = 0; i < i3.removedCount; ++i) expected -= weights3[i3.removed[i]][j];
+            if (target[j] != static_cast<int16_t>(expected) ||
+                inPlace[j] != static_cast<int16_t>(expected)) {
+                ++errs;
+                std::cerr << "testFusedUpdate failed (size " << outputSize << ") at " << j << ": got "
+                          << target[j] << " " << inPlace[j] << " expected " << expected << std::endl;
+                return testResult(errs, __func__);
+            }
+        }
+    }
+    return testResult(errs, __func__);
+}
 #endif
 
 
@@ -861,6 +925,7 @@ int testNNUE() {
 
 #ifdef SIMD
     errs += testWideningUpdate<nnue::NetworkParams::FT_OUTPUT_SIZE>();
+    errs += testFusedUpdate<nnue::NetworkParams::FT_OUTPUT_SIZE>();
     errs += testWideningUpdate<256>();
 #endif
 
