@@ -289,6 +289,12 @@ inline void updateRowsLoop(const AccumType *source, AccumType *target, size_t &o
 // Update an accumulator (or half of one) in one pass: copy "source" to "target" (they can
 // be the same), applying the row updates. To update starting from the feature transformer
 // biases, pass the biases as "source".
+//
+// All the row sets (piece-square, pawn pair and threat features) are applied in a single
+// pass for performance: each tile of the accumulator is loaded and stored once, rather
+// than once per feature set, and it stays in registers while all the rows are added or
+// subtracted. Stockfish and Integral also apply the piece-square, threat and pawn pair
+// rows in one pass over the accumulator.
 template <typename AccumType, size_t outputSize /* accumulator size */, typename... Updates>
 void updateRows(const AccumType *source, AccumType *target, const Updates &...updates) {
     static_assert(sizeof(AccumType) == 2 || sizeof(AccumType) == 4, "unsupported accumulator type");
