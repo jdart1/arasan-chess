@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <cstdint>
 
+#include "accum.h"
 #include "attacks.h"
 #include "board.h"
 #include "chess.h"
@@ -63,7 +64,11 @@ extern const Tables TABLES;
 
 } // namespace ThreatTables
 
-template <size_t alignment = DEFAULT_ALIGN>
+// The class also holds the weights for the features (only if THREATS is defined). They are
+// 8-bit and are widened to 16 bits when added to the accumulator. Biases are maintained
+// in the PSQ feature.
+template <typename WeightType, typename OutputType, typename AccumulatorType, size_t outputSize,
+          size_t alignment = DEFAULT_ALIGN>
 class ThreatFeature {
 
 public:
@@ -171,6 +176,51 @@ public:
         removed[removedCount] = added[addedCount] = LAST_INDEX;
     }
 
+#ifdef THREATS
+#ifdef SIMD
+    // Rows to add and subtract for an accumulator update (see simd::updateRows). The "added"
+    // list can be the list from getActiveThreats, to add all features of a position.
+    auto rowUpdate(const ThreatIndexArray &added, size_t addedCount,
+                   const ThreatIndexArray &removed, size_t removedCount) const noexcept {
+        return simd::makeRowUpdate(_weights, added.data(), addedCount, removed.data(),
+                                   removedCount);
+    }
+#else
+    // Update half of the accumulator in place: add the weights of the "added" features and
+    // subtract those of the "removed" features.
+    void updateAccum(AccumulatorType &accum, AccumulatorHalf half, const ThreatIndexArray &added,
+                     size_t addedCount, const ThreatIndexArray &removed,
+                     size_t removedCount) const noexcept {
+        for (size_t i = 0; i < addedCount; ++i) {
+            accum.add_half(half, _weights[added[i]]);
+        }
+        for (size_t i = 0; i < removedCount; ++i) {
+            accum.sub_half(half, _weights[removed[i]]);
+        }
+    }
+#endif
+
+    // read weights from a stream
+    virtual std::istream &read(std::istream &s) {
+        for (size_t i = 0; i < DIMENSIONS && s.good(); ++i) {
+            for (size_t j = 0; j < outputSize && s.good(); ++j) {
+                _weights[i][j] = read_little_endian<WeightType>(s);
+            }
+        }
+        return s;
+    }
+
+    virtual const WeightType *getCol(size_t row) const noexcept {
+        return _weights[row];
+    }
+
+    virtual void setCol(size_t row, const WeightType *col) {
+        for (size_t i = 0; i < outputSize; ++i) {
+            _weights[row][i] = col[i];
+        }
+    }
+#endif
+
 private:
     static Bitboard allPieces(const Occupancies &occ) {
         uint64_t all = 0;
@@ -232,6 +282,10 @@ private:
             }
         }
     }
+
+#ifdef THREATS
+    alignas(alignment) WeightType _weights[DIMENSIONS][outputSize];
+#endif
 };
 
 #endif

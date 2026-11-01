@@ -453,7 +453,7 @@ static const std::array<Case,9> incrementalCases = {
 // Check that threat feature deltas between the start and each later position of a case
 // equal the difference between the full feature sets
 static int testThreatDeltas() {
-    using TF = nnue::ThreatFeature<>;
+    using TF = nnue::Network::FeatureXformer::Threat;
     using Snapshot = std::array<Bitboard, N_PIECES * N_COLORS>; // layout of Occupancies
     int errs = 0;
     auto snap = [](const Board &b) {
@@ -818,7 +818,7 @@ static bool threatPairAllowed(PieceType attacker, PieceType victim) {
 }
 
 static int testThreatFeature() {
-    using TF = nnue::ThreatFeature<>;
+    using TF = nnue::Network::FeatureXformer::Threat;
     int errs = 0;
     const Piece pieces[12] = {WhitePawn, WhiteKnight, WhiteBishop, WhiteRook, WhiteQueen, WhiteKing,
                               BlackPawn, BlackKnight, BlackBishop, BlackRook, BlackQueen, BlackKing};

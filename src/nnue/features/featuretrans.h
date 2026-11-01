@@ -26,7 +26,8 @@ public:
     // pair feature weights are 8-bit
     using PawnPair = PawnPairFeature<int8_t, OutputType, AccumulatorType, outputSize, alignment>;
 
-    using Threat = ThreatFeature<alignment>;
+    // threat feature weights are 8-bit
+    using Threat = ThreatFeature<int8_t, OutputType, AccumulatorType, outputSize, alignment>;
 
     FeatureTransformer() = default;
 
@@ -63,7 +64,12 @@ public:
     virtual std::istream &read(std::istream &s) {
         // the pawn pair weights follow the piece-square weights and biases
         psq.read(s);
-        return pawnPairs.read(s);
+        pawnPairs.read(s);
+#ifdef THREATS
+        // and the threat weights follow the pawn pair weights
+        threats.read(s);
+#endif
+        return s;
     }
 
     PawnPair &getPawnPairs() noexcept {
@@ -82,7 +88,13 @@ private:
         simd::updateRows<OutputType, outputSize>(
             source, target,
             psq.rowUpdate(c.psqAdded, c.psqAddedCount, c.psqRemoved, c.psqRemovedCount),
+#ifdef THREATS
+            pawnPairs.rowUpdate(c.ppAdded, c.ppAddedCount, c.ppRemoved, c.ppRemovedCount),
+            threats.rowUpdate(c.threatAdded, c.threatAddedCount, c.threatRemoved,
+                              c.threatRemovedCount));
+#else
             pawnPairs.rowUpdate(c.ppAdded, c.ppAddedCount, c.ppRemoved, c.ppRemovedCount));
+#endif
     }
 #else
     // apply the changes to the accumulator
@@ -91,11 +103,17 @@ private:
         psq.updateAccum(c.psqAdded, c.psqAddedCount, c.psqRemoved, c.psqRemovedCount, half, accum);
         pawnPairs.updateAccum(accum, half, c.ppAdded, c.ppAddedCount, c.ppRemoved,
                               c.ppRemovedCount);
+#ifdef THREATS
+        threats.updateAccum(accum, half, c.threatAdded, c.threatAddedCount, c.threatRemoved,
+                            c.threatRemovedCount);
+#endif
     }
 #endif
 
     PSQ psq;
     PawnPair pawnPairs;
+#ifdef THREATS
     Threat threats;
+#endif
 };
 #endif
