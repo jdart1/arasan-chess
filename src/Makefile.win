@@ -90,7 +90,7 @@ SOURCE_ARCHIVE = release\arasan_source$(VERSION).zip
 !If "$(PLATFORM)"=="XP"
 CFLAGS=$(CFLAGS) /D_USING_V110_SDK71_ /DNTDDI_VERSION=0x05010300 /D_WIN32_WINNT=0x0501
 !Endif
-NETWORK = arasanv9-20261023.nnue
+NETWORK = arasanv10-20261102.nnue
 NNUE_FLAGS=/Innue -DNETWORK=$(NETWORK)
 
 # define THREATS to compile in the threat features (experimental)
