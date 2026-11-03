@@ -11,11 +11,12 @@ namespace simd {
 
 // Prefetch the cache line containing an address
 FORCEINLINE void prefetch(const void *address) {
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && (defined(_M_X64) || defined(_M_IX86))
     _mm_prefetch(reinterpret_cast<const char *>(address), _MM_HINT_T0);
 #elif defined(__GNUC__) || defined(__clang__)
     __builtin_prefetch(address);
 #else
+    // no prefetch (for example MSVC on ARM)
     (void)address;
 #endif
 }
