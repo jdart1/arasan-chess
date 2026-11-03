@@ -149,8 +149,7 @@ public:
         uint64_t changedBits = 0;
         for (unsigned i = 0; i < N_PIECES; ++i) {
             for (ColorType c : colors) {
-                changedBits |=
-                    static_cast<uint64_t>(oldOcc[i][c]) ^ static_cast<uint64_t>(newOcc[i][c]);
+                changedBits |= oldOcc[i][c] ^ newOcc[i][c];
             }
         }
         if (changedBits == 0) {
@@ -158,10 +157,8 @@ public:
         }
         const Bitboard changed(changedBits);
         const Bitboard oldAll(allPieces(oldOcc)), newAll(allPieces(newOcc));
-        const Bitboard oldNonKings(oldAll & ~static_cast<uint64_t>(oldOcc[King - 1][White] |
-                                                                   oldOcc[King - 1][Black]));
-        const Bitboard newNonKings(newAll & ~static_cast<uint64_t>(newOcc[King - 1][White] |
-                                                                   newOcc[King - 1][Black]));
+        const Bitboard oldNonKings(oldAll & ~(oldOcc[King - 1][White] | oldOcc[King - 1][Black]));
+        const Bitboard newNonKings(newAll & ~(newOcc[King - 1][White] | newOcc[King - 1][Black]));
         const Bitboard attackers(affectedAttackers(oldOcc, oldAll, changed) |
                                  affectedAttackers(newOcc, newAll, changed));
         for (ColorType c : colors) {
@@ -183,15 +180,15 @@ public:
                             : Bitboard();
                     // a target attacked in both positions, and not on a changed square, has the
                     // same victim in both: its feature is unchanged
-                    const Bitboard same(oldTargets & newTargets & ~static_cast<uint64_t>(changed));
-                    forEachTarget(oldOcc, Bitboard(oldTargets & ~static_cast<uint64_t>(same)),
+                    const Bitboard same(oldTargets & newTargets & ~changed);
+                    forEachTarget(oldOcc, Bitboard(oldTargets & ~same),
                                   [&](Piece victim, Square to) {
                                       assert(changes.removedCount < changes.removed.size());
                                       changes.removed[changes.removedCount++] = {
                                           static_cast<uint8_t>(attacker), static_cast<uint8_t>(from),
                                           static_cast<uint8_t>(victim), static_cast<uint8_t>(to)};
                                   });
-                    forEachTarget(newOcc, Bitboard(newTargets & ~static_cast<uint64_t>(same)),
+                    forEachTarget(newOcc, Bitboard(newTargets & ~same),
                                   [&](Piece victim, Square to) {
                                       assert(changes.addedCount < changes.added.size());
                                       changes.added[changes.addedCount++] = {
@@ -304,7 +301,7 @@ private:
     static Bitboard allPieces(const Occupancies &occ) {
         uint64_t all = 0;
         for (unsigned i = 0; i < N_PIECES; ++i) {
-            all |= static_cast<uint64_t>(occ[i][White]) | static_cast<uint64_t>(occ[i][Black]);
+            all |= occ[i][White] | occ[i][Black];
         }
         return Bitboard(all);
     }
@@ -324,7 +321,7 @@ private:
                                 occ[Queen - 1][White] | occ[Queen - 1][Black]);
         // pieces on the changed squares, but not kings
         Bitboard result(all & changed &
-                        ~static_cast<uint64_t>(occ[King - 1][White] | occ[King - 1][Black]));
+                        ~(occ[King - 1][White] | occ[King - 1][Black]));
         Bitboard squares(changed);
         Square sq;
         while (squares.iterate(sq)) {
@@ -348,7 +345,7 @@ private:
                 if (victims.isClear()) {
                     continue;
                 }
-                targets &= ~static_cast<uint64_t>(victims);
+                targets &= ~victims;
                 const Piece victim = MakePiece(static_cast<PieceType>(vt), vc);
                 Square to;
                 while (victims.iterate(to)) {
@@ -365,7 +362,7 @@ private:
                         const Bitboard &attackers, Output &&out) {
         // all pieces except kings: the possible victims
         const Bitboard nonKings(all &
-                                ~static_cast<uint64_t>(occ[King - 1][White] | occ[King - 1][Black]));
+                                ~(occ[King - 1][White] | occ[King - 1][Black]));
         for (ColorType c : colors) {
             for (int t = Pawn; t <= Queen; ++t) {
                 const PieceType type = static_cast<PieceType>(t);
