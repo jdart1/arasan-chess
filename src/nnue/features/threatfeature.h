@@ -64,7 +64,7 @@ extern const Tables TABLES;
 
 } // namespace ThreatTables
 
-// The class also holds the weights for the features (only if THREATS is defined). They are
+// The class also holds the weights for the features. They are
 // 8-bit and are widened to 16 bits when added to the accumulator. Biases are maintained
 // in the PSQ feature.
 template <typename WeightType, typename OutputType, typename AccumulatorType, size_t outputSize,
@@ -176,7 +176,6 @@ public:
         removed[removedCount] = added[addedCount] = LAST_INDEX;
     }
 
-#ifdef THREATS
 #ifdef SIMD
     // Rows to add and subtract for an accumulator update (see simd::updateRows). The "added"
     // list can be the list from getActiveThreats, to add all features of a position.
@@ -219,7 +218,6 @@ public:
             _weights[row][i] = col[i];
         }
     }
-#endif
 
 private:
     static Bitboard allPieces(const Occupancies &occ) {
@@ -283,9 +281,7 @@ private:
         }
     }
 
-#ifdef THREATS
     alignas(alignment) WeightType _weights[DIMENSIONS][outputSize];
-#endif
 };
 
 #endif

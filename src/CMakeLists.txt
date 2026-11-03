@@ -29,7 +29,6 @@ option(AVX2 "Use AVX2 instructions" OFF)
 option(AVX512 "Use AVX512 instructions" OFF)
 option(BMI2 "Use BMI2 instructions" OFF)
 option(NEON "Use ARM NEON instructions" OFF)
-option(THREATS "Compile in threat features (experimental)" OFF)
 
 set(EXE_NAME arasanx)
 
@@ -56,9 +55,6 @@ if(SYZYGY_TBS)
 endif(SYZYGY_TBS)
 
 add_compile_definitions(NETWORK=${NETWORK})
-if(THREATS)
-    add_compile_definitions(THREATS)
-endif(THREATS)
 set(NNUE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/nnue)
 include_directories(${NNUE_DIR})
 list(APPEND EXTRA_SRC evaluate.cpp nnue/features/threatfeature.cpp nnue/features/ppfeature.cpp)

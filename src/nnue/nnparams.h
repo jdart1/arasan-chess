@@ -74,13 +74,8 @@ static inline unsigned getOutputBucket(unsigned pieceCount) {
 }
 
 // version of the network (bumped to 8 for the sparse int8 head, 9 for pawn pair features,
-// 10 for threat features: the file then has the threat weights after the pawn pair weights).
-// Builds with threat features (THREATS defined) load only version 10 networks.
-#ifdef THREATS
+// 10 for threat features: the file has the threat weights after the pawn pair weights)
 static constexpr std::byte NN_VERSION = std::byte(10);
-#else
-static constexpr std::byte NN_VERSION = std::byte(9);
-#endif
 
 static constexpr int NN_HEADER_SIZE = 4;
 

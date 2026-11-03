@@ -45,10 +45,6 @@ endif
 ifdef TUNE
 FLAGS := $(FLAGS) -DTUNE
 endif
-# set (THREATS=1) to compile in the threat features (experimental)
-ifdef THREATS
-FLAGS := $(FLAGS) -DTHREATS
-endif
 NNUE_FLAGS := -Innue -DNETWORK=$(NETWORK)
 
 #PROF     = -pg

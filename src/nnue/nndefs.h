@@ -39,10 +39,8 @@ struct FeatureChanges {
     size_t psqAddedCount = 0, psqRemovedCount = 0;
     PPIndexArray ppAdded, ppRemoved;
     size_t ppAddedCount = 0, ppRemovedCount = 0;
-#ifdef THREATS
     ThreatIndexArray threatAdded, threatRemoved;
     size_t threatAddedCount = 0, threatRemovedCount = 0;
-#endif
 };
 
 #endif

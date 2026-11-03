@@ -153,11 +153,9 @@ void nnue::Evaluator::getFeatures(const Board &board, ColorType c, FeatureChange
     std::cout << "pawn pair indices (" << ColorImage(c) << "):" << std::endl;
     printPairIndices(features.ppAdded, features.ppAddedCount);
 #endif
-#ifdef THREATS
     features.threatAddedCount =
         Network::FeatureXformer::Threat::getActiveThreats(c, board, features.threatAdded);
     features.threatRemovedCount = 0;
-#endif
 }
 
 // Incremental update of 1/2 of accumulator for the specified color
@@ -184,14 +182,12 @@ void nnue::Evaluator::updateAccumIncremental(const Network &network, const NodeI
         printPairIndices(changes.ppRemoved, changes.ppRemovedCount);
 #endif
     }
-#ifdef THREATS
     // As for pawn pairs, threat changes are computed from the positions of the two nodes.
     // The king is on the same side of the board in both (else we would be refreshing), so
     // the threat indices are consistent.
     Network::FeatureXformer::Threat::getThreatDeltas(
         c, target->kingSquare(c), source->occupancies, target->occupancies, changes.threatAdded,
         changes.threatAddedCount, changes.threatRemoved, changes.threatRemovedCount);
-#endif
     network.updateAccum(source->accum, sourceHalf, target->accum, targetHalf, changes);
     target->accum.setState(targetHalf, AccumulatorState::Computed);
 #ifdef NNUE_TRACE
@@ -349,13 +345,11 @@ void nnue::Evaluator::finnyUpdate(const nnue::Network &network, const Board &boa
         printPairIndices(changes.ppRemoved, changes.ppRemovedCount);
 #endif
     }
-#ifdef THREATS
     // The cache entry also includes threat features, again consistent with the king's side
     // of the board.
     Network::FeatureXformer::Threat::getThreatDeltas(
         side, kp, cacheEntry.occupancies, boardOcc, changes.threatAdded, changes.threatAddedCount,
         changes.threatRemoved, changes.threatRemovedCount);
-#endif
     // update the cache entry's accumulator, based on the index diffs. We always use the lower half
     // of the cache's accumulator.
     network.updateAccum(cacheEntry.acc, AccumulatorHalf::Lower, cacheEntry.acc, AccumulatorHalf::Lower,
