@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 project(arasan)
 
 add_compile_definitions(ARASAN_VERSION=26.1)
-set(NETWORK arasanv9-20261023.nnue CACHE STRING "default network file name")
+set(NETWORK arasanv10-20261102.nnue CACHE STRING "default network file name")
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
@@ -57,7 +57,7 @@ endif(SYZYGY_TBS)
 add_compile_definitions(NETWORK=${NETWORK})
 set(NNUE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/nnue)
 include_directories(${NNUE_DIR})
-list(APPEND EXTRA_SRC evaluate.cpp nnue/features/ppfeature.cpp)
+list(APPEND EXTRA_SRC evaluate.cpp nnue/features/threatfeature.cpp nnue/features/ppfeature.cpp)
 
 if(64BIT)
     set(EXE_NAME ${EXE_NAME}-64)

@@ -57,17 +57,13 @@ private:
     // full evaluation of accumulator, update into 3rd argument
     void updateAccum(const Network &network, const Board &board, Network::AccumulatorType &accum);
 
-    // Full evaluation of 1/2 of the accumulator for a specified color (c)
-    void updateAccum(const Network &network, const PSQIndexArray &indices, ColorType c,
-                     ColorType sideToMove, Network::AccumulatorType &accum) {
-        AccumulatorHalf targetHalf = Network::AccumulatorType::getHalf(c, sideToMove);
-        network.updateAccum(indices, targetHalf, accum);
-        accum.setState(targetHalf, AccumulatorState::Computed);
-    }
+    // Get all features of the position for one perspective (as "added" features)
+    static void getFeatures(const Board &board, ColorType c, FeatureChanges &features);
 
-    // Add all pawn pair features of the position to half of an accumulator
-    void addPawnPairs(const Network &network, const Board &board, ColorType c,
-                      AccumulatorHalf half, Network::AccumulatorType &accum);
+    // The threat features that differ between the positions of two nodes. They do not depend
+    // on the perspective, so they are computed once and used for the updates of both halves
+    // of the accumulator: the result is kept (with the positions it is for) for the next call.
+    const ThreatChanges &getThreatChanges(const NodeInfo *source, const NodeInfo *target);
 
     // Incremental update of 1/2 of accumulator for the specified color
     void updateAccumIncremental(const Network &network, const NodeInfo *source, NodeInfo *target,
@@ -84,6 +80,15 @@ private:
     // Update the corresponding cache entry and from that, the specified node's accumulator half
     void finnyUpdate(const Network &network, const Board &board,
                      NodeInfo *node, ColorType color, AccumulatorHalf targetHalf);
+
+    struct ThreatMemo {
+        const NodeInfo *source = nullptr;
+        const NodeInfo *target = nullptr;
+        Occupancies sourceOccupancies, targetOccupancies;
+        ThreatChanges changes;
+    };
+
+    ThreatMemo threatMemo;
 
     nnue::FinnyTable finnyTable;
 };

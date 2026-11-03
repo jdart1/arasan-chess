@@ -4,7 +4,6 @@
 #include "nnue.h"
 
 // TBD speedups for pair features:
-//  - fuse the PSQ and pair accumulator updates in simd::update (one tile loop, two weight tables)
 //  - add two weight rows per operation on AVX2 too (needs pair weights stored in a permuted
 //    order, as in Stockfish)
 //  - share the work of getPairDeltas between the two perspectives (same pawn changes, different

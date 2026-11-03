@@ -155,27 +155,18 @@ class Network {
 
     friend std::istream &operator>>(std::istream &i, Network &);
 
-    // Perform an incremental update
+    // Perform an incremental update, in one pass over the accumulator
     void updateAccum(const AccumulatorType &source, AccumulatorHalf sourceHalf,
-                     AccumulatorType &target, AccumulatorHalf targetHalf, const PSQIndexArray &added,
-                     size_t added_count, const PSQIndexArray &removed,
-                     size_t removed_count) const noexcept {
-        transformer->updateAccum(source, sourceHalf, target, targetHalf, added, added_count,
-                                 removed, removed_count);
+                     AccumulatorType &target, AccumulatorHalf targetHalf,
+                     const FeatureChanges &changes) const noexcept {
+        transformer->updateAccum(source, sourceHalf, target, targetHalf, changes);
     }
 
-    // Propagate data through the layer, updating the specified half of the
-    // accumulator (side to move goes in lower half).
-    void updateAccum(const PSQIndexArray &indices, AccumulatorHalf half,
+    // Compute the specified half of the accumulator (side to move goes in lower half)
+    // from the "added" features in "changes".
+    void updateAccum(const FeatureChanges &changes, AccumulatorHalf half,
                      AccumulatorType &output) const noexcept {
-        transformer->updateAccum(indices, half, output);
-    }
-
-    // Update half of the accumulator in place with pawn pair features
-    void updatePawnPairs(AccumulatorType &accum, AccumulatorHalf half, const PPIndexArray &added,
-                         size_t addedCount, const PPIndexArray &removed,
-                         size_t removedCount) const noexcept {
-        transformer->updatePawnPairs(accum, half, added, addedCount, removed, removedCount);
+        transformer->updateAccum(changes, half, output);
     }
 
     uint32_t getVersion() const noexcept {

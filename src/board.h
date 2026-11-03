@@ -13,10 +13,10 @@
 #ifdef SIMD
 #include "nnue/simd.h"
 #endif
+#include <array>
 namespace nnue {
     #include "nnue/nndefs.h"
 }
-#include <array>
 #include <functional>
 
 struct NodeInfo;

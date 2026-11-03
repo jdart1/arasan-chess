@@ -106,25 +106,28 @@ public:
                               const Bitboard newPawns[2], PPIndexArray &added,
                               size_t &addedCount, PPIndexArray &removed, size_t &removedCount);
 
+#ifdef SIMD
+    // Rows to add and subtract for an accumulator update (see simd::updateRows). The "added" list
+    // can be the list from getActivePairs, to add all features of a position.
+    auto rowUpdate(const PPIndexArray &added, size_t addedCount, const PPIndexArray &removed,
+                   size_t removedCount) const noexcept {
+        return simd::makeRowUpdate(_weights, added.data(), addedCount, removed.data(),
+                                   removedCount);
+    }
+#else
     // Update half of the accumulator in place: add the weights of the "added" features and
-    // subtract those of the "removed" features. To add all features of a position to an
-    // accumulator half, pass the list from getActivePairs as "added".
+    // subtract those of the "removed" features.
     void updateAccum(AccumulatorType &accum, AccumulatorHalf half, const PPIndexArray &added,
                      size_t addedCount, const PPIndexArray &removed,
                      size_t removedCount) const noexcept {
-#ifdef SIMD
-        simd::update<OutputType, WeightType, DIMENSIONS, outputSize>(
-            accum.getOutput(half), accum.data(half), _weights, added.data(), addedCount,
-            removed.data(), removedCount);
-#else
         for (size_t i = 0; i < addedCount; ++i) {
             accum.add_half(half, _weights[added[i]]);
         }
         for (size_t i = 0; i < removedCount; ++i) {
             accum.sub_half(half, _weights[removed[i]]);
         }
-#endif
     }
+#endif
 
     // read weights from a stream
     virtual std::istream &read(std::istream &s) {
