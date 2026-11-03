@@ -70,6 +70,12 @@ public:
         return s;
     }
 
+    // Prefetch the threat weight rows for the threat features in the changes
+    void prefetchThreats(const FeatureChanges &c) const noexcept {
+        threats.prefetch(c.threatAdded, c.threatAddedCount);
+        threats.prefetch(c.threatRemoved, c.threatRemovedCount);
+    }
+
     PawnPair &getPawnPairs() noexcept {
         return pawnPairs;
     }

@@ -60,6 +60,11 @@ private:
     // Get all features of the position for one perspective (as "added" features)
     static void getFeatures(const Board &board, ColorType c, FeatureChanges &features);
 
+    // The threat features that differ between the positions of two nodes. They do not depend
+    // on the perspective, so they are computed once and used for the updates of both halves
+    // of the accumulator: the result is kept (with the positions it is for) for the next call.
+    const ThreatChanges &getThreatChanges(const NodeInfo *source, const NodeInfo *target);
+
     // Incremental update of 1/2 of accumulator for the specified color
     void updateAccumIncremental(const Network &network, const NodeInfo *source, NodeInfo *target,
                                 const ColorType c);
@@ -75,6 +80,15 @@ private:
     // Update the corresponding cache entry and from that, the specified node's accumulator half
     void finnyUpdate(const Network &network, const Board &board,
                      NodeInfo *node, ColorType color, AccumulatorHalf targetHalf);
+
+    struct ThreatMemo {
+        const NodeInfo *source = nullptr;
+        const NodeInfo *target = nullptr;
+        Occupancies sourceOccupancies, targetOccupancies;
+        ThreatChanges changes;
+    };
+
+    ThreatMemo threatMemo;
 
     nnue::FinnyTable finnyTable;
 };

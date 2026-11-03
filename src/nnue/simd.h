@@ -9,6 +9,17 @@
 
 namespace simd {
 
+// Prefetch the cache line containing an address
+FORCEINLINE void prefetch(const void *address) {
+#if defined(_MSC_VER)
+    _mm_prefetch(reinterpret_cast<const char *>(address), _MM_HINT_T0);
+#elif defined(__GNUC__) || defined(__clang__)
+    __builtin_prefetch(address);
+#else
+    (void)address;
+#endif
+}
+
 template <typename T, unsigned simdWidth> inline static constexpr size_t chunks(unsigned len) {
     return (len * 8 * sizeof(T)) / simdWidth;
 }

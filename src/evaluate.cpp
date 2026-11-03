@@ -158,10 +158,41 @@ void nnue::Evaluator::getFeatures(const Board &board, ColorType c, FeatureChange
     features.threatRemovedCount = 0;
 }
 
+const nnue::ThreatChanges &nnue::Evaluator::getThreatChanges(const NodeInfo *source,
+                                                              const NodeInfo *target) {
+    ThreatMemo &m = threatMemo;
+    // The nodes are reused, so check that the positions are the same too
+    if (m.source != source || m.target != target ||
+        std::memcmp(m.sourceOccupancies, source->occupancies, sizeof(Occupancies)) != 0 ||
+        std::memcmp(m.targetOccupancies, target->occupancies, sizeof(Occupancies)) != 0) {
+        m.source = source;
+        m.target = target;
+        std::memcpy(m.sourceOccupancies, source->occupancies, sizeof(Occupancies));
+        std::memcpy(m.targetOccupancies, target->occupancies, sizeof(Occupancies));
+        Network::FeatureXformer::Threat::getThreatChanges(source->occupancies, target->occupancies,
+                                                          m.changes);
+    }
+    return m.changes;
+}
+
 // Incremental update of 1/2 of accumulator for the specified color
 void nnue::Evaluator::updateAccumIncremental(const Network &network, const NodeInfo *source,
                                              NodeInfo *target, const ColorType c) {
     FeatureChanges changes;
+    // As for pawn pairs, threat changes are computed from the positions of the two nodes. The
+    // king is on the same side of the board in both (else we would be refreshing), so the
+    // threat indices are consistent. They are found first, so that the weight rows can be
+    // prefetched while the other changes are computed.
+    {
+        using Threat = Network::FeatureXformer::Threat;
+        const Square ksq = target->kingSquare(c);
+        const ThreatChanges &threats = getThreatChanges(source, target);
+        changes.threatAddedCount =
+            Threat::toIndices(c, ksq, threats.added.data(), threats.addedCount, changes.threatAdded);
+        changes.threatRemovedCount = Threat::toIndices(c, ksq, threats.removed.data(),
+                                                       threats.removedCount, changes.threatRemoved);
+        network.getTransformer()->prefetchThreats(changes);
+    }
     getIndexDiffs(source, target, c, changes.psqAdded, changes.psqRemoved, changes.psqAddedCount,
                   changes.psqRemovedCount);
     AccumulatorHalf sourceHalf = Network::AccumulatorType::getHalf(c, source->stm);
@@ -182,12 +213,6 @@ void nnue::Evaluator::updateAccumIncremental(const Network &network, const NodeI
         printPairIndices(changes.ppRemoved, changes.ppRemovedCount);
 #endif
     }
-    // As for pawn pairs, threat changes are computed from the positions of the two nodes.
-    // The king is on the same side of the board in both (else we would be refreshing), so
-    // the threat indices are consistent.
-    Network::FeatureXformer::Threat::getThreatDeltas(
-        c, target->kingSquare(c), source->occupancies, target->occupancies, changes.threatAdded,
-        changes.threatAddedCount, changes.threatRemoved, changes.threatRemovedCount);
     network.updateAccum(source->accum, sourceHalf, target->accum, targetHalf, changes);
     target->accum.setState(targetHalf, AccumulatorState::Computed);
 #ifdef NNUE_TRACE
