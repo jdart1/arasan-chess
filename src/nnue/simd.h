@@ -297,9 +297,7 @@ inline void updateRowsLoop(const AccumType *source, AccumType *target, size_t &o
     }
 }
 
-// Update an accumulator (or half of one) in one pass: copy "source" to "target" (they can
-// be the same), applying the row updates. To update starting from the feature transformer
-// biases, pass the biases as "source".
+// x86 implementation of updateRows: update an accumulator (or half of one) in one pass.
 //
 // All the row sets (piece-square, pawn pair and threat features) are applied in a single
 // pass for performance: each tile of the accumulator is loaded and stored once, rather
@@ -307,7 +305,7 @@ inline void updateRowsLoop(const AccumType *source, AccumType *target, size_t &o
 // subtracted. Stockfish and Integral also apply the piece-square, threat and pawn pair
 // rows in one pass over the accumulator.
 template <typename AccumType, size_t outputSize /* accumulator size */, typename... Updates>
-void updateRows(const AccumType *source, AccumType *target, const Updates &...updates) {
+void updateRowsX86(const AccumType *source, AccumType *target, const Updates &...updates) {
     static_assert(sizeof(AccumType) == 2 || sizeof(AccumType) == 4, "unsupported accumulator type");
     size_t offset = 0;
 #if defined(AVX512)
@@ -437,16 +435,16 @@ void update(const AccumType *source, AccumType *target,
                 source, target, weights, added, added_count, removed, removed_count, offset);
     }
 #else
-    updateRows<AccumType, outputSize>(source, target,
-                                      makeRowUpdate(weights, added, added_count, removed, removed_count));
+    updateRowsX86<AccumType, outputSize>(
+        source, target, makeRowUpdate(weights, added, added_count, removed, removed_count));
 #endif
 }
 
 #ifdef NEON
-// Update an accumulator (or half of one): copy "source" to "target" (they can be the same),
-// applying the row updates. NEON has no fused version: the updates are applied in sequence.
+// NEON implementation of updateRows. There is no fused version: the row sets are applied in
+// sequence, each as a separate pass over the accumulator.
 template <typename AccumType, size_t outputSize /* accumulator size */, typename... Updates>
-void updateRows(const AccumType *source, AccumType *target, const Updates &...updates) {
+void updateRowsNeon(const AccumType *source, AccumType *target, const Updates &...updates) {
     const AccumType *src = source;
     auto apply = [&](const auto &up) {
         using Update = std::decay_t<decltype(up)>;
@@ -458,6 +456,20 @@ void updateRows(const AccumType *source, AccumType *target, const Updates &...up
     (apply(updates), ...);
 }
 #endif
+
+// Update an accumulator (or half of one): copy "source" to "target" (they can be the same),
+// applying the row updates, which are RowUpdate objects (see makeRowUpdate). To update
+// starting from the feature transformer biases, pass the biases as "source". On x86 the
+// update is done in one pass over the accumulator (updateRowsX86); on NEON it takes one
+// pass per row set (updateRowsNeon).
+template <typename AccumType, size_t outputSize /* accumulator size */, typename... Updates>
+FORCEINLINE void updateRows(const AccumType *source, AccumType *target, const Updates &...updates) {
+#ifdef NEON
+    updateRowsNeon<AccumType, outputSize>(source, target, updates...);
+#else
+    updateRowsX86<AccumType, outputSize>(source, target, updates...);
+#endif
+}
 
 template <size_t inputSize, size_t roundedInputSize, size_t outputSize, unsigned inputDequantifyShift,
           unsigned outputDequantifyShift>
