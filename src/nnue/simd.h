@@ -155,50 +155,99 @@ FORCEINLINE void applyWidenedRowsNeon(vec_type (&regs)[regCount],
     }
 }
 
-template <typename vec_type, typename AccumType, typename WeightType, size_t inputSize /* features */,
-          size_t outputSize /* accumulator size */, size_t regCount, size_t regWidth,
-          size_t iterations, typename operations>
-inline void updateLoopNeon(const AccumType *source, AccumType *target,
-                           const WeightType (&weights)[inputSize][outputSize],
-                           const unsigned *added, size_t added_count, const unsigned *removed,
-                           size_t removed_count, size_t &offset) {
+// Apply a RowUpdate to the registers holding a tile of the accumulator
+template <typename vec_type, typename AccumType, typename operations, size_t regCount,
+          typename Update>
+FORCEINLINE void applyRowUpdateNeon(vec_type (&regs)[regCount], const Update &update,
+                                    size_t offset) {
+    using WeightType = std::remove_cv_t<std::remove_reference_t<decltype(update.weights[0][0])>>;
     constexpr size_t indexMultiplier = simdWidth / (8 * sizeof(AccumType));
     constexpr bool widen = sizeof(WeightType) < sizeof(AccumType);
     static_assert(!widen || (sizeof(WeightType) == 1 && sizeof(AccumType) == 2),
                   "only widening of 8-bit weights to 16 bits is supported");
+    if constexpr (widen) {
+        // 8-bit weights are widened to 16 bits as they are added
+        applyWidenedRowsNeon<true, vec_type, operations, regCount>(
+            regs, update.weights, update.added, update.addedCount, offset);
+        applyWidenedRowsNeon<false, vec_type, operations, regCount>(
+            regs, update.weights, update.removed, update.removedCount, offset);
+    } else {
+        for (size_t i = 0; i < update.addedCount; ++i) {
+            const auto *w = update.weights[update.added[i]];
+            for (size_t j = 0; j < regCount; ++j) {
+                regs[j] =
+                    operations::add(regs[j], operations::load(w + indexMultiplier * (offset + j)));
+            }
+        }
+        for (size_t i = 0; i < update.removedCount; ++i) {
+            const auto *w = update.weights[update.removed[i]];
+            for (size_t j = 0; j < regCount; ++j) {
+                regs[j] =
+                    operations::sub(regs[j], operations::load(w + indexMultiplier * (offset + j)));
+            }
+        }
+    }
+}
+
+template <typename vec_type, typename AccumType, size_t regCount, size_t iterations,
+          typename operations, typename... Updates>
+inline void updateRowsLoopNeon(const AccumType *source, AccumType *target, size_t &offset,
+                               const Updates &...updates) {
+    constexpr size_t indexMultiplier = simdWidth / (8 * sizeof(AccumType));
     alignas(VEC_ALIGN) vec_type regs[regCount];
     for (size_t iter = 0; iter < iterations; ++iter, offset += regCount) {
         // load source into registers
         for (size_t i = 0; i < regCount; ++i) {
             regs[i] = operations::load(source + indexMultiplier * (offset + i));
         }
-        // perform updates in registers
-        if constexpr (widen) {
-            // 8-bit weights are widened to 16 bits as they are added
-            applyWidenedRowsNeon<true, vec_type, operations, regCount>(regs, weights, added,
-                                                                       added_count, offset);
-            applyWidenedRowsNeon<false, vec_type, operations, regCount>(regs, weights, removed,
-                                                                        removed_count, offset);
-        } else {
-            for (size_t i = 0; i < added_count; ++i) {
-                const auto *w = weights[added[i]];
-                for (size_t j = 0; j < regCount; ++j) {
-                    regs[j] = operations::add(
-                        regs[j], operations::load(w + indexMultiplier * (offset + j)));
-                }
-            }
-            for (size_t i = 0; i < removed_count; ++i) {
-                const auto *w = weights[removed[i]];
-                for (size_t j = 0; j < regCount; ++j) {
-                    regs[j] = operations::sub(
-                        regs[j], operations::load(w + indexMultiplier * (offset + j)));
-                }
-            }
-        }
+        // perform all updates in registers
+        (applyRowUpdateNeon<vec_type, AccumType, operations, regCount>(regs, updates, offset), ...);
         // store results to memory
         for (size_t i = 0; i < regCount; ++i) {
             operations::store(target + indexMultiplier * (offset + i), regs[i]);
         }
+    }
+}
+
+// NEON implementation of updateRows: update an accumulator (or half of one) in one pass, with
+// all the row sets applied to each tile of the accumulator while it is held in registers (see
+// updateRowsX86).
+template <typename AccumType, size_t outputSize /* accumulator size */, typename... Updates>
+void updateRowsNeon(const AccumType *source, AccumType *target, const Updates &...updates) {
+    static_assert(sizeof(AccumType) == 2 || sizeof(AccumType) == 4, "unsupported accumulator type");
+    static_assert(outputSize * sizeof(AccumType) * 8 >= simdWidth,
+                  "insufficient accumulator width");
+    static_assert(outputSize * sizeof(AccumType) * 8 % simdWidth == 0,
+                  "accumulator size is not multiple of SIMD width");
+    size_t offset = 0;
+    constexpr size_t registerWidths = chunks<AccumType, simdWidth>(outputSize);
+    // The number of registers in a tile of the accumulator. aarch64 has 32 vector registers, so
+    // a tile this large does not stay entirely in registers, but a larger tile is faster: there
+    // are fewer passes over the row lists and more contiguous weight data per row for each tile.
+    // Measured with the bench on an Apple M1 (accumulator half of 1024 values, fused update),
+    // NPS for tiles of 8, 16, 24 and 32 registers: 267K, 287K, 315K and 339K.
+    constexpr size_t regCount = 32;
+    constexpr size_t iterations = registerWidths / regCount;
+    constexpr size_t remaining = registerWidths % regCount;
+    if constexpr (iterations > 0) {
+        if constexpr (sizeof(AccumType) == 2)
+            updateRowsLoopNeon<vec16_t, AccumType, regCount, iterations,
+                               SimdOperationsNeon<vec16_t, AccumType, sizeof(AccumType)>>(
+                source, target, offset, updates...);
+        else
+            updateRowsLoopNeon<vec32_t, AccumType, regCount, iterations,
+                               SimdOperationsNeon<vec32_t, AccumType, sizeof(AccumType)>>(
+                source, target, offset, updates...);
+    }
+    if constexpr (remaining > 0) {
+        if constexpr (sizeof(AccumType) == 2)
+            updateRowsLoopNeon<vec16_t, AccumType, remaining, 1,
+                               SimdOperationsNeon<vec16_t, AccumType, sizeof(AccumType)>>(
+                source, target, offset, updates...);
+        else
+            updateRowsLoopNeon<vec32_t, AccumType, remaining, 1,
+                               SimdOperationsNeon<vec32_t, AccumType, sizeof(AccumType)>>(
+                source, target, offset, updates...);
     }
 }
 
@@ -388,6 +437,19 @@ inline void updateLoop(const AccumType *source, AccumType *target,
     }
 }
 
+// Update an accumulator (or half of one): copy "source" to "target" (they can be the same),
+// applying the row updates, which are RowUpdate objects (see makeRowUpdate). To update
+// starting from the feature transformer biases, pass the biases as "source". The update is
+// done in one pass over the accumulator.
+template <typename AccumType, size_t outputSize /* accumulator size */, typename... Updates>
+FORCEINLINE void updateRows(const AccumType *source, AccumType *target, const Updates &...updates) {
+#ifdef NEON
+    updateRowsNeon<AccumType, outputSize>(source, target, updates...);
+#else
+    updateRowsX86<AccumType, outputSize>(source, target, updates...);
+#endif
+}
+
 // Incremental update of 1/2 of the accumulator
 template <typename AccumType, typename WeightType, size_t inputSize /* features */,
           size_t outputSize /* accumulator size*/>
@@ -403,73 +465,8 @@ void update(const AccumType *source, AccumType *target,
     static_assert(sizeof(AccumType) == sizeof(WeightType) ||
                       (sizeof(AccumType) == 2 && sizeof(WeightType) == 1),
                   "AccumType/WeightType combination not supported");
-#ifdef NEON
-    size_t offset = 0;
-    static_assert(outputSize * sizeof(AccumType) * 8 >= simdWidth,
-                  "insufficient accumulator width");
-    static_assert(outputSize * sizeof(AccumType) * 8 % simdWidth == 0,
-                  "accumulator size is not multiple of SIMD width");
-    constexpr size_t registerWidths = chunks<AccumType, simdWidth>(outputSize);
-    // It is faster here to not reserve all registers for storing intermediate results,
-    // because NEON vector operations except load/store operate on registers only.
-    constexpr size_t regCount = simdRegCount / 2;
-    constexpr size_t iterations = registerWidths / regCount;
-    constexpr size_t remaining = registerWidths % regCount;
-    if constexpr (iterations > 0) {
-        if constexpr (sizeof(AccumType)==2)
-            updateLoopNeon<vec16_t, AccumType, WeightType, inputSize, outputSize, regCount, simdWidth,
-                       iterations, SimdOperationsNeon<vec16_t, AccumType, sizeof(AccumType)>>(
-            source, target, weights, added, added_count, removed, removed_count, offset);
-        else
-            updateLoopNeon<vec32_t, AccumType, WeightType, inputSize, outputSize, regCount, simdWidth,
-                       iterations, SimdOperationsNeon<vec32_t, AccumType, sizeof(AccumType)>>(
-            source, target, weights, added, added_count, removed, removed_count, offset);
-    }
-    if constexpr (remaining > 0) {
-        if constexpr (sizeof(AccumType) == 2)
-            updateLoopNeon<vec16_t, AccumType, WeightType, inputSize, outputSize, remaining,
-                           simdWidth, 1, SimdOperationsNeon<vec16_t, AccumType, sizeof(AccumType)>>(
-                source, target, weights, added, added_count, removed, removed_count, offset);
-        else
-            updateLoopNeon<vec32_t, AccumType, WeightType, inputSize, outputSize, remaining,
-                           simdWidth, 1, SimdOperationsNeon<vec32_t, AccumType, sizeof(AccumType)>>(
-                source, target, weights, added, added_count, removed, removed_count, offset);
-    }
-#else
-    updateRowsX86<AccumType, outputSize>(
+    updateRows<AccumType, outputSize>(
         source, target, makeRowUpdate(weights, added, added_count, removed, removed_count));
-#endif
-}
-
-#ifdef NEON
-// NEON implementation of updateRows. There is no fused version: the row sets are applied in
-// sequence, each as a separate pass over the accumulator.
-template <typename AccumType, size_t outputSize /* accumulator size */, typename... Updates>
-void updateRowsNeon(const AccumType *source, AccumType *target, const Updates &...updates) {
-    const AccumType *src = source;
-    auto apply = [&](const auto &up) {
-        using Update = std::decay_t<decltype(up)>;
-        using WeightType = std::remove_cv_t<std::remove_reference_t<decltype(up.weights[0][0])>>;
-        update<AccumType, WeightType, Update::rows, outputSize>(
-            src, target, up.weights, up.added, up.addedCount, up.removed, up.removedCount);
-        src = target;
-    };
-    (apply(updates), ...);
-}
-#endif
-
-// Update an accumulator (or half of one): copy "source" to "target" (they can be the same),
-// applying the row updates, which are RowUpdate objects (see makeRowUpdate). To update
-// starting from the feature transformer biases, pass the biases as "source". On x86 the
-// update is done in one pass over the accumulator (updateRowsX86); on NEON it takes one
-// pass per row set (updateRowsNeon).
-template <typename AccumType, size_t outputSize /* accumulator size */, typename... Updates>
-FORCEINLINE void updateRows(const AccumType *source, AccumType *target, const Updates &...updates) {
-#ifdef NEON
-    updateRowsNeon<AccumType, outputSize>(source, target, updates...);
-#else
-    updateRowsX86<AccumType, outputSize>(source, target, updates...);
-#endif
 }
 
 template <size_t inputSize, size_t roundedInputSize, size_t outputSize, unsigned inputDequantifyShift,
