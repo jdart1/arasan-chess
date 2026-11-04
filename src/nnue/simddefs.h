@@ -138,6 +138,12 @@ static inline void dpbusd_epi32(vec_t &sum, vec8_t a, vec8_t b) {
     vec32_t sum32 = vreinterpretq_s32_s16(sum);
 #if defined(__ARM_FEATURE_MATMUL_INT8)
     sum32 = vusdotq_s32(sum32, vreinterpretq_u8_s8(a), b);
+#elif defined(__ARM_FEATURE_DOTPROD)
+    // The signed dot product instruction (SDOT) gives the same result as the unsigned-by-signed
+    // one, as long as the unsigned values "a" are at most 127 so can be treated as signed. This
+    // is the case for the activations that are the input to the sparse layer (see
+    // PAIRWISE_QUANT in nnparams.h).
+    sum32 = vdotq_s32(sum32, a, b);
 #else
     // emulate x86 multipy-add instruction with NEON
     uint8x16_t au = vreinterpretq_u8_s8(a);
