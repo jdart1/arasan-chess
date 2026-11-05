@@ -17,6 +17,10 @@
 # It also removes the most recently committed network file from git (git rm) and adds the new
 # one (git add) in the network directory.
 #
+# Finally, it creates symbolic links to the new network file in the bin and profile directories,
+# where the executables look for it (creating those directories if they do not exist). Links for
+# older network files are left alone.
+#
 # The current network file name may differ between files, so each file is
 # rewritten by matching the *.nnue token in its known context rather than
 # substituting a single old value globally.
@@ -123,6 +127,29 @@ if [ -n "$OLD_NETWORK" ] && [ "$OLD_NETWORK" != "$NEW_NETWORK" ]; then
     else
         echo "  old network network/$OLD_NETWORK not tracked by git, not removing"
     fi
+fi
+
+# --- Symbolic links to the network file in the bin and profile directories ----------------------
+# link_network <directory>
+# Creates <directory> (relative to the repository root) if needed and a relative symbolic link in
+# it to the new network file. An existing link is replaced, but an existing regular file is not.
+link_network() {
+    local dir="$1"
+    local link="$ROOT/$dir/$NEW_NETWORK"
+    mkdir -p "$ROOT/$dir"
+    if [ -e "$link" ] && [ ! -L "$link" ]; then
+        echo "  WARNING: $link exists and is not a symbolic link, not replacing" >&2
+        return
+    fi
+    ln -sfn "../network/$NEW_NETWORK" "$link"
+    echo "  symlink $dir/$NEW_NETWORK -> ../network/$NEW_NETWORK"
+}
+
+if [ -f "$NETDIR/$NEW_NETWORK" ]; then
+    link_network bin
+    link_network profile
+else
+    echo "  WARNING: $NETDIR/$NEW_NETWORK not found, not creating symbolic links" >&2
 fi
 
 echo
