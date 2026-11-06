@@ -12,6 +12,7 @@
 #include "featureutil.h"
 #include "nndefs.h"
 #include "util.h"
+#include "weightcodec.h"
 
 // Pawn pair feature set, originally invented by Jonathan Hallstrom for Pawnocchio,
 // and now in other engines including Stockfish.
@@ -131,12 +132,8 @@ public:
 
     // read weights from a stream
     virtual std::istream &read(std::istream &s) {
-        for (size_t i = 0; i < DIMENSIONS && s.good(); ++i) {
-            for (size_t j = 0; j < outputSize && s.good(); ++j) {
-                _weights[i][j] = read_little_endian<WeightType>(s);
-            }
-        }
-        return s;
+        return WeightCodec::read<WeightType>(s, DIMENSIONS, outputSize,
+                                             [this](size_t i) { return _weights[i]; });
     }
 
     virtual const WeightType *getCol(size_t row) const noexcept {

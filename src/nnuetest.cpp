@@ -23,6 +23,7 @@ namespace nnue {
 #include "layers/pairwisemult.h"
 #include "layers/sparselinear.h"
 #include "layers/linear.h"
+#include "features/weightcodec.h"
 }
 
 // Helper to fill arrays with random values
@@ -894,6 +895,178 @@ static int testThreatFeature() {
     return errs;
 }
 
+// ---- WeightCodec tests ----
+
+// Table of 256 code lengths with the given (value, length) entries set
+static std::string codecTable(std::initializer_list<std::pair<int, int>> entries) {
+    std::string t(256, '\0');
+    for (const auto &e : entries) t[e.first] = static_cast<char>(e.second);
+    return t;
+}
+
+static std::string codecLE32(uint32_t v) {
+    std::string s;
+    for (int i = 0; i < 4; ++i) s.push_back(static_cast<char>((v >> (8 * i)) & 0xFF));
+    return s;
+}
+
+// Decode a block into out (pre-filled with a non-zero value). Returns true if the decode succeeded.
+template <typename T>
+static bool codecDecode(const std::string &data, size_t rows, size_t cols, std::vector<T> &out) {
+    std::istringstream s(data);
+    out.assign(rows * cols, static_cast<T>(0x55));
+    nnue::WeightCodec::read<T>(s, rows, cols, [&](size_t i) { return out.data() + i * cols; });
+    return !s.fail();
+}
+
+// Test-only encoder, following the format description in weightcodec.h. lengths gives
+// the code length for each byte value in each plane.
+using CodecLengths = std::array<std::array<uint8_t, 256>, 2>;
+static std::string codecEncode(size_t rows, size_t cols, size_t planes,
+                               const std::vector<uint16_t> &values, const CodecLengths &lengths) {
+    std::array<std::array<uint32_t, 256>, 2> codes{};
+    for (size_t p = 0; p < planes; ++p) {
+        uint32_t code = 0;
+        for (unsigned len = 1; len <= nnue::WeightCodec::MAX_CODE_LEN; ++len) {
+            for (size_t sym = 0; sym < 256; ++sym) {
+                if (lengths[p][sym] == len) codes[p][sym] = code++;
+            }
+            code <<= 1;
+        }
+    }
+    std::string bitmap((rows + 7) / 8, '\0');
+    std::string stream;
+    uint64_t acc = 0;
+    unsigned nbits = 0;
+    for (size_t i = 0; i < rows; ++i) {
+        bool nonZero = false;
+        for (size_t j = 0; j < cols; ++j) nonZero |= values[i * cols + j] != 0;
+        if (!nonZero) continue;
+        bitmap[i / 8] = static_cast<char>(bitmap[i / 8] | (1 << (i % 8)));
+        for (size_t j = 0; j < cols; ++j) {
+            for (size_t p = 0; p < planes; ++p) {
+                const unsigned sym = (values[i * cols + j] >> (8 * p)) & 0xFF;
+                acc = (acc << lengths[p][sym]) | codes[p][sym];
+                nbits += lengths[p][sym];
+                while (nbits >= 8) {
+                    stream.push_back(static_cast<char>((acc >> (nbits - 8)) & 0xFF));
+                    nbits -= 8;
+                }
+            }
+        }
+    }
+    if (nbits) stream.push_back(static_cast<char>((acc << (8 - nbits)) & 0xFF));
+    std::string out = bitmap;
+    for (size_t p = 0; p < planes; ++p) {
+        out.append(reinterpret_cast<const char *>(lengths[p].data()), 256);
+    }
+    return out + codecLE32(static_cast<uint32_t>(stream.size())) + stream;
+}
+
+// Random byte-plane values: value k with probability about 2^-(k+1), so long codes occur
+static uint16_t codecRandomValue(std::mt19937 &rng, size_t planes) {
+    uint16_t v = 0;
+    for (size_t p = 0; p < planes; ++p) {
+        const uint32_t r = rng() | (1u << 12);
+        unsigned k = 0;
+        while (!((r >> k) & 1)) ++k;
+        v = static_cast<uint16_t>(v | (std::min(k, 12u) << (8 * p)));
+    }
+    return v;
+}
+
+template <typename T> static int testCodecRoundTrip(size_t rows, size_t cols) {
+    constexpr size_t planes = sizeof(T);
+    // Complete code: value 0 has length 1, values 1-11 have length 2-12, value 12 has length 12
+    CodecLengths lengths{};
+    for (size_t p = 0; p < 2; ++p) {
+        lengths[p][0] = 1;
+        for (size_t k = 1; k <= 11; ++k) lengths[p][k] = static_cast<uint8_t>(k + 1);
+        lengths[p][12] = 12;
+    }
+    std::mt19937 rng(7);
+    std::vector<uint16_t> values(rows * cols);
+    for (size_t i = 0; i < rows; ++i) {
+        for (size_t j = 0; j < cols; ++j) {
+            values[i * cols + j] = (i % 5 == 3) ? 0 : codecRandomValue(rng, planes);
+        }
+    }
+    const std::string block = codecEncode(rows, cols, planes, values, lengths);
+    int errs = 0;
+    std::vector<T> out;
+    if (!codecDecode<T>(block, rows, cols, out)) {
+        std::cerr << "codec round trip: decode failed" << std::endl;
+        return 1;
+    }
+    for (size_t i = 0; i < out.size(); ++i) {
+        if (out[i] != static_cast<T>(values[i])) {
+            if (++errs < 5) std::cerr << "codec round trip: mismatch at " << i << std::endl;
+        }
+    }
+    // corrupted blocks must be rejected
+    const size_t lengthsPos = (rows + 7) / 8;
+    const size_t sizePos = lengthsPos + 256 * planes;
+    std::string bad = block;
+    bad[lengthsPos + 20] = 1; // oversubscribes the code
+    bad[lengthsPos + 21] = 1;
+    if (codecDecode<T>(bad, rows, cols, out)) {
+        std::cerr << "codec: oversubscribed code accepted" << std::endl;
+        ++errs;
+    }
+    if (codecDecode<T>(block.substr(0, block.size() - 1), rows, cols, out)) {
+        std::cerr << "codec: truncated block accepted" << std::endl;
+        ++errs;
+    }
+    bad = block + '\0';
+    bad.replace(sizePos, 4, codecLE32(static_cast<uint32_t>(block.size() - sizePos - 4 + 1)));
+    if (codecDecode<T>(bad, rows, cols, out)) {
+        std::cerr << "codec: trailing data in stream accepted" << std::endl;
+        ++errs;
+    }
+    return errs;
+}
+
+static int testWeightCodec() {
+    int errs = 0;
+    std::vector<int8_t> w8;
+    std::vector<int16_t> w16;
+    // int8: values 0 (code 0), 5 (code 10), -5 (code 11); one non-zero row, one zero row
+    std::string block = std::string(1, '\x01') + codecTable({{0, 1}, {5, 2}, {0xFB, 2}}) +
+                        codecLE32(1) + std::string(1, '\x58');
+    if (!codecDecode<int8_t>(block, 2, 4, w8) ||
+        w8 != std::vector<int8_t>{0, 5, -5, 0, 0, 0, 0, 0}) {
+        std::cerr << "codec: int8 decode wrong" << std::endl;
+        ++errs;
+    }
+    // int16: two planes with their own tables, a negative value
+    block = std::string(1, '\x01') + codecTable({{0x34, 1}, {0x78, 1}}) +
+            codecTable({{0x12, 1}, {0xFF, 1}}) + codecLE32(1) + std::string(1, '\x30');
+    if (!codecDecode<int16_t>(block, 1, 2, w16) || w16 != std::vector<int16_t>{0x1234, -136}) {
+        std::cerr << "codec: int16 decode wrong" << std::endl;
+        ++errs;
+    }
+    // all rows zero: no tables used, destination must still be cleared
+    block = std::string(1, '\0') + codecTable({}) + codecLE32(0);
+    if (!codecDecode<int8_t>(block, 3, 5, w8) || w8 != std::vector<int8_t>(15, 0)) {
+        std::cerr << "codec: zero block decode wrong" << std::endl;
+        ++errs;
+    }
+    // a plane with a single value uses a 1-bit code; the other bit pattern is invalid
+    block = std::string(1, '\x01') + codecTable({{7, 1}}) + codecLE32(1) + std::string(1, '\0');
+    if (!codecDecode<int8_t>(block, 1, 1, w8) || w8 != std::vector<int8_t>{7}) {
+        std::cerr << "codec: single value decode wrong" << std::endl;
+        ++errs;
+    }
+    block = std::string(1, '\x01') + codecTable({{7, 1}}) + codecLE32(1) + std::string(1, '\x80');
+    if (codecDecode<int8_t>(block, 1, 1, w8)) {
+        std::cerr << "codec: invalid code accepted" << std::endl;
+        ++errs;
+    }
+    errs += testCodecRoundTrip<int8_t>(40, 77);
+    errs += testCodecRoundTrip<int16_t>(33, 50);
+    return testResult(errs, __func__);
+}
+
 int testNNUE() {
 
     int errs = 0;
@@ -910,6 +1083,7 @@ int testNNUE() {
     errs += testLinearLayer<int32_t,int32_t,int32_t,int32_t,32,32,6,0>();
     errs += testLinearLayer<int32_t,int32_t,int32_t,int32_t,32,1,0,0>();
     errs += testOutputLayerInt64();
+    errs += testWeightCodec();
     int tmp = errs;
     errs += testNnz<1024>();
     if (errs - tmp > 0) {

@@ -8,6 +8,7 @@
 #include "chess.h"
 #include "featureutil.h"
 #include "util.h"
+#include "weightcodec.h"
 
 // Implements a set of Piece-Square features, as in Arasan v26.1 and earler.
 // King position is mirrored so that the King is always on files e..h.
@@ -62,15 +63,16 @@ public:
 #ifdef NNUE_TRACE
        int min_weight = 1<<30, max_weight = -(1<<30), min_bias = 1<<30, max_bias = -(1<<30);
 #endif
-        for (size_t i = 0; i < inputSize && s.good(); ++i) {
-            for (size_t j = 0; j < outputSize && s.good(); ++j) {
-                _weights[i][j] = read_little_endian<WeightType>(s);
+        WeightCodec::read<WeightType>(s, inputSize, outputSize,
+                                      [this](size_t i) { return _weights[i]; });
 #ifdef NNUE_TRACE
+        for (size_t i = 0; i < inputSize && s.good(); ++i) {
+            for (size_t j = 0; j < outputSize; ++j) {
                 if (_weights[i][j] < min_weight) min_weight = _weights[i][j];
                 if (_weights[i][j] > max_weight) max_weight = _weights[i][j];
-#endif
             }
         }
+#endif
         for (size_t i = 0; i < outputSize && s.good(); ++i) {
             _biases[i] = read_little_endian<BiasType>(s);
 #ifdef NNUE_TRACE

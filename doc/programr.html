@@ -899,6 +899,53 @@ compatible with the <a href="https://github.com/official-stockfish/Stockfish/com
 network architecture used in Stockfish 15. That implementation was maintained in 
 a <a href="https://github.com/jdart1/nnue"
    target="_blank">separate repo</a> and imported into the Arasan repo as a submodule.</p>
+<h3>Network version history</h3>
+<p>The table below lists the successive Arasan network versions. The date and abbreviated hash identify the
+commit on the master branch that implemented the version, and the releases are the Arasan releases that used it.
+Networks that were retrained within a version, without a change of architecture, are not listed individually: see
+the git history of the network subdirectory. Since version 3, network files have been named
+arasanv<i>N</i>-<i>date</i>.nnue. Since version 5, the first four bytes of the file are the characters
+'A', 'R', 'A' followed by a version byte, which is checked when the network is loaded.</p>
+<table border="1" cellpadding="4" cellspacing="0">
+<tr><th>Date</th><th>Commit</th><th>Version</th><th>Releases</th><th>Description</th></tr>
+<tr><td>2021-08-07</td><td>036c0b9</td><td>Stockfish 12 format</td><td>23.0 to 23.5</td>
+<td>First NNUE network. The network file is the same size as the Stockfish 12 networks (21,022,697 bytes), so the
+architecture is that era's HalfKP 256x2-32-32. Trained on Arasan selfplay positions.</td></tr>
+<tr><td>2023-04-29</td><td>b6efecb</td><td>SFNNv4</td><td>24.0 to 24.2.2</td>
+<td>Network in the Stockfish 15 "SFNNv4" format: HalfKAv2_hm features (with horizontal mirroring), trained with
+nnue-pytorch on Arasan selfplay positions. Retrained several times within this version.</td></tr>
+<tr><td>2024-11-09</td><td>e93b864</td><td>v3</td><td>25.0</td>
+<td>First network trained with the Bullet tuner, and the first Arasan-specific architecture: HalfKA features with
+horizontal mirroring and 9 king buckets, a 2x1024 accumulator, SCReLU activation and a single output layer with
+16-bit weights, 8 output buckets.</td></tr>
+<tr><td>2025-03-20</td><td>2ef5d79</td><td>v4</td><td>25.1 to 25.2.1</td>
+<td>Accumulator widened to 2x1536. The NNUE code was moved from a submodule into the Arasan source tree. Later
+retrained with larger datasets, the Ranger optimizer, a cosine learning rate schedule and factorization.</td></tr>
+<tr><td>2025-12-05</td><td>663919c</td><td>v5</td><td>25.3 to 25.4</td>
+<td>Accumulator widened to 2x1792. Introduced the 'A', 'R', 'A' + version byte file header.</td></tr>
+<tr><td>2026-05-31, 2026-06-03</td><td>8d11c76, a2ece40</td><td>v6, v7 (experimental)</td><td>none</td>
+<td>First three-layer networks: v6 with a floating-point head and v7 with integer (int32) L2 and output layers.
+Developed on the multilayer3 branch and never merged into master: both lost their SPRT tests (scores of 41.8% and
+48.2%).</td></tr>
+<tr><td>2026-06-23</td><td>cbdf7d0</td><td>v8</td><td>26.0 to 26.1</td>
+<td>Three-layer, fully integer network: 2x1792 accumulator (int16), per-perspective CReLU and pairwise
+multiplication to u8, sparse L1 (u8 x int8 weights, 16 outputs), L2 (int32, 32 outputs) and L3 output (int32
+weights, int64 result), 8 output buckets, quantization as in Raphael. Later retrained with WDL = 0.1 and with a
+3-stage learning rate schedule.</td></tr>
+<tr><td>2026-10-26</td><td>c31c86b</td><td>v9</td><td>not yet released</td>
+<td>Pawn-pair features (4,560 inputs, int8 weights, as in Pawnocchio) added to the piece-square inputs.
+Accumulator width reduced to 2x1536. SPRT against v8: score of 50.55% (5,898 games), H1 accepted.</td></tr>
+<tr><td>2026-11-01</td><td>9b9d77b</td><td>v10</td><td>not yet released</td>
+<td>Threat features added (59,808 inputs: attacking piece and square, attacked piece and square; int8 weights).
+Accumulator width reduced to 2x1024. Against v9: score of 50.01% (9,262 games), no significant difference.</td></tr>
+<tr><td>2026-11-05</td><td>f49fb6b</td><td>v11</td><td>not yet released</td>
+<td>Accumulator width reduced to 2x768. The piece-square, pawn-pair and threat weight blocks are stored
+compressed, which reduces the file size by about 40% (60.2 MB to 36.4 MB for the 768-wide network). Rows of weights
+that are entirely zero are omitted, and the remaining bytes are Huffman coded, with a separate code for each byte of
+the 16-bit piece-square weights. The other layers are stored uncompressed. The training script compresses the
+network as it is saved (network/arasan_pack); the decoder is the <code>WeightCodec</code> class
+(src/nnue/features/weightcodec.h). Version 10 files can no longer be loaded.</td></tr>
+</table>
 <h3>Tuning and datasets</h3>
 <p>Network tuning was performed using the <a href="https://github.com/jdart1/bullet", target="_blank">Bullet tuner</a> using a combination of  positions from Arasan selfplay games (generated from the "selfplay" utility program) and Lc0 training data.
 The bullet script used for training is committed into the network subdirectory, as is the most recent training log.</p>

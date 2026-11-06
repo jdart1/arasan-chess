@@ -11,7 +11,7 @@ static constexpr unsigned OUTPUT_BUCKETS = 8;
 static constexpr unsigned BUCKET_DIVISOR = (32 + OUTPUT_BUCKETS - 1) / OUTPUT_BUCKETS;
 
 // width of the feature transformer output (per perspective)
-static constexpr unsigned FT_OUTPUT_SIZE = 1024;
+static constexpr unsigned FT_OUTPUT_SIZE = 768;
 
 // 3-layer sparse int8 head (Stockfish/Hobbes-style), Raphael-style downstream:
 //   feature transformer (FT_OUTPUT_SIZE per perspective, 2*FT_OUTPUT_SIZE total)
@@ -74,8 +74,9 @@ static inline unsigned getOutputBucket(unsigned pieceCount) {
 }
 
 // version of the network (bumped to 8 for the sparse int8 head, 9 for pawn pair features,
-// 10 for threat features: the file has the threat weights after the pawn pair weights)
-static constexpr std::byte NN_VERSION = std::byte(10);
+// 10 for threat features: the file has the threat weights after the pawn pair weights, 11 for
+// compression of the feature weights: see WeightCodec)
+static constexpr std::byte NN_VERSION = std::byte(11);
 
 static constexpr int NN_HEADER_SIZE = 4;
 
