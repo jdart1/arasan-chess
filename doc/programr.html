@@ -115,7 +115,7 @@ on Thompson sampling - see references):</p>
 <p>
 Arasan comes with a book that was built from a combination of a fairly
 small hand-tuned book file (basic.pgn) and a fairly large collection
-of high-quality human and computer games. There are over 900,000 moves
+of high-quality human and computer games. There are over 1 million moves
 in the book.</p>
 <p>You can make your own book file using the makebook utility.
 Typical usage would be like this:</p>
@@ -160,7 +160,6 @@ When the next game is started, stored positions
 from this file are read into memory and stored in the hash table,
 enabling the program to detect danger or opportunity sooner
 than it did previously.</p>
-
 
 <h2>ECO Recognizer</h2>
 
@@ -858,54 +857,65 @@ of bitbases used for KPK scoring.</p>
 Efficiently Updatable Neural Network (NNUE)</a>, which is now used exclusively for chess position evaluation. NNUE evaluation for chess was first introduced in Stockfish, whose implementation
 of it was contributed to the Stockfish project by Hisayori Noda aka Nodchip, based on prior work for Go.
 For a general introduction to NNUE concepts, see the <a href="https://www.chessprogramming.org/NNUE" target="_blank">Chess Programming Wiki</a>.</p>
-<p>The current network architecture for Arasan consists of a feature transformer followed by three affine layers, with quantized integer weights and biases. Its architecture is generally similar to that of other strong non-Stockfish engines, for example: Obsidian, PlentyChess, Alexandria,
-Raphael, and Hobbes (the latter two being notable for using integer layers throughout, as Arasan does).</p>
+<p>The current network architecture for Arasan consists of a feature transformer followed by three affine layers, with quantized integer weights and biases. Its architecture is generally similar to Stockfish (but lacking some Stockfish refinements), and to that of other strong non-Stockfish engines, for example: Obsidian, PlentyChess, Alexandria, Integral, Raphael, and Hobbes (the latter two being notable for using integer layers throughout, as Arasan does).</p>
 <p>Since the NNUE evaluation function may be called millions of times per second during a search, runtime performance is essential. Like other engines, Arasan makes heavy use of SIMD processor instructions, where available, as well as a variety of optimizations, which will be described below. Many of the optimizations originated in Stockfish, and are implemented as well as other engines.</p>
-	<h3>Feature Transfomer</h3>
-	<p>The first stage of the NNUE evaluation is a feature transformer, implemented in class ArasanV3Feature (src/nnue/features/arasanv3.h). The
-		transformer is responsible for converting a chess position
-	into a vector, aka accumulator (nnue/accum.h). The accumulator has two halves, the
-	lower half holding data for the current side to move, and the upper half holding data for the opposite side.</p>
-	<p>Converting a chess position into a set of accumulator values involves first computing a set of indices describing the
-	position. Indices are computed following the so-called HalfKA feature set, with horizontal mirroring and 9 King buckets. Because King position relative to other pieces is important, the index computation takes, for each side, the approximate king location, to a granuarity of 9 regions. This then combined with the 64 squares and 12 possible piece types (White and Black), gives 6,912 possible indices (12 x 9 x 64).</p>
-	<p>Once the indices have been computed, the feature transformer uses them as the input to a matrix multiplication. 
-		You can think of the indices as a sparse vector, with 0 values for those indices not used and 1 for those indices that are in the computed set. This vector input is then multiplied by the feature transformer weight matrix, and the 
-	feature tranformer biases (another vector) added.</p>
-	<h3>Incremental update of the accumulator</h3>
+<h3>Feature Transfomer</h3>
+<p>The first stage of the NNUE evaluation is a feature transformer. The transformer is responsible for converting a chess position
+into a vector, aka accumulator (nnue/accum.h). The accumulator has two halves, the lower half holding data for the current side to move, and the upper half holding data for the opposite side.
+Converting a chess position into a set of accumulator values involves first computing a set of indices describing the
+position. Once the indices have been computed, the feature transformer uses them as the input to a matrix multiplication.
+You can think of the indices as a sparse vector, with 0 values for those indices not used and 1 for those indices that are in the computed set. This vector input is then multiplied by the feature transformer weight matrix, and the
+  feature tranformer biases (another vector) added.</p>
+<p>The feature transfomer is iplemented in class FeatureTransformer (src/nnue/features/featuretransformer.h). This is a wrapper class that delegates to more specific classes for particular feature sets.</p>
+<p>Currrently there are three different feature sets in use:</p>
+<ol>
+  <li><b>PSQ</b> (piece-square) feature, based on the so-called HalfKA feature set, with horizontal mirroring and 9 King buckets. The index computation takes, for each side, the approximate king location, to a granuarity of 9 regions, combined with the 64 squares and 12 possible piece types (White and Black), giving 6,912 possible indices (12 x 9 x 64). Weights are 16-bit integers.</lis>
+  <li><b>Pawn pairs</b>: this feature set, originally implemented by Jonathan Hallstrom for Pawnocchio, encodes the position
+  of each pawn relative to other pawns on the same or adjacent files, which captures structure such as isolated and
+  doubled pawns. Each pawn (of either color) has an id from 0 to 95: its square (pawns can only be on 48 squares) and whether it
+  belongs to the side being evaluated or to the opponent. There is one input per pair of distinct pawns on the same or
+  adjacent files, giving 4,560 possible indices (the triangular number 96 x 95 / 2, of which pairs more than one file
+  apart are never used). The weights are 8-bit integers.</li>
+  <li><b>Threats</b>: as in Stockfish, one input for each "piece A attacks
+  piece B" relation, counting direct attacks only (no x-rays), and giving the pieces' types and colors and the squares of
+  both. Kings are never attacker or victim. Some pairs are left out because they are redundant: pawn attacks
+  are only counted against knights and rooks (pawn-pawn is covered by the pair features), an attack on a victim
+  that attacks the attacker back is counted once (for example a pawn attacking a queen is excluded, since the queen's
+  attack on the pawn is counted), and mutual attacks between pieces of the same type are counted in one
+  direction only. This gives 59,808 possible indices. The weights are 8-bit integers.</li>
+ </ol>
+<p>The pair and threat features have no king buckets: their squares are oriented to the side being
+evaluated (the board is flipped for Black) and mirrored horizontally when that side's king is on files e through h, as for the PSQ
+feature set. The 8-bit weight rows are widened to 16 bits when they are added to the accumulator.</p>
+<h3>Incremental update of the accumulator</h3>
 <p>A key part of NNUE architecture is leveraging the fact that moves transform chess positions by making small changes: in the simple case of a move that is not capture, promotion, or castling, only one piece has its square location changed. Arasan maintains an accumulator value per position, stored on the search stack, that can be used for incremental evaluation.</p>
-<p>When NNUE evaluation is needed, the code looks back through the search stack to find a suitable prior position upon which evaluation can be based. Some moves will make a position unusuable: in particular, if a move transitions the King to a square in a different King bucket (or across the horizontal-mirror boundary), then the prior position can't be used. If a prior position is found with a computed accumulator, is not too far from the present position, and isn't invalid for use, then the code incrementally computes the new accumulator by applying changes from moves between the current stack position and the prior search stack position to the prior accumulator.</p>
-	<p>To further speed evaluation, Arasan uses so-called finny tables, originally implemented by Finn Eggers for his engine Koivisto. The idea is that a cache of previous accumulators is maintained (separate from the search stack), and if no suitable accumulator for incremental update can be obtained by traversing the search stack, then a cached accumulator value can be fetched and incremental update applied to that.</p>
-   <h3>Feature transformer activation</h3>	
-			<p>As did the input, the output of the feature transformer has two halves, one from the stm perspective and one from the opponent's perspective. Before multiplication, each value is clamped to the range [0, NETWORK_QA] (a CReLU activation). The two halves of the output are then pairwise-multiplied (as in Stockfish), producing an output of 1/2 the original size. The product is right-shifted by (16 - PAIRWISE_SHIFT) = 9 bits to rescale it into the u8 (unsigned 8-bit) range required by the next layer.</p>
-	<h3>Affine layers</h3>
-	<p>Following the feature transformer, there are three subsequent network layers: two hidden layers, interspersed with
-		activation functions, and an output layer. Each of these layers is "bucketed:" the evaluation selects one of 8 separate sets of weights/biases, depending on the level of material in the current position.
-	<p>The sequence of layers is:</p>
-	<ol>
-		<li>L1: 1792 8-bit unsigned (input) x 16 int32 (output), 8-bit (int8) weights, 32-bit biases</li>
-		<li>CReLU activation</li>
-		<li>L2: 16 int32 (input) x 32 int32 (output), 32-bit weights, 32-bit biases</li>
-		<li>CReLU activation</li>
-	  <li>L3: 32 int32 (input) x 1 int64 output, 32-bit weights, 64-bit bias</li>
-	</ol>
-	<p>As in Raphael, no further scaling (dequantizing shift) is applied during forward propagation through L1 and L2, because the intermediate quantities fit within the 32 bits of those layers' int32 outputs. The L3 output, however, can overflow 32 bits, so it is computed in 64-bit arithmetic. A single divide at the very end dequantizes the result to a position score.</p>
-	<h3>L1 optimizations</h3>
-	<p>The L1 layer is a significant contributor to overall computation cost, due to its size. For this reason, optimizations are appplied to this layer. One of these is the choice of i8 weights, which is much faster than using i16. Then, weights are re-arranged to facilitate use of combined multipy-add vector instructions (as in Stockfish). In addition, the input to L1 will typically be sparse, in part due to CReLU clamping, which converts negative outputs from the feature transformer to zero. To leverage this, the calculation does a pass to collect groups of inputs that are non-zero, and skips any that are zero (also a Stockfish idea). </p>
-<h3>Previous network architectures</h3>
-<p>The prior network architecture, introduced in Arasan 25.0, was 2-layer, with 16-bit weights. The feature transformer implementation was the same, but following that was a SqrCReLU activation function. Originally the accumulator was 2x1024 in size and so the output layer was 2048x1, with 8 output buckets. The accumulator was changed to 2x1536 in commit
-2ef5d79 and 2x1792 in commit 663919c.</p>
-<p>Before version 25.0, Arasan's network was
-compatible with the <a href="https://github.com/official-stockfish/Stockfish/commit/cb9c2594fcedc881ae8f8bfbfdf130cf89840e4c", target="_blank">SFNNv4</a>
-network architecture used in Stockfish 15. That implementation was maintained in 
-a <a href="https://github.com/jdart1/nnue"
-   target="_blank">separate repo</a> and imported into the Arasan repo as a submodule.</p>
+<p>When NNUE evaluation is needed, the code first attempts to do that incrementally, if possible. For the PSQ feature, it looks back through the search stack to find a suitable prior position upon which evaluation can be based. Some moves will make a position unusuable: in particular, if a move transitions the King to a square in a different King bucket (or across the horizontal-mirror boundary), then the prior position can't be used. If a prior position is found with a computed accumulator, is not too far from the present position, and isn't invalid for use, then the code incrementally computes the new accumulator by applying changes from moves between the current stack position and the prior search stack position to the prior accumulator.</p>
+<p>The pair and threat features can also be incrementally evaluated, but this is done not by backtracking and applying diffs for each move, but by just computing the relevant diffs (pawns or pieces) between a prior computed position and the current position. This is possible because full occupancy data is maintained in the search stack for each ply. As with the PSQ feature, certain moves can invalidate a prior entry and require a full computation: in particular, a move of the King between board sides (a..d files vs. e..h).</p>
+<p>To further speed evaluation, Arasan uses so-called finny tables, originally implemented by Finn Eggers for his engine Koivisto. The idea is that a cache of previous accumulators is maintained (separate from the search stack), and if no suitable accumulator for incremental update can be obtained by traversing the search stack, then a cached accumulator value can be fetched and incremental update applied to that.  There is one cache entry for each side, King bucket, and mirror half of the board (a-d or e-h): those are the cases where the indices of the features are consistent. Each entry stores the accumulator along with the piece occupancies it was computed for, and the update works out the PSQ, pair and threat features that differ between those occupancies and the current position.</p>
+<h3>Feature transformer activation</h3>
+<p>As did the input, the output of the feature transformer has two halves, one from the stm perspective and one from the opponent's perspective. Before multiplication, each value is clamped to the range [0, NETWORK_QA] (a CReLU activation). The two halves of the output are then pairwise-multiplied, producing an output of 1/2 the original size. The product is right-shifted by (16 - PAIRWISE_SHIFT) = 9 bits to rescale it into the u8 (unsigned 8-bit) range required by the next layer.</p>
+<h3>Affine layers</h3>
+<p>Following the feature transformer, there are three subsequent network layers: two hidden layers, interspersed with activation functions, and an output layer. Each of these layers is "bucketed:" the evaluation selects one of 8 separate sets of weights/biases, depending on the level of material in the current position.
+<p>The sequence of layers is:</p>
+<ol>
+	<li>L1: 768 8-bit unsigned (input) x 16 int32 (output), 8-bit (int8) weights, 32-bit biases</li>
+	<li>CReLU activation</li>
+	<li>L2: 16 int32 (input) x 32 int32 (output), 32-bit weights, 32-bit biases</li>
+	<li>CReLU activation</li>
+        <li>L3: 32 int32 (input) x 1 int64 output, 32-bit weights, 64-bit bias</li>
+</ol>
+<p>As in Raphael, no further scaling (dequantizing shift) is applied during forward propagation through L1 and L2, because the intermediate quantities fit within the 32 bits of those layers' int32 outputs. The L3 output, however, can overflow 32 bits, so it is computed in 64-bit arithmetic. A single divide at the very end dequantizes the result to a position score.</p>
+<h3>L1 optimizations</h3>
+<p>The L1 layer is a significant contributor to overall computation cost, due to its size. For this reason, optimizations are appplied to this layer. One of these is the choice of i8 weights, which is much faster than using i16. Then, weights are re-arranged to facilitate use of combined multipy-add vector instructions (as in Stockfish). In addition, the input to L1 will typically be sparse, in part due to CReLU clamping, which converts negative outputs from the feature transformer to zero. To leverage this, the calculation does a pass to collect groups of inputs that are non-zero, and skips any that are zero (also a Stockfish idea). </p>
 <h3>Network version history</h3>
 <p>The table below lists the successive Arasan network versions. The date and abbreviated hash identify the
 commit on the master branch that implemented the version, and the releases are the Arasan releases that used it.
 Networks that were retrained within a version, without a change of architecture, are not listed individually: see
 the git history of the network subdirectory. Since version 3, network files have been named
 arasanv<i>N</i>-<i>date</i>.nnue. Since version 5, the first four bytes of the file are the characters
-'A', 'R', 'A' followed by a version byte, which is checked when the network is loaded.</p>
+  'A', 'R', 'A' followed by a version byte, which is checked when the network is loaded.</p>
+<p>Note that v3 and earlier network implementations were maintained in a
+a <a href="https://github.com/jdart1/nnue" target="_blank">separate repo</a> and imported into the Arasan repo as a submodule.</p>
 <table border="1" cellpadding="4" cellspacing="0">
 <tr><th>Date</th><th>Commit</th><th>Version</th><th>Releases</th><th>Description</th></tr>
 <tr><td>2021-08-07</td><td>036c0b9</td><td>Stockfish 12 format</td><td>23.0 to 23.5</td>
@@ -925,34 +935,30 @@ retrained with larger datasets, the Ranger optimizer, a cosine learning rate sch
 <td>Accumulator widened to 2x1792. Introduced the 'A', 'R', 'A' + version byte file header.</td></tr>
 <tr><td>2026-05-31, 2026-06-03</td><td>8d11c76, a2ece40</td><td>v6, v7 (experimental)</td><td>none</td>
 <td>First three-layer networks: v6 with a floating-point head and v7 with integer (int32) L2 and output layers.
-Developed on the multilayer3 branch and never merged into master: both lost their SPRT tests (scores of 41.8% and
-48.2%).</td></tr>
+Failed SPRT tests; not merged into master.</td></tr>
 <tr><td>2026-06-23</td><td>cbdf7d0</td><td>v8</td><td>26.0 to 26.1</td>
 <td>Three-layer, fully integer network: 2x1792 accumulator (int16), per-perspective CReLU and pairwise
 multiplication to u8, sparse L1 (u8 x int8 weights, 16 outputs), L2 (int32, 32 outputs) and L3 output (int32
 weights, int64 result), 8 output buckets, quantization as in Raphael. Later retrained with WDL = 0.1 and with a
 3-stage learning rate schedule.</td></tr>
-<tr><td>2026-10-26</td><td>c31c86b</td><td>v9</td><td>not yet released</td>
+<tr><td>2026-10-26</td><td>c31c86b</td><td>v9</td><td>not released</td>
 <td>Pawn-pair features (4,560 inputs, int8 weights, as in Pawnocchio) added to the piece-square inputs.
-Accumulator width reduced to 2x1536. SPRT against v8: score of 50.55% (5,898 games), H1 accepted.</td></tr>
-<tr><td>2026-11-01</td><td>9b9d77b</td><td>v10</td><td>not yet released</td>
+Accumulator width reduced to 2x1536.</td></tr>
+<tr><td>2026-11-01</td><td>9b9d77b</td><td>v10</td><td>not released</td>
 <td>Threat features added (59,808 inputs: attacking piece and square, attacked piece and square; int8 weights).
-Accumulator width reduced to 2x1024. Against v9: score of 50.01% (9,262 games), no significant difference.</td></tr>
-<tr><td>2026-11-05</td><td>f49fb6b</td><td>v11</td><td>not yet released</td>
-<td>Accumulator width reduced to 2x768. The piece-square, pawn-pair and threat weight blocks are stored
-compressed, which reduces the file size by about 40% (60.2 MB to 36.4 MB for the 768-wide network). Rows of weights
-that are entirely zero are omitted, and the remaining bytes are Huffman coded, with a separate code for each byte of
-the 16-bit piece-square weights. The other layers are stored uncompressed. The training script compresses the
-network as it is saved (network/arasan_pack); the decoder is the <code>WeightCodec</code> class
-(src/nnue/features/weightcodec.h). Version 10 files can no longer be loaded.</td></tr>
+Accumulator width reduced to 2x1024.</td></tr>
+<tr><td>2026-11-05</td><td>651eb037</td><td>v11</td><td>not released</td>
+<td>Accumulator width reduced to 2x768. Adds compression of feature weights.</td></tr>
 </table>
+<br/>
 <h3>Tuning and datasets</h3>
 <p>Network tuning was performed using the <a href="https://github.com/jdart1/bullet", target="_blank">Bullet tuner</a> using a combination of  positions from Arasan selfplay games (generated from the "selfplay" utility program) and Lc0 training data.
 The bullet script used for training is committed into the network subdirectory, as is the most recent training log.</p>
 <p>The network binary file must have, in the first four bytes, a version
 which is checked at runtime. This is added to the file by the training script.</p>
-<p>The actual network data is loaded at runtime from a file. Unlike Stockfish and some other programs,
-Arasan does not embed the network data in the program executable. The default file name is compiled into the executable.</p>
+<p>The actual network data is loaded at runtime from a file. Unlike Stockfish and many other programs,
+  Arasan does not embed the network data in the program executable. The default file name is compiled into the executable.</p>
+<p>Since network architecture version 11, the weights of the feature sets, which are the bulk of the network file size, are output in a compressed format by the trainer, and then decompressed when they are read from disk. Two forms of compression are used. Firstly, a bitmap is stored with bits set only for those rows that are not entirely zero; this is followed by the non-zero rows. Second, Huffman encoding is applied to those non-zero rows. Overall compression is approximately 40%, about the same as zlib, but without introducing any 3rd-party dependencies.</p>
 
 <h2>Multi-threading</h2>
 
