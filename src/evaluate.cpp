@@ -253,9 +253,11 @@ void nnue::Evaluator::updateAccum(const nnue::Network &network, const Board &boa
         const DirtyState &ds = n->dirty[0];
         if ((dn == 0) ||
             (n ->ply == 0) ||
-            (TypeOfPiece(ds.piece) == King && Network::FeatureXformer::PSQ::needsRefresh(c, ds.from, ds.to)) ||
+            (TypeOfPiece(ds.piece) == King && ColorOfPiece(ds.piece) == c &&
+             Network::FeatureXformer::PSQ::needsRefresh(c, ds.from, ds.to)) ||
             ((gain -= dn + 1) < 0)) {
-            // previous move was null, or was a King move that invalidates the accumulator,
+            // previous move was null, or was a move of the king of this perspective that
+            // invalidates the accumulator (a move of the other king is an ordinary change),
             // or we can't get any gain from incremental update
             incrementalOk = false;
             break;
