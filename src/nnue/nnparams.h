@@ -73,9 +73,7 @@ static inline unsigned getOutputBucket(unsigned pieceCount) {
     return (pieceCount - 2) / BUCKET_DIVISOR;
 }
 
-// version of the network (bumped to 8 for the sparse int8 head, 9 for pawn pair features,
-// 10 for threat features: the file has the threat weights after the pawn pair weights, 11 for
-// compression of the feature weights: see WeightCodec)
+// version of the network
 static constexpr std::byte NN_VERSION = std::byte(11);
 
 static constexpr int NN_HEADER_SIZE = 4;

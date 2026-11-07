@@ -20,6 +20,8 @@ struct DirtyState {
     DirtyState(Square f, Square t, Piece p) : from(f), to(t), piece(p) {}
 };
 
+// Finny cache entry - holds a previously evaluated accumulator and the
+// occupancies on which it was based.
 struct FinnyEntry {
     alignas(nnue::DEFAULT_ALIGN) Occupancies occupancies;
     alignas(nnue::DEFAULT_ALIGN) Network::AccumulatorType acc;
