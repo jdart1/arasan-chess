@@ -37,7 +37,7 @@ class WeightCodec {
     static std::istream &read(std::istream &s, size_t rows, size_t cols, RowFunc rowPtr) {
         static_assert(sizeof(T) == 1 || sizeof(T) == 2, "unsupported weight size");
         static_assert(std::is_integral<T>::value, "weights must be integers");
-        constexpr size_t PLANES = sizeof(T);
+        constexpr size_t BYTE_PLANES = sizeof(T);
         using U = std::make_unsigned_t<T>;
 
         std::vector<uint8_t> bitmap((rows + 7) / 8);
@@ -47,7 +47,7 @@ class WeightCodec {
             nonZeroRows += rowIsSet(bitmap, i) ? 1 : 0;
         }
 
-        std::array<DecodeTable, PLANES> tables;
+        std::array<DecodeTable, BYTE_PLANES> tables;
         for (auto &table : tables) {
             uint8_t lengths[SYMBOLS];
             s.read(reinterpret_cast<char *>(lengths), sizeof(lengths));
@@ -59,7 +59,7 @@ class WeightCodec {
 
         const uint32_t dataLen = static_cast<uint32_t>(read_little_endian<int32_t>(s));
         const uint64_t maxLen =
-            (static_cast<uint64_t>(nonZeroRows) * cols * PLANES * MAX_CODE_LEN + 7) / 8;
+            (static_cast<uint64_t>(nonZeroRows) * cols * BYTE_PLANES * MAX_CODE_LEN + 7) / 8;
         if (s.fail() || dataLen > maxLen) {
             s.setstate(std::ios::failbit);
             return s;
@@ -80,7 +80,7 @@ class WeightCodec {
             }
             for (size_t j = 0; j < cols && ok; ++j) {
                 U v = 0;
-                for (size_t p = 0; p < PLANES; ++p) {
+                for (size_t p = 0; p < BYTE_PLANES; ++p) {
                     if (nbits < MAX_CODE_LEN) {
                         while (nbits <= 56) {
                             acc = (acc << 8) | (pos < dataLen ? data[pos] : 0);
