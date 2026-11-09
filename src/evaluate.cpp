@@ -43,8 +43,6 @@ static void printPairIndices(const nnue::PPIndexArray &indices, size_t count) {
 }
 #endif
 
-#define USE_FINNY
-
 void nnue::Evaluator::clearCache() {
     for (unsigned i = 0; i < 2; i++) { // sides
         for (unsigned j = 0; j < nnue::NetworkParams::KING_BUCKETS; j++) { // buckets
@@ -269,14 +267,8 @@ void nnue::Evaluator::updateAccum(const nnue::Network &network, const Board &boa
         // a previous position was found with usable data
         updateAccumIncremental(network, n, node, c);
     } else {
-#ifdef USE_FINNY
         // update from cache (the cache includes pawn pair features)
         finnyUpdate(network, board, node, c, targetHalf);
-#else
-        FeatureChanges features;
-        getFeatures(board, c, features);
-        network.updateAccum(features, targetHalf, node->accum);
-#endif
     }
     node->accum.setState(targetHalf, AccumulatorState::Computed);
 }
