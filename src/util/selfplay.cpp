@@ -363,6 +363,7 @@ static void selfplay(ThreadData &td) {
         Statistics stats;
         Board board;
         unsigned low_score_count = 0, tb_score_count = 0, high_score_count = 0;
+        int high_score_side = 0; // side ahead for high_score_count: 1 = White, -1 = Black
         enum class Result { WhiteWin, BlackWin, Draw, Unknown } result = Result::Unknown;
         std::vector<BinFormats::PositionData> output;
         BinFormats::ViriGame viriGame;
@@ -401,8 +402,9 @@ static void selfplay(ThreadData &td) {
                     output.clear();
                     viriGame.reset();
                     // We have no score from a random move, so reset the
-                    // adjudication counter
-                    low_score_count = 0;
+                    // adjudication counters
+                    low_score_count = high_score_count = 0;
+                    high_score_side = 0;
                 } else if (sp_options.semiRandomize && !skipRandom &&
                            (ply >= semiRandomStart) && (ply < semiRandomEnd) &&
                            (int(board.men()) > globals::EGTBMenCount) &&
@@ -421,6 +423,9 @@ static void selfplay(ThreadData &td) {
                         ++low_score_count;
                     else
                         low_score_count = 0;
+                    // win adjudication is based only on full-depth searches
+                    high_score_count = 0;
+                    high_score_side = 0;
                 } else {
                     m = searcher->findBestMove(board, FixedDepth, Constants::INFINITE_TIME,
                                                0, // extra time
@@ -435,14 +440,28 @@ static void selfplay(ThreadData &td) {
                         ++low_score_count;
                     else
                         low_score_count = 0;
-                    if (score >= sp_options.adjudicateWinScore)
+                    // score is from the side to move's POV, so its sign
+                    // alternates from ply to ply even when one side is
+                    // consistently winning. Track the winning side from
+                    // White's POV and count consecutive plies on which the
+                    // same side is ahead by at least adjudicateWinScore.
+                    const score_t whiteScore =
+                        board.sideToMove() == White ? score : -score;
+                    const int winningSide =
+                        whiteScore >= sp_options.adjudicateWinScore    ? 1
+                        : whiteScore <= -sp_options.adjudicateWinScore ? -1
+                                                                       : 0;
+                    if (winningSide != 0 && winningSide == high_score_side) {
                         ++high_score_count;
-                    else
-                        high_score_count = 0;
+                    } else {
+                        high_score_side = winningSide;
+                        high_score_count = winningSide != 0 ? 1 : 0;
+                    }
                     // adjudicate wins but not for low material - TB adjudication
                     // rules will apply to thoose
                     if (high_score_count >= sp_options.adjudicateWinPlies &&
                         (!sp_options.adjudicateTB || board.men() > 7)) {
+                        result = high_score_side > 0 ? Result::WhiteWin : Result::BlackWin;
                         adjudicated = true;
                     }
                 }
