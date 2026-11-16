@@ -92,8 +92,10 @@ static struct SelfPlayOptions {
     bool adjudicateTB = true;
     int adjudicateTBMen = 3;
     int adjudicateTBMenPawnless = 5;
-    score_t adjudicateWinScore = 5*Scoring::PAWN_VALUE;
-    unsigned adjudicateWinPlies = 3;
+    // Lenient win adjudication keeps positions from won games in the data
+    // (at 5 pawns/3 plies they were nearly eliminated).
+    score_t adjudicateWinScore = 10*Scoring::PAWN_VALUE;
+    unsigned adjudicateWinPlies = 4;
     unsigned outputPlyFrequency = 1; // output every nth move
     unsigned drawAdjudicationPlies = 10;
     unsigned TBAdjudicationPlies = 4;
@@ -102,14 +104,27 @@ static struct SelfPlayOptions {
     std::string posFileName;
     std::string gameFileName = "games.pgn";
     bool saveGames = false;
-    unsigned maxBookPly = 0;
+    // Default opening: 4 book plies, then 8-9 random plies, then one balance
+    // check (|score| <= 2 pawns, window shifted 0.25 pawns toward White).
+    // This gives ~50-52% White score, few lopsided games and very few
+    // duplicate start positions even at 10B positions.
+    unsigned maxBookPly = 4;
     bool randomize = true;
-    unsigned randomCount = 2; // contiguous random plies per game
+    unsigned randomCount = 8; // contiguous random plies per game
+    // if set, add one more random ply in a randomly chosen half of the games
+    bool randomParity = true;
+    // If > 0, search the first recorded position (after book, random and
+    // semi-random plies) at full depth and reject the game if |score| exceeds
+    // this. Only one search is wasted per rejected game.
+    score_t maxStartScore = 2*Scoring::PAWN_VALUE;
+    // Shift the accepted start score window in White's favor: with limit L
+    // and bias B, accept -(L - B) <= White's score <= L + B. Must be < L.
+    score_t startWhiteBias = static_cast<score_t>(0.25 * Scoring::PAWN_VALUE);
     int randomTolerance = 0.5*Scoring::PAWN_VALUE;
     bool limitEarlyKingMoves = true;
-    bool semiRandomize = true;
+    bool semiRandomize = false;
     RandomizeType randomizeType = RandomizeType::MultiPV;
-    unsigned semiRandomCount = 14; // contiguous semi-random plies per game
+    unsigned semiRandomCount = 0; // contiguous semi-random plies per game
     unsigned multipv_limit = 8;
     score_t multiPVMargin = static_cast<score_t>(0.42 * Scoring::PAWN_VALUE);
     float whiteMarginAdjust = 0.95;
@@ -140,6 +155,7 @@ struct ThreadData {
     MoveArray gameMoves;
     std::mt19937_64 engine;
     uint64_t skipped = 0;
+    uint64_t rejected = 0; // games rejected for an unbalanced start position
 } threadDatas[Constants::MaxCPUs];
 
 static void saveGame(ThreadData &td, const std::string &result, std::ofstream &file) {
@@ -375,6 +391,11 @@ static void selfplay(ThreadData &td) {
         int prevScore = 0;
         unsigned prevDepth = 0;
         unsigned bookMoves = sp_options.maxBookPly;
+        // optionally add one more random ply in half the games, so that either
+        // side can be to move when the random phase ends
+        const unsigned randomCount =
+            sp_options.randomCount +
+            ((sp_options.randomize && sp_options.randomParity) ? unsigned(td.engine() & 1) : 0U);
         for (unsigned ply = 0; ply <= sp_options.maxOutPly && !adjudicated && !terminated; ++ply) {
             stats.clear();
             Move m = NullMove;
@@ -389,7 +410,7 @@ static void selfplay(ThreadData &td) {
             // then semi-random - that end before recording starts. Those plies
             // are not training material and a whole-game format cannot omit
             // individual plies. Alternating plies keep the color split even.
-            const unsigned semiRandomStart = bookMoves + sp_options.randomCount;
+            const unsigned semiRandomStart = bookMoves + randomCount;
             const unsigned semiRandomEnd = semiRandomStart + sp_options.semiRandomCount;
             const unsigned recordStart = semiRandomEnd;
             score_t score = 0;
@@ -398,7 +419,7 @@ static void selfplay(ThreadData &td) {
                 bool skipRandom = (int(board.men()) <= globals::EGTBMenCount) ||
                                   (std::abs(prevScore) >= 10 * Scoring::PAWN_VALUE);
                 if (sp_options.randomize && (ply >= bookMoves) &&
-                    (ply < bookMoves + sp_options.randomCount)) {
+                    (ply < bookMoves + randomCount)) {
                     m = randomMove(board, stats, td);
                     // TBD: we don't associate any prior FENS with the current
                     // game result after a random move. Stockfish though does do
@@ -438,6 +459,20 @@ static void selfplay(ThreadData &td) {
                                                false, // uci
                                                stats, TalkLevel::Silent);
                     score = stats.display_value;
+                    if (sp_options.maxStartScore > 0 && ply == recordStart) {
+                        // Reject the game if randomization left the position
+                        // too unbalanced. The window may be shifted in
+                        // White's favor (startWhiteBias). The game is
+                        // discarded before anything is recorded (the result
+                        // stays Unknown).
+                        const score_t whiteScore =
+                            board.sideToMove() == White ? score : -score;
+                        if (whiteScore > sp_options.maxStartScore + sp_options.startWhiteBias ||
+                            whiteScore < -(sp_options.maxStartScore - sp_options.startWhiteBias)) {
+                            ++td.rejected;
+                            break;
+                        }
+                    }
                     prevNodes = stats.num_nodes;
                     prevDepth = stats.depth;
                     if (score <= 1 && score >= -1)
@@ -655,19 +690,30 @@ static void threadp(ThreadData *td) {
 static void usage() {
     std::cerr << "Usage:" << std::endl;
     std::cerr << "selfplay [-a (append)]" << std::endl;
-    std::cerr << "         [-b book plies]" << std::endl;
+    std::cerr << "         [-b book plies (default 4)]" << std::endl;
+    std::cerr << "         [-B pawns (shift the -l window in White's favor, default 0.25)]"
+              << std::endl;
     std::cerr << "         [-c cores]" << std::endl;
     std::cerr << "         [-d depth]" << std::endl;;
     std::cerr << "         [-f output format (bin|marlin|bullet|text|viri)]" << std::endl;
     std::cerr << "         [-g filename (save games)]" << std::endl;
     std::cerr << "         [-h (use hashtable to check dups)]" << std::endl;
+    std::cerr << "         [-l pawns (reject games with |score| above this at the first"
+                 " recorded ply, default 2, 0 = no limit)]" << std::endl;
     std::cerr << "         [-n positions]" << std::endl;
     std::cerr << "         [-m output every m positions]" << std::endl;
+    std::cerr << "         [-M pawns (semi-random multi-PV margin, default 0.42)]" << std::endl;
     std::cerr << "         [-o filename (output file)]" << std::endl;
-    std::cerr << "         [-r n (semi-random moves per game)]" << std::endl;
-    std::cerr << "         [-R n (random moves per game)]" << std::endl;
+    std::cerr << "         [-p 0|1 (1 = add 1 extra random ply in a random half of the games,"
+                 " default 1)]" << std::endl;
+    std::cerr << "         [-r n (semi-random moves per game, default 0)]" << std::endl;
+    std::cerr << "         [-R n (random moves per game, default 8)]" << std::endl;
     std::cerr << "         [-s semi-random depth]" << std::endl;
+    std::cerr << "         [-T pawns (random move SEE tolerance, default 0.5)]" << std::endl;
     std::cerr << "         [-v (verbose)]" << std::endl;
+    std::cerr << "         [-w pawns (win adjudication score, default 10)]" << std::endl;
+    std::cerr << "         [-W plies (plies at the win adjudication score, default 4)]"
+              << std::endl;
 }
 
 static void init_threads() {
@@ -839,12 +885,69 @@ int CDECL main(int argc, char **argv) {
                 std::cerr << "error: expected number after -m" << std::endl;
                 return -1;
             }
+        } else if (strcmp(argv[arg], "-M") == 0 || strcmp(argv[arg], "-T") == 0 ||
+                   strcmp(argv[arg], "-l") == 0 || strcmp(argv[arg], "-w") == 0 ||
+                   strcmp(argv[arg], "-B") == 0) {
+            // options whose value is in pawns: -M semi-random multi-PV margin,
+            // -T random move SEE tolerance, -l start position score limit,
+            // -w win adjudication score, -B White bias of the start window
+            const std::string opt(argv[arg]);
+            if (arg + 1 >= argc) {
+                std::cerr << "expected number (pawns) after " << opt << std::endl;
+                return -1;
+            }
+            std::stringstream s(argv[++arg]);
+            double pawns = 0.0;
+            s >> pawns;
+            if (s.fail() || pawns < 0.0) {
+                std::cerr << "error: expected non-negative number (pawns) after " << opt
+                          << std::endl;
+                return -1;
+            }
+            const auto value = static_cast<score_t>(pawns * Scoring::PAWN_VALUE);
+            if (opt == "-M") {
+                sp_options.multiPVMargin = value;
+            } else if (opt == "-T") {
+                sp_options.randomTolerance = value;
+            } else if (opt == "-l") {
+                sp_options.maxStartScore = value;
+            } else if (opt == "-B") {
+                sp_options.startWhiteBias = value;
+            } else {
+                sp_options.adjudicateWinScore = value;
+            }
+        } else if (strcmp(argv[arg], "-W") == 0) {
+            if (arg + 1 >= argc) {
+                std::cerr << "expected ply count after -W" << std::endl;
+                return -1;
+            }
+            std::stringstream s(argv[++arg]);
+            s >> sp_options.adjudicateWinPlies;
+            if (s.fail() || sp_options.adjudicateWinPlies == 0) {
+                std::cerr << "error: expected positive ply count after -W" << std::endl;
+                return -1;
+            }
+        } else if (strcmp(argv[arg], "-p") == 0) {
+            if (arg + 1 >= argc ||
+                (strcmp(argv[arg + 1], "0") != 0 && strcmp(argv[arg + 1], "1") != 0)) {
+                std::cerr << "error: expected 0 or 1 after -p" << std::endl;
+                return -1;
+            }
+            sp_options.randomParity = argv[++arg][0] == '1';
         } else if (strcmp(argv[arg], "-v") == 0) {
             sp_options.verbose = true;
         } else {
             usage();
             return -1;
         }
+    }
+
+    if (sp_options.maxStartScore == 0) {
+        // no start position check (-l 0), so no window to bias
+        sp_options.startWhiteBias = 0;
+    } else if (sp_options.startWhiteBias >= sp_options.maxStartScore) {
+        std::cerr << "error: the -B bias must be less than the -l limit" << std::endl;
+        return -1;
     }
 
     if (sp_options.format == BinFormats::Format::Viri) {
@@ -914,6 +1017,19 @@ int CDECL main(int argc, char **argv) {
     std::cout << std::setprecision(4)
               << "White score percentage: " << winPct + drawPct/2 << '%'
               << " draw percentage: " << drawPct << std::endl;
+    if (sp_options.maxStartScore > 0) {
+        uint64_t rejected = 0;
+        for (unsigned i = 0; i < sp_options.cores; i++) {
+            rejected += threadDatas[i].rejected;
+        }
+        const double limit = double(sp_options.maxStartScore) / Scoring::PAWN_VALUE;
+        const double bias = double(sp_options.startWhiteBias) / Scoring::PAWN_VALUE;
+        std::cout << rejected << " games rejected for an unbalanced start (White score outside ["
+                  << std::setprecision(3) << -(limit - bias) << ", " << limit + bias
+                  << "] pawns, " << std::setprecision(4)
+                  << (100.0 * rejected) / (rejected + totalGames) << "% of games started)"
+                  << std::endl;
+    }
     if (sp_options.format != BinFormats::Format::Viri) {
         // Viriformat does no position skipping: trainer is in charge of that
         uint64_t skipped = 0;
