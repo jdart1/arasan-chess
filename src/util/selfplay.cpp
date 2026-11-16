@@ -890,11 +890,25 @@ int CDECL main(int argc, char **argv) {
     }
 
     init_threads();
+    const auto runStartTime = getCurrentTime();
     launch_threads();
+    const double runSeconds =
+        std::max<double>(getElapsedTime(runStartTime, getCurrentTime()) / 1000.0, 0.001);
 
     std::cout << "White wins: " << wins << " Black wins: " << losses << " Draws: " << draws
               << std::endl;
     auto totalGames = draws + losses + wins;
+    {
+        // posCounter can overshoot the target slightly at the end of a run
+        const uint64_t positions = std::min<uint64_t>(posCounter, sp_options.posCount);
+        std::ios_base::fmtflags original_flags = std::cout.flags();
+        std::cout << std::fixed << std::setprecision(1) << "elapsed time: " << runSeconds
+                  << " sec., " << positions << " positions, " << totalGames << " games"
+                  << ", positions/second: " << positions / runSeconds
+                  << ", games/second: " << std::setprecision(2) << totalGames / runSeconds
+                  << std::endl;
+        std::cout.flags(original_flags);
+    }
     auto winPct = 100.0 * wins / totalGames;
     auto drawPct = 100.0 * draws / totalGames;
     std::cout << std::setprecision(4)
