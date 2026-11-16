@@ -359,6 +359,10 @@ static void selfplay(ThreadData &td) {
         if (sp_options.saveGames) {
             td.gameMoves.reset();
         }
+        // Start each game with clean search state (hash table, history,
+        // correction history, eval cache), so that play depends only on the
+        // position and not on earlier games searched by this thread.
+        searcher->clearHashTables();
         bool adjudicated = false, terminated = false;
         Statistics stats;
         Board board;
