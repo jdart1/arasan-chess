@@ -492,65 +492,6 @@ fn normalize_hm(mut bbs: [u64; 8]) -> [u64; 8] {
     bbs
 }
 
-// Print the pair indices for each FEN (arguments, or lines on standard input if there are
-// none), in the format of network/engine_pair_indices.py: the FEN, then the sorted indices for
-// White and for Black. Positions are from the side to move's point of view, so "stm" is the
-// side to move.
-fn dump_pairs(args: &[String]) {
-    let pp = PawnPairInputs::new();
-    let fens: Vec<String> = if args.is_empty() {
-        std::io::stdin().lines().map(|line| line.unwrap().trim().to_string()).filter(|line| !line.is_empty()).collect()
-    } else {
-        args.to_vec()
-    };
-    for fen in fens {
-        let pos: ChessBoard = format!("{fen} | 0 | 0.0").parse().unwrap();
-        let mut stm = Vec::new();
-        let mut ntm = Vec::new();
-        pp.map_features(&pos, |idx| stm.push(idx), |idx| ntm.push(idx));
-        stm.sort();
-        ntm.sort();
-        let black_to_move = fen.split_whitespace().nth(1) == Some("b");
-        let (white, black) = if black_to_move { (ntm, stm) } else { (stm, ntm) };
-        let join = |list: &Vec<usize>| list.iter().map(|idx| idx.to_string()).collect::<Vec<_>>().join(" ");
-        println!("{fen}");
-        println!("white {}", join(&white));
-        println!("black {}", join(&black));
-    }
-}
-
-// Print the threat indices for each FEN (arguments, or lines on standard input if there are
-// none; lines starting with '#' are skipped), in the format of network/engine_threat_indices.py:
-// the FEN, then the sorted indices for White and for Black.
-fn dump_threats(args: &[String]) {
-    let th = ThreatInputs::new();
-    let fens: Vec<String> = if args.is_empty() {
-        std::io::stdin()
-            .lines()
-            .map(|line| line.unwrap().trim().to_string())
-            .filter(|line| !line.is_empty() && !line.starts_with('#'))
-            .collect()
-    } else {
-        args.to_vec()
-    };
-    for fen in fens {
-        // bullet's parser wants the move counters
-        let full = if fen.split_whitespace().count() < 6 { format!("{fen} 0 1") } else { fen.clone() };
-        let pos: ChessBoard = format!("{full} | 0 | 0.0").parse().unwrap();
-        let mut stm = Vec::new();
-        let mut ntm = Vec::new();
-        th.map_features(&pos, |idx| stm.push(idx), |idx| ntm.push(idx));
-        stm.sort();
-        ntm.sort();
-        let black_to_move = fen.split_whitespace().nth(1) == Some("b");
-        let (white, black) = if black_to_move { (ntm, stm) } else { (stm, ntm) };
-        let join = |list: &Vec<usize>| list.iter().map(|idx| idx.to_string()).collect::<Vec<_>>().join(" ");
-        println!("{fen}");
-        println!("white {}", join(&white));
-        println!("black {}", join(&black));
-    }
-}
-
 fn make_inputs_mapper(
     params: (&ModelInputs<InputTy>, &PawnPairInputs, &ThreatInputs, ChessBucketsMirrored, impl OutputBuckets<ChessBoard>),
     wdl: impl WdlScheduler,
@@ -644,15 +585,6 @@ fn packed_weights(format: SavedFormat, rows: usize, elem: usize) -> SavedFormat 
 }
 
 fn main() {
-    let args: Vec<String> = std::env::args().collect();
-    if args.get(1).map(String::as_str) == Some("--dump-pairs") {
-        dump_pairs(&args[2..]);
-        return;
-    }
-    if args.get(1).map(String::as_str) == Some("--dump-threats") {
-        dump_threats(&args[2..]);
-        return;
-    }
 
     let pp = PawnPairInputs::new();
     let th = ThreatInputs::new();
