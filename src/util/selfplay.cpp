@@ -98,7 +98,12 @@ static struct SelfPlayOptions {
     unsigned adjudicateWinPlies = 4;
     unsigned outputPlyFrequency = 1; // output every nth move
     unsigned drawAdjudicationPlies = 10;
-    unsigned TBAdjudicationPlies = 4;
+    // Delay TB adjudication, within a range of values. Otherwise,
+    // we get few low-material positions in the dataset:
+    unsigned TBAdjudicationRange[2] = {10,40};
+    // No delay for 3-man positions: they are few and trivial (KQK, KRK, KPK
+    // etc.), so delaying adjudication mostly adds duplicate positions.
+    unsigned TBAdjudicationPlies3Men = 4;
     unsigned drawAdjudicationMinPly = 80;
     int adjudicateMinMove50Count = 40; // mininum move 50 count
     std::string posFileName;
@@ -371,6 +376,9 @@ static void selfplay(ThreadData &td) {
                   << std::endl;
         std::cout.flags(original_flags);
     };
+    std::uniform_int_distribution<unsigned> tbAdjudicateDist(
+                                                             sp_options.TBAdjudicationRange[0],
+                                                             sp_options.TBAdjudicationRange[1]);
     while (posCounter < sp_options.posCount) {
         if (sp_options.saveGames) {
             td.gameMoves.reset();
@@ -396,6 +404,7 @@ static void selfplay(ThreadData &td) {
         const unsigned randomCount =
             sp_options.randomCount +
             ((sp_options.randomize && sp_options.randomParity) ? unsigned(td.engine() & 1) : 0U);
+        const unsigned TBAdjudicatePlies = tbAdjudicateDist(td.engine);
         for (unsigned ply = 0; ply <= sp_options.maxOutPly && !adjudicated && !terminated; ++ply) {
             stats.clear();
             Move m = NullMove;
@@ -514,7 +523,9 @@ static void selfplay(ThreadData &td) {
                 terminated = true;
                 result = Result::Draw;
             } else if (sp_options.adjudicateTBOk(board) &&
-                       ++tb_score_count >= sp_options.TBAdjudicationPlies) {
+                       ++tb_score_count >= (board.men() <= 3 ?
+                                            sp_options.TBAdjudicationPlies3Men :
+                                            TBAdjudicatePlies)) {
                 if (stats.display_value >= Constants::TABLEBASE_WIN) {
                     result =
                         (board.sideToMove() == White) ? Result::WhiteWin : Result::BlackWin;
