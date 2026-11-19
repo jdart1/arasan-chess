@@ -1,4 +1,4 @@
-// Arasan network trainer, version 10: version 9 architecture plus threat inputs.
+// Arasan network trainer, version 11
 //
 // NOTE: this script is written for the "bullet_trainer" model API (ModelDefinition,
 // ModelInputs, ...) used by bullet's examples/advanced/main.rs, which it follows closely.
@@ -81,8 +81,7 @@ const NET_NAME: &str = "arasan11";
 const NETWORK_VERSION: u8 = arasan_pack::PACKED_VERSION;
 const MAP_THREADS: u8 = 8;
 const SAVE_RATE: usize = 200;
-const DATA_PATH: &str = "/data3/bullet/apr-may2026/dec25-may26-shuffled-interleaved.bullet";
-// "/data3/bullet/aug2026/dec25-aug26-shuffled-interleaved.bullet"
+const DATA_PATH: &str = "/data3/bullet/dec25-may26-test91filtered-interleaved.bullet";
 
 const NUM_OUTPUT_BUCKETS: usize = 8;
 const L1: usize = 768; // feature transformer width (per perspective)
@@ -99,15 +98,15 @@ const QP: i32 = (255 * 255) >> (16 - 7); // 127
 const PP_RANGE: f32 = i8::MAX as f32 / (QA as f32);
 const TH_RANGE: f32 = PP_RANGE;
 
-const SUPERBATCHES: usize = 600;
+const SUPERBATCHES: usize = 800;
 const BATCH_SIZE: usize = 16_384;
 const BATCHES_PER_SUPERBATCH: usize = 6104;
 
 // Three-stage schedule (LR and WDL), after bullet's examples/advanced/main.rs.
 // The stage lengths must sum to SUPERBATCHES.
-const STAGE0: usize = 100;
-const STAGE1: usize = 400;
-const STAGE2: usize = 100;
+const STAGE0: usize = 130;
+const STAGE1: usize = 540;
+const STAGE2: usize = 130;
 const WARMUP_SBS: usize = STAGE0 / 2;
 const WARMUP_MAX_LR: f32 = 2e-3;
 const WARMUP_MIN_LR: f32 = 1e-4;
@@ -492,6 +491,65 @@ fn normalize_hm(mut bbs: [u64; 8]) -> [u64; 8] {
     bbs
 }
 
+// Print the pair indices for each FEN (arguments, or lines on standard input if there are
+// none), in the format of network/engine_pair_indices.py: the FEN, then the sorted indices for
+// White and for Black. Positions are from the side to move's point of view, so "stm" is the
+// side to move.
+fn dump_pairs(args: &[String]) {
+    let pp = PawnPairInputs::new();
+    let fens: Vec<String> = if args.is_empty() {
+        std::io::stdin().lines().map(|line| line.unwrap().trim().to_string()).filter(|line| !line.is_empty()).collect()
+    } else {
+        args.to_vec()
+    };
+    for fen in fens {
+        let pos: ChessBoard = format!("{fen} | 0 | 0.0").parse().unwrap();
+        let mut stm = Vec::new();
+        let mut ntm = Vec::new();
+        pp.map_features(&pos, |idx| stm.push(idx), |idx| ntm.push(idx));
+        stm.sort();
+        ntm.sort();
+        let black_to_move = fen.split_whitespace().nth(1) == Some("b");
+        let (white, black) = if black_to_move { (ntm, stm) } else { (stm, ntm) };
+        let join = |list: &Vec<usize>| list.iter().map(|idx| idx.to_string()).collect::<Vec<_>>().join(" ");
+        println!("{fen}");
+        println!("white {}", join(&white));
+        println!("black {}", join(&black));
+    }
+}
+
+// Print the threat indices for each FEN (arguments, or lines on standard input if there are
+// none; lines starting with '#' are skipped), in the format of network/engine_threat_indices.py:
+// the FEN, then the sorted indices for White and for Black.
+fn dump_threats(args: &[String]) {
+    let th = ThreatInputs::new();
+    let fens: Vec<String> = if args.is_empty() {
+        std::io::stdin()
+            .lines()
+            .map(|line| line.unwrap().trim().to_string())
+            .filter(|line| !line.is_empty() && !line.starts_with('#'))
+            .collect()
+    } else {
+        args.to_vec()
+    };
+    for fen in fens {
+        // bullet's parser wants the move counters
+        let full = if fen.split_whitespace().count() < 6 { format!("{fen} 0 1") } else { fen.clone() };
+        let pos: ChessBoard = format!("{full} | 0 | 0.0").parse().unwrap();
+        let mut stm = Vec::new();
+        let mut ntm = Vec::new();
+        th.map_features(&pos, |idx| stm.push(idx), |idx| ntm.push(idx));
+        stm.sort();
+        ntm.sort();
+        let black_to_move = fen.split_whitespace().nth(1) == Some("b");
+        let (white, black) = if black_to_move { (ntm, stm) } else { (stm, ntm) };
+        let join = |list: &Vec<usize>| list.iter().map(|idx| idx.to_string()).collect::<Vec<_>>().join(" ");
+        println!("{fen}");
+        println!("white {}", join(&white));
+        println!("black {}", join(&black));
+    }
+}
+
 fn make_inputs_mapper(
     params: (&ModelInputs<InputTy>, &PawnPairInputs, &ThreatInputs, ChessBucketsMirrored, impl OutputBuckets<ChessBoard>),
     wdl: impl WdlScheduler,
@@ -585,6 +643,15 @@ fn packed_weights(format: SavedFormat, rows: usize, elem: usize) -> SavedFormat 
 }
 
 fn main() {
+    let args: Vec<String> = std::env::args().collect();
+    if args.get(1).map(String::as_str) == Some("--dump-pairs") {
+        dump_pairs(&args[2..]);
+        return;
+    }
+    if args.get(1).map(String::as_str) == Some("--dump-threats") {
+        dump_threats(&args[2..]);
+        return;
+    }
 
     let pp = PawnPairInputs::new();
     let th = ThreatInputs::new();
