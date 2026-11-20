@@ -310,8 +310,8 @@ template <> int32_t hsum32(__m256i x) {
 }
 template <>
 [[maybe_unused]] void dpbusd_epi32(__m256i &acc, __m256i a, __m256i b) {
-#ifdef VNNI
-    acc = _mm256_dpbusd_epi32(acc, a, b);
+#ifdef AVX_VNNI
+    acc = _mm256_dpbusd_avx_epi32(acc, a, b);
 #else
     __m256i x = _mm256_maddubs_epi16(a, b);
     x = _mm256_madd_epi16(x, ones256);
@@ -422,10 +422,11 @@ template <> __m128i vec_rshift32(__m128i x, unsigned shift) { return _mm_srai_ep
 template <> __m128i vec_shl16(__m128i x, unsigned shift) { return _mm_slli_epi16(x, shift); }
 template <> __m128i vec_shr16(__m128i x, unsigned shift) { return _mm_srai_epi16(x, shift); }
 template <> __m128i vec_shr32(__m128i x, unsigned shift) { return _mm_srai_epi32(x, shift); }
+
 template <>
 void dpbusd_epi32(__m128i &x, __m128i y, __m128i z) {
-#ifdef VNNI
-    x = _mm_dpbusd_epi32(x, y, z);
+#ifdef AVX_VNNI
+    x = _mm_dpbusd_avx_epi32(x, y, z);
 #elif defined(SSE3)
     auto sum32 = _mm_madd_epi16(_mm_maddubs_epi16(y, z), _mm_set1_epi16(1));
     x = _mm_add_epi32(sum32, x);
