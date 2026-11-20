@@ -18,7 +18,6 @@ use std::cmp::Reverse;
 use std::collections::BinaryHeap;
 
 /// Header version byte of the packed layout
-pub const PACKED_VERSION: u8 = 11;
 pub const MAX_CODE_LEN: usize = 12;
 const SYMBOLS: usize = 256;
 
